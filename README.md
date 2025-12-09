@@ -15,3 +15,7 @@ Nasim : Serveur
 - Sockets, Epoll/Kqueue
 - Boucle d'evenement
 - Timeouts
+
+Doc :
+
+https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
