@@ -21,14 +21,15 @@ int main()
 		fd = socket(AF_INET, SOCK_STREAM, 0);
 		bind(fd, (struct sockaddr*)&addr, sizeof(addr));
 		listen(fd, 1);
-		int acpt = accept(fd, (struct sockaddr*)&addr, &client_len);
+		int client_socket = accept(fd, (struct sockaddr*)&addr, &client_len);
 
-		write(acpt, "Test\n", 5);
+		write(client_socket, "Test\n", 5);
 
 		close(fd);
-		close(acpt);
+		close(client_socket);
 	}
 
 
 	return (0);
 }
+

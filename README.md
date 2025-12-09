@@ -19,3 +19,4 @@ Nasim : Serveur
 Doc :
 
 https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
+https://blog.stephane-robert.info/docs/admin-serveurs/linux/curl/
