@@ -22,11 +22,18 @@ int main()
 
 	socklen_t sizeaddr = sizeof(address);
 
-	int client = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client
+	while (1)
+	{
 
-	std::cout << "Connecte" << std::endl;
+		int client = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client
 
-	close(client);
+		
+		std::cout << "Connecte" << std::endl;
+
+		close(client);
+	}
+
+
 	close(socketServer);
 
 	return 0;
