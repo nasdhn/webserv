@@ -2,34 +2,35 @@
 
 int main()
 {
+	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
 
-	int fd;
+	int opt = 1;
+	setsockopt(socketServer, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
-	struct sockaddr_in addr;
-	memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(8080);
-	// addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	addr.sin_zero[(sizeof(addr))];
+	struct sockaddr_in address;
+	address.sin_family = AF_INET;
+	address.sin_port = htons(8080);
+	address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	address.sin_zero[(sizeof(address))];
 
-	socklen_t client_len = sizeof(addr);
-
-	while (1)
-	{
-		std::cout << "Attente de connexion.." << std::endl;
-		fd = socket(AF_INET, SOCK_STREAM, 0);
-		bind(fd, (struct sockaddr*)&addr, sizeof(addr));
-		listen(fd, 1);
-		int client_socket = accept(fd, (struct sockaddr*)&addr, &client_len);
-
-		write(client_socket, "Test\n", 5);
-
-		close(fd);
-		close(client_socket);
-	}
+	bind(socketServer, (struct sockaddr*)&address, sizeof(address));
+	std::cout << "Bind" << std::endl;
 
 
-	return (0);
+	listen(socketServer, 10);
+	std::cout << "Mode ecoute" << std::endl;
+
+	socklen_t sizeaddr = sizeof(address);
+
+	int client = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client
+
+	std::cout << "Connecte" << std::endl;
+
+	close(client);
+	close(socketServer);
+
+	return 0;
+
 }
+
 
