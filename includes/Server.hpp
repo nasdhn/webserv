@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
+ #include <sys/poll.h>
 
 class Server {
 
@@ -19,6 +20,7 @@ class Server {
 
 
 		void setupServ();
+		void setupClient();
 
 	private :
 };
