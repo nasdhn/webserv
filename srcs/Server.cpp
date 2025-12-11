@@ -1,6 +1,26 @@
-#include "Serveur.hpp"
+#include "Server.hpp"
 
-int main()
+Server::Server()
+{
+
+}
+
+Server::Server(const Server& other)
+{
+	(void)other;
+}
+Server& Server::operator=(const Server& other)
+{	
+	(void)other;
+	return (*this);
+}
+
+Server::~Server()
+{
+
+}
+
+void Server::setupServ()
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -35,8 +55,4 @@ int main()
 
 	close(socketServer);
 
-	return 0;
-
 }
-
-
