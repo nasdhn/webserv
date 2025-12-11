@@ -7,7 +7,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
- #include <sys/poll.h>
+#include <sys/poll.h>
+#include <vector>
 
 class Server {
 
@@ -23,6 +24,7 @@ class Server {
 		void setupClient();
 
 	private :
+		std::vector<struct pollfd> _pollfd;
 };
 
 
