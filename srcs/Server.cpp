@@ -36,7 +36,7 @@ void Server::setupServ()
 	address.sin_addr.s_addr = INADDR_ANY;
 	// address.sin_zero[(sizeof(address))];
 
-	int flag = (fcntl(socketServer, F_GETFL, 0);
+	int flag = fcntl(socketServer, F_GETFL, 0);
 	if (flag == -1)
 	{	
 		close(socketServer);
@@ -80,7 +80,7 @@ void Server::setupServ()
 		if (poll(&_fd[0], _fd.size(), -1) == -1)
 			throw std::runtime_error("Error : Poll's initialisation failed !");
 
-		for (int i = 0; i < _fd.size(); i++)
+		for (unsigned int i = 0; i < _fd.size(); i++)
 		{
 			if (_fd[i].revents & POLLIN)
 			{
@@ -90,7 +90,7 @@ void Server::setupServ()
 					if (clientSocket == -1)
 						throw std::runtime_error("Error : Client Socket's initialisation failed !");
 
-					int flag = (fcntl(clientSocket, F_GETFL, 0);
+					int flag = fcntl(clientSocket, F_GETFL, 0);
 					if (flag == -1)
 					{	
 						close(clientSocket);
