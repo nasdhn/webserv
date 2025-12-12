@@ -41,6 +41,7 @@ class Config
 
 
 		void setErrorPage(std::string s);
+		void setMaxSize(std::string s);
 
 		void printErrorPage();
 };

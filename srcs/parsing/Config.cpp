@@ -49,6 +49,13 @@ void Config::setErrorPage(std::string s)
 		this->_errorPage.insert(std::make_pair(*vit, path));
 }
 
+void Config::setMaxSize(std::string s)
+{
+	s.erase(s.length() - 1, s.length());
+	if (isDigits(s))
+		this->_maxSize = std::atoi(s.c_str());
+}
+
 void Config::printErrorPage()
 {
 	for (std::map<unsigned int, std::string>::iterator it = this->_errorPage.begin();

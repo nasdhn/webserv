@@ -32,6 +32,12 @@ int parse(Config *conf, std::string s)
 		std::cout << s << std::endl;
 		conf->setErrorPage(s);
 	}
+	else if (title == "maxSize")
+	{
+		s.erase(0, title.length() + 1);
+		std::cout << s << std::endl;
+		conf->setMaxSize(s);
+	}
 
 	return (0);
 }
