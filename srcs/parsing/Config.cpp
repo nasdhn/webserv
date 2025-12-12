@@ -40,7 +40,10 @@ void Config::setErrorPage(std::string s)
 		if (isDigits(token))
 			lst.push_back(atoi(token.c_str()));
 		if (!isDigits(token))
+		{
+			token.erase(token.length() - 1, token.length());
 			path = token;
+		}
 	}
 	for (std::vector<unsigned int>::iterator vit = lst.begin(); vit != lst.end(); ++vit)
 		this->_errorPage.insert(std::make_pair(*vit, path));
