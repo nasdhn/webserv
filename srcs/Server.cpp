@@ -114,6 +114,22 @@ void Server::setupServ()
 				}
 				else
 				{
+					// temporaire pour tester
+					char buffer[1024] = {0};
+					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);  // utiliser une map pour mettre le buff pas fini avec l identifiant jusqu'a tout recevoir
+					if (ret <= 0)
+					{
+						std::cout << "Déconnexion.." << std::endl;
+						close(_fd[i].fd);
+						_fd.erase(_fd.begin() + i);
+						i--;
+					}
+					if (ret > 0)
+					{
+						buffer[ret] = '\0';
+						std::cout << "Message recu : " << buffer << std::endl;
+					}
+
 					std::cout << "client parle.." << std::endl;
 				}
 			}
@@ -124,9 +140,4 @@ void Server::setupServ()
 
 
 	close(socketServer);
-}
-
-void Server::setupClient()
-{
-
 }

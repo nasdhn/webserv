@@ -22,7 +22,6 @@ class Server {
 
 
 		void setupServ();
-		void setupClient();
 
 	private :
 		std::vector<struct pollfd> _fd;
