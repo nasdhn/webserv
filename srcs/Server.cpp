@@ -32,9 +32,22 @@ void Server::setupServ()
 
 	struct sockaddr_in address = {};
 	address.sin_family = AF_INET;
-	address.sin_port = htons(8080);
+	address.sin_port = htons(8080); // a completer avec parsing
 	address.sin_addr.s_addr = INADDR_ANY;
 	// address.sin_zero[(sizeof(address))];
+
+	int flag = (fcntl(socketServer, F_GETFL, 0);
+	if (flag == -1)
+	{	
+		close(socketServer);
+		throw std::runtime_error("Error : Can't get socket flags !");
+	}
+
+	if (fcntl(socketServer, F_SETFL, flag | O_NONBLOCK) == -1)
+	{	
+		close(socketServer);
+		throw std::runtime_error("Error : Set non blocking's initialisation failed !");
+	}
 
 	if (bind(socketServer, (struct sockaddr*)&address, sizeof(address)) == -1)
 	{	
@@ -53,14 +66,59 @@ void Server::setupServ()
 
 	socklen_t sizeaddr = sizeof(address);
 
+	// integration de poll
+	struct pollfd sfd;
+	sfd.fd = socketServer;
+	sfd.events = POLLIN;
+	sfd.revents = 0;
+	_fd.push_back(sfd);
+
+
 	while (1)
 	{
-		int clientSocket = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client
-		if (clientSocket == -1)
-			throw std::runtime_error("Error : Client Socket's initialisation failed !");
-		std::cout << "Connecte" << std::endl;
+		// integration de poll
+		if (poll(&_fd[0], _fd.size(), -1) == -1)
+			throw std::runtime_error("Error : Poll's initialisation failed !");
 
-		close(clientSocket);
+		for (int i = 0; i < _fd.size(); i++)
+		{
+			if (_fd[i].revents & POLLIN)
+			{
+				if (_fd[i].fd == socketServer)
+				{
+					int clientSocket = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
+					if (clientSocket == -1)
+						throw std::runtime_error("Error : Client Socket's initialisation failed !");
+
+					int flag = (fcntl(clientSocket, F_GETFL, 0);
+					if (flag == -1)
+					{	
+						close(clientSocket);
+						throw std::runtime_error("Error : Can't get socket flags !");
+					}
+
+					if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1)
+					{	
+						close(clientSocket);
+						throw std::runtime_error("Error : Set non blocking's initialisation failed !");
+					}
+
+					struct pollfd clientFD;
+					clientFD.fd = clientSocket;
+					clientFD.events = POLLIN;
+					clientFD.revents = 0;
+					_fd.push_back(clientFD);
+
+					// DEBUG
+					std::cout << "Nouveau client connecté sur le FD " << clientSocket << std::endl;
+				}
+				else
+				{
+					std::cout << "client parle.." << std::endl;
+				}
+			}
+		}
+
 	}
 
 

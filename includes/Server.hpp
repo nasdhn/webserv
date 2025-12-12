@@ -9,6 +9,7 @@
 #include <cstring>
 #include <sys/poll.h>
 #include <vector>
+#include <fcntl.h>
 
 class Server {
 
@@ -24,7 +25,7 @@ class Server {
 		void setupClient();
 
 	private :
-		std::vector<struct pollfd> _pollfd;
+		std::vector<struct pollfd> _fd;
 };
 
 
