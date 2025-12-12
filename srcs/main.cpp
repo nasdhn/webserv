@@ -22,6 +22,10 @@ int parse(Config *conf, std::string s)
 	title = s.substr(0, s.find(del));
 	std::cout << title << std::endl;
 
+	//TODO hostname
+	//TODO listen
+	//TODO maxSize
+	//TODO server part
 	if (title == "errorPage")
 	{
 		s.erase(0, title.length() + 1);
