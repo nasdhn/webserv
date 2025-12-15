@@ -19,7 +19,7 @@ class Server {
 		Server& operator=(const Server& other);
 		~Server();
 
-
+		std::vector<struct pollfd> getFD();
 
 		void setupServ();
 

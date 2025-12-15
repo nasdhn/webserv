@@ -20,6 +20,11 @@ Server::~Server()
 
 }
 
+std::vector<struct pollfd> Server::getFD()
+{
+	return _fd;
+}
+
 void Server::setupServ()
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
@@ -88,7 +93,10 @@ void Server::setupServ()
 				{
 					int clientSocket = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
 					if (clientSocket == -1)
-						throw std::runtime_error("Error : Client Socket's initialisation failed !");
+					{
+						std::cerr << "Error : Client's connexion failed.." << std::endl;
+                    	continue;
+					}
 
 					int flag = fcntl(clientSocket, F_GETFL, 0);
 					if (flag == -1)
@@ -100,7 +108,8 @@ void Server::setupServ()
 					if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1)
 					{	
 						close(clientSocket);
-						throw std::runtime_error("Error : Set non blocking's initialisation failed !");
+						std::cerr << "Error fcntl : Client closed.." << std::endl;
+						continue;
 					}
 
 					struct pollfd clientFD;
@@ -114,7 +123,7 @@ void Server::setupServ()
 				}
 				else
 				{
-					// temporaire pour tester
+					// temporaire pour tester a remplacer par la map
 					char buffer[1024] = {0};
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);  // utiliser une map pour mettre le buff pas fini avec l identifiant jusqu'a tout recevoir
 					if (ret <= 0)
