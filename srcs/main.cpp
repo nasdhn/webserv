@@ -22,21 +22,29 @@ int parse(Config *conf, std::string s)
 	title = s.substr(0, s.find(del));
 	std::cout << title << std::endl;
 
-	//TODO hostname
-	//TODO listen
-	//TODO maxSize
+	//TODO find all params mandatory
+	//TODO error message ?
+
 	//TODO server part
 	if (title == "errorPage")
 	{
 		s.erase(0, title.length() + 1);
-		std::cout << s << std::endl;
 		conf->setErrorPage(s);
 	}
 	else if (title == "maxSize")
 	{
 		s.erase(0, title.length() + 1);
-		std::cout << s << std::endl;
 		conf->setMaxSize(s);
+	}
+	else if (title == "hostname")
+	{
+		s.erase(0, title.length() + 1);
+		conf->setHostname(s);
+	}
+	else if (title == "listen")
+	{
+		s.erase(0, title.length() + 1);
+		conf->setListen(s);
 	}
 
 	return (0);

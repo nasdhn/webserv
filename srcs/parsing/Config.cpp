@@ -56,6 +56,17 @@ void Config::setMaxSize(std::string s)
 		this->_maxSize = std::atoi(s.c_str());
 }
 
+void Config::setHostname(std::string s)
+{
+	this->_hostname.push_back(s);
+}
+
+void Config::setListen(std::string s)
+{
+	this->_listen.push_back(s);
+}
+
+
 void Config::printErrorPage()
 {
 	for (std::map<unsigned int, std::string>::iterator it = this->_errorPage.begin();

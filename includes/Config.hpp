@@ -9,6 +9,7 @@
 class Site
 {
 	private:
+		std::string _name;
 		std::vector<std::string> _method;
 		bool _listDirectory;
 		std::string _defaultFile;
@@ -25,8 +26,8 @@ class Config
 	private:
 		int _maxSize;
 		std::map<unsigned int, std::string> _errorPage;
-		std::string _hostname; //vector
-		std::string _listen; //vector
+		std::vector<std::string> _hostname; //vector
+		std::vector<std::string> _listen; //vector
 		//location
 			//methods list/vector
 			//listDirectory bool
@@ -42,6 +43,9 @@ class Config
 
 		void setErrorPage(std::string s);
 		void setMaxSize(std::string s);
+		void setHostname(std::string s);
+		void setListen(std::string s);
+
 
 		void printErrorPage();
 };
