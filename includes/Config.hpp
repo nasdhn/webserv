@@ -1,33 +1,20 @@
-#ifndef PARSING_CPP
-# define PARSING_CPP
+#ifndef PARSING_HPP
+# define PARSING_HPP
 
 # include <string>
 # include <map>
 # include <vector>
 # include <algorithm>
-
-class Site
-{
-	private:
-		std::string _name;
-		std::vector<std::string> _method;
-		bool _listDirectory;
-		std::string _defaultFile;
-		bool _uploadingFile;
-		std::string _root;
-		std::map<std::string, std::string> _redirection;
-		std::string _cgi;
-	public:
-
-};
+# include "Site.hpp"
 
 class Config
 {
 	private:
 		int _maxSize;
 		std::map<unsigned int, std::string> _errorPage;
-		std::vector<std::string> _hostname; //vector
-		std::vector<std::string> _listen; //vector
+		std::vector<std::string> _hostname;
+		std::vector<std::string> _listen;
+		//std::vector<Site> _site;
 		//location
 			//methods list/vector
 			//listDirectory bool
@@ -45,9 +32,15 @@ class Config
 		void setMaxSize(std::string s);
 		void setHostname(std::string s);
 		void setListen(std::string s);
+		void setSite(std::string s);
 
 
 		void printErrorPage();
+		void printHostname();
+		void printListen();
+		void printMaxSize();
+		void printSite();
+		void printData();
 };
 
 #endif

@@ -58,25 +58,59 @@ void Config::setMaxSize(std::string s)
 
 void Config::setHostname(std::string s)
 {
+	s.erase(s.length() - 1, s.length());
 	this->_hostname.push_back(s);
 }
 
 void Config::setListen(std::string s)
 {
+	s.erase(s.length() - 1, s.length());
 	this->_listen.push_back(s);
 }
 
 
 void Config::printErrorPage()
 {
+	std::cout << "errorPage : " << std::endl;
 	for (std::map<unsigned int, std::string>::iterator it = this->_errorPage.begin();
 		it != this->_errorPage.end();
 		++it)
 	{
-		
-			std::cout << "clé = " << it->first     // valeur entière dans la liste
-					<< ", valeur = " << it->second
-					<< std::endl;
-		
+		std::cout << it->first << " : " << it->second << std::endl;
 	}
+}
+
+void Config::printHostname()
+{
+	std::cout << "hostname : " << std::endl;
+	for (std::vector<std::string>::iterator it = this->_hostname.begin();
+		it != this->_hostname.end();
+		++it)
+	{
+		std::cout << *it << std::endl;
+	}
+}
+
+void Config::printListen()
+{
+	std::cout << "listen : " << std::endl;
+	for (std::vector<std::string>::iterator it = this->_listen.begin();
+		it != this->_listen.end();
+		++it)
+	{
+		std::cout << *it << std::endl;
+	}
+}
+
+void Config::printMaxSize()
+{
+	std::cout << "MaxSize : " << this->_maxSize << std::endl;
+}
+
+void Config::printData()
+{
+	this->printHostname();
+	this->printListen();
+	this->printErrorPage();
+	this->printMaxSize();
 }
