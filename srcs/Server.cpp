@@ -7,11 +7,12 @@ Server::Server()
 
 Server::Server(const Server& other)
 {
-	(void)other;
+	_fd = other._fd;
 }
 Server& Server::operator=(const Server& other)
 {	
-	(void)other;
+	if (this != &other)
+		_fd = other._fd;
 	return (*this);
 }
 
@@ -25,12 +26,11 @@ std::vector<struct pollfd> Server::getFD()
 	return _fd;
 }
 
-void Server::setupServ()
+int Server::servInit()
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketServer == -1)
 		throw std::runtime_error("Error : Socket's initialisation failed !");
-
 	int opt = 1;
 	if (setsockopt(socketServer, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) == -1)
 		throw std::runtime_error("Error : Set Socket's initialisation failed !");
@@ -47,29 +47,23 @@ void Server::setupServ()
 		close(socketServer);
 		throw std::runtime_error("Error : Can't get socket flags !");
 	}
-
 	if (fcntl(socketServer, F_SETFL, flag | O_NONBLOCK) == -1)
 	{	
 		close(socketServer);
 		throw std::runtime_error("Error : Set non blocking's initialisation failed !");
 	}
-
 	if (bind(socketServer, (struct sockaddr*)&address, sizeof(address)) == -1)
 	{	
 		close(socketServer);
 		throw std::runtime_error("Error : Bind failed !");
 	}
 	std::cout << "Bind" << std::endl;
-
-
 	if (listen(socketServer, 10) == -1)
 	{	
 		close(socketServer);
 		throw std::runtime_error("Error : Listen failed !");
 	}
 	std::cout << "Mode ecoute" << std::endl;
-
-	socklen_t sizeaddr = sizeof(address);
 
 	// integration de poll
 	struct pollfd sfd;
@@ -78,6 +72,19 @@ void Server::setupServ()
 	sfd.revents = 0;
 	_fd.push_back(sfd);
 
+	return (socketServer);
+}
+
+void Server::setupServ()
+{
+	int socketServer = servInit();
+
+	struct sockaddr_in clientAddr = {};
+	clientAddr.sin_family = AF_INET;
+	clientAddr.sin_port = htons(8080); // a completer avec parsing
+	clientAddr.sin_addr.s_addr = INADDR_ANY;
+	// address.sin_zero[(sizeof(address))];
+	socklen_t sizeaddr = sizeof(clientAddr);
 
 	while (1)
 	{
@@ -89,28 +96,30 @@ void Server::setupServ()
 		{
 			if (_fd[i].revents & POLLIN)
 			{
+				// a chaque client on passe la dedans
 				if (_fd[i].fd == socketServer)
 				{
-					int clientSocket = accept(socketServer, (struct sockaddr*)&address, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
+					int clientSocket = accept(socketServer, (struct sockaddr*)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
 					if (clientSocket == -1)
 					{
 						std::cerr << "Error : Client's connexion failed.." << std::endl;
                     	continue;
 					}
-
 					int flag = fcntl(clientSocket, F_GETFL, 0);
 					if (flag == -1)
 					{	
 						close(clientSocket);
 						throw std::runtime_error("Error : Can't get socket flags !");
 					}
-
 					if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1)
 					{	
 						close(clientSocket);
 						std::cerr << "Error fcntl : Client closed.." << std::endl;
 						continue;
 					}
+
+					Client *newClient = new Client(clientSocket);
+					_clients[clientSocket] = newClient;
 
 					struct pollfd clientFD;
 					clientFD.fd = clientSocket;
@@ -123,33 +132,46 @@ void Server::setupServ()
 				}
 				else
 				{
-					// temporaire pour tester a remplacer par la map
+					Client *client = _clients[_fd[i].fd];
 					char buffer[1024] = {0};
-					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);  // utiliser une map pour mettre le buff pas fini avec l identifiant jusqu'a tout recevoir
+					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
 						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout 
 						// si 0 on close
 						std::cout << "Déconnexion.." << std::endl;
 						close(_fd[i].fd);
+						_clients.erase(_fd[i].fd);
+						delete client;
 						_fd.erase(_fd.begin() + i);
 						i--;
 					}
 					if (ret > 0)
 					{
 						buffer[ret] = '\0';
+						client->_request.append(buffer, ret); 
+
+						// DEBUG
 						std::cout << "Message recu : " << buffer << std::endl;
+						std::cout << "Message de id : " << client->_id << " dans _client : " << client->_request << std::endl;
+						std::cout << "Octet recu : " << ret << " | Total octet : " << client->_request.size() << std::endl;
+						// DEBUG
+
+						unsigned long pos = client->_request.find("\r\n\r\n");
+						if (pos != std::string::npos)
+							std::cout << "Requete complete" << std::endl;
+						else
+							continue;
 					}
 
+					// DEBUG
 					std::cout << "client parle.." << std::endl;
+					std::cout << _fd.size() << " FD dans la liste" << std::endl;
 				}
 			}
 		}
 
 	}
-
-
-
 	close(socketServer);
 }
 

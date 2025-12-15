@@ -11,6 +11,9 @@
 #include <vector>
 #include <map>
 #include <fcntl.h>
+#include "Client.hpp"
+#include <memory>
+#include <algorithm>
 
 class Server {
 
@@ -19,13 +22,14 @@ class Server {
 		Server(const Server& other);
 		Server& operator=(const Server& other);
 		~Server();
-
 		std::vector<struct pollfd> getFD();
 
+		int servInit();
 		void setupServ();
 
 	private :
 		std::vector<struct pollfd> _fd;
+		std::map<int, Client*> _clients;
 };
 
 
