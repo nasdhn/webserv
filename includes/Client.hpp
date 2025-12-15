@@ -12,7 +12,7 @@ class Client {
         ~Client();
 
     private :
-        std::map<int, std::string> _buff_fd;
+    
 
 };
 

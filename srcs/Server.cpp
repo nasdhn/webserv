@@ -128,6 +128,8 @@ void Server::setupServ()
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);  // utiliser une map pour mettre le buff pas fini avec l identifiant jusqu'a tout recevoir
 					if (ret <= 0)
 					{
+						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout 
+						// si 0 on close
 						std::cout << "Déconnexion.." << std::endl;
 						close(_fd[i].fd);
 						_fd.erase(_fd.begin() + i);
@@ -150,3 +152,4 @@ void Server::setupServ()
 
 	close(socketServer);
 }
+

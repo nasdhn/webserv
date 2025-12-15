@@ -9,6 +9,7 @@
 #include <cstring>
 #include <sys/poll.h>
 #include <vector>
+#include <map>
 #include <fcntl.h>
 
 class Server {
