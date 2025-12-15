@@ -8,11 +8,15 @@ Server::Server()
 Server::Server(const Server& other)
 {
 	_fd = other._fd;
+	_clients = other._clients;
 }
 Server& Server::operator=(const Server& other)
 {	
 	if (this != &other)
+	{	
 		_fd = other._fd;
+		_clients = other._clients;
+	}
 	return (*this);
 }
 
