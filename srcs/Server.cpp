@@ -167,7 +167,7 @@ void Server::setupServ()
 							client->getHeader() = client->getRequest().substr(0, pos + 4);
 							client->getRequest().erase(0, pos + 4);
 
-							// Faire une class request les request
+							// Faire une class request pour les request
 
 							// DEBUG
 							std::cout << "Header : " << client->getHeader() << std::endl;
