@@ -12,13 +12,15 @@ class Client {
         Client& operator=(const Client &other);
         ~Client();
     
-        int _id;
-        std::string _request;
+        int getID() const;
+        std::string& getRequest();
+        std::string& getHeader();
 
     private :
-
-
-
+        int _id;
+        std::string _request;
+        std::string _header;
+     
 };
 
 

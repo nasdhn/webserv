@@ -153,17 +153,26 @@ void Server::setupServ()
 					if (ret > 0)
 					{
 						buffer[ret] = '\0';
-						client->_request.append(buffer, ret); 
+						client->getRequest().append(buffer, ret); 
 
 						// DEBUG
-						std::cout << "Message recu : " << buffer << std::endl;
-						std::cout << "Message de id : " << client->_id << " dans _client : " << client->_request << std::endl;
-						std::cout << "Octet recu : " << ret << " | Total octet : " << client->_request.size() << std::endl;
+						// std::cout << "Message recu : " << buffer << std::endl;
+						// std::cout << "Message de id : " << client->getID() << " dans _client : " << client->getRequest() << std::endl;
+						// std::cout << "Octet recu : " << ret << " | Total octet : " << client->getRequest().size() << std::endl;
 						// DEBUG
 
-						unsigned long pos = client->_request.find("\r\n\r\n");
+						unsigned long pos = client->getRequest().find("\r\n\r\n");
 						if (pos != std::string::npos)
+						{	
+							client->getHeader() = client->getRequest().substr(0, pos + 4);
+							client->getRequest().erase(0, pos + 4);
+							// DEBUG
+							std::cout << "Header : " << client->getHeader() << std::endl;
+							std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
+							
 							std::cout << "Requete complete" << std::endl;
+							// DEBUG
+						}
 						else
 							continue;
 					}
