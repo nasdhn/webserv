@@ -166,6 +166,9 @@ void Server::setupServ()
 						{	
 							client->getHeader() = client->getRequest().substr(0, pos + 4);
 							client->getRequest().erase(0, pos + 4);
+
+							// Faire une class request les request
+
 							// DEBUG
 							std::cout << "Header : " << client->getHeader() << std::endl;
 							std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
