@@ -168,7 +168,6 @@ void Server::setupServ()
 							client->getRequest().erase(0, pos + 4);
 
 
-
 							// Faire une class request pour les request
 							// code provisoire et variable a modifier une fois que la class sera faite 
 							// content_lenght et request
@@ -176,20 +175,32 @@ void Server::setupServ()
 							unsigned long CL_pos = client->getHeader().find(CL);
 							if (CL_pos != std::string::npos)
 							{
-								client->getContentSizeString() = client->getHeader().substr(pos, 5);
+								unsigned long endLine = client->getHeader().find('\n', CL_pos);
+								client->getContentSizeString() = client->getHeader().substr(CL_pos + 16, endLine - (CL_pos + 16));
 
 								std::istringstream iss(client->getContentSizeString());
 								std::cout << "Content size string : " << client->getContentSizeString() << std::endl;
 								iss >> client->getContentSizeInt();
 								std::cout << "Le content lenght existe et la taille est : " << client->getContentSizeInt() << std::endl;
+
+								// avec content lenght check le buffer si il a tout lu ou si il en reste c est ce qui va etre le body
+								if ((size_t)client->getRequest().size() < (size_t)client->getContentSizeInt())
+								{
+									std::cout << "Body pas encore tout lu" << std::endl;
+									break;
+								}
+								else
+								{
+									// mettre un flag pour dire que c est bon et ensuite envoyer la reponse plus loin si le flag est bon
+									std::cout << "body entierement lu" << std::endl;
+								}
 							}
 							else
 							{
+								// pas de content lenght donc direct passer a la reponse
 								std::cout << "pas de content leghnt" << std::endl;
 							}
 							// jusqu'ici
-
-
 
 							// DEBUG
 							std::cout << "Header : " << client->getHeader() << std::endl;
