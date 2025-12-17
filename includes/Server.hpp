@@ -30,6 +30,7 @@ class Server {
 	private :
 		std::vector<struct pollfd> _fd;
 		std::map<int, Client*> _clients;
+		bool _readyToSend;
 };
 
 

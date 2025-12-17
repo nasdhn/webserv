@@ -2,13 +2,14 @@
 
 Server::Server()
 {
-
+	_readyToSend = false;
 }
 
 Server::Server(const Server& other)
 {
 	_fd = other._fd;
 	_clients = other._clients;
+	_readyToSend = other._readyToSend;
 }
 Server& Server::operator=(const Server& other)
 {	
@@ -16,6 +17,7 @@ Server& Server::operator=(const Server& other)
 	{	
 		_fd = other._fd;
 		_clients = other._clients;
+		_readyToSend = other._readyToSend;
 	}
 	return (*this);
 }
@@ -191,16 +193,24 @@ void Server::setupServ()
 								}
 								else
 								{
-									// mettre un flag pour dire que c est bon et ensuite envoyer la reponse plus loin si le flag est bon
+									_readyToSend = true;
 									std::cout << "body entierement lu" << std::endl;
 								}
 							}
 							else
 							{
 								// pas de content lenght donc direct passer a la reponse
+								_readyToSend = true;
 								std::cout << "pas de content leghnt" << std::endl;
 							}
 							// jusqu'ici
+
+
+							if (_readyToSend == true)
+							{
+								// faire la partie send ici
+								std::cout << "Ready to send" << std::endl;
+							}
 
 							// DEBUG
 							std::cout << "Header : " << client->getHeader() << std::endl;
