@@ -167,7 +167,29 @@ void Server::setupServ()
 							client->getHeader() = client->getRequest().substr(0, pos + 4);
 							client->getRequest().erase(0, pos + 4);
 
+
+
 							// Faire une class request pour les request
+							// code provisoire et variable a modifier une fois que la class sera faite 
+							// content_lenght et request
+							std::string CL = "Content-Length:";
+							unsigned long CL_pos = client->getHeader().find(CL);
+							if (CL_pos != std::string::npos)
+							{
+								client->getContentSizeString() = client->getHeader().substr(pos, 5);
+
+								std::istringstream iss(client->getContentSizeString());
+								std::cout << "Content size string : " << client->getContentSizeString() << std::endl;
+								iss >> client->getContentSizeInt();
+								std::cout << "Le content lenght existe et la taille est : " << client->getContentSizeInt() << std::endl;
+							}
+							else
+							{
+								std::cout << "pas de content leghnt" << std::endl;
+							}
+							// jusqu'ici
+
+
 
 							// DEBUG
 							std::cout << "Header : " << client->getHeader() << std::endl;

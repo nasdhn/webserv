@@ -3,6 +3,7 @@
 
 #include <map>
 #include <iostream>
+#include <sstream>
 
 class Client {
 
@@ -16,10 +17,20 @@ class Client {
         std::string& getRequest();
         std::string& getHeader();
 
+        // fonction provisoire a remplacer ou a suppr par celle de class Request
+        int& getContentSizeInt();
+        std::string& getContentSizeString();
+
+
+
     private :
         int _id;
         std::string _request;
         std::string _header;
+
+        // variable provisoire a remplacer par celle de class Request
+        std::string _contentLenght_str;
+        int _contentSize_int;
      
 };
 
