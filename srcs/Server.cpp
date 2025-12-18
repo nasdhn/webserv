@@ -2,14 +2,13 @@
 
 Server::Server()
 {
-	_readyToSend = false;
+
 }
 
 Server::Server(const Server& other)
 {
 	_fd = other._fd;
 	_clients = other._clients;
-	_readyToSend = other._readyToSend;
 }
 Server& Server::operator=(const Server& other)
 {	
@@ -31,6 +30,14 @@ std::vector<struct pollfd> Server::getFD()
 {
 	return _fd;
 }
+
+// a implementer apres pour split le code
+
+// void Server::generateResponse(int fd, Client *client)
+// {
+// 	// ici mettre le send et tout ce qui va avec
+// 	send(fd, client->getResponse().c_str(), client->getResponse().size(), 0);
+// }
 
 int Server::servInit()
 {
@@ -169,7 +176,6 @@ void Server::setupServ()
 							client->getHeader() = client->getRequest().substr(0, pos + 4);
 							client->getRequest().erase(0, pos + 4);
 
-
 							// Faire une class request pour les request
 							// code provisoire et variable a modifier une fois que la class sera faite 
 							// content_lenght et request
@@ -189,27 +195,25 @@ void Server::setupServ()
 								if ((size_t)client->getRequest().size() < (size_t)client->getContentSizeInt())
 								{
 									std::cout << "Body pas encore tout lu" << std::endl;
-									break;
+									continue;
 								}
 								else
 								{
-									_readyToSend = true;
+									client->getReadyToSend() = true;
 									std::cout << "body entierement lu" << std::endl;
 								}
 							}
 							else
 							{
 								// pas de content lenght donc direct passer a la reponse
-								_readyToSend = true;
+								client->getReadyToSend() = true;
 								std::cout << "pas de content leghnt" << std::endl;
 							}
 							// jusqu'ici
 
-
-							if (_readyToSend == true)
+							if (client->getReadyToSend() == true)
 							{
-								// faire la partie send ici
-								std::cout << "Ready to send" << std::endl;
+								_fd[i].events = POLLOUT | POLLIN;
 							}
 
 							// DEBUG
@@ -228,7 +232,21 @@ void Server::setupServ()
 					std::cout << _fd.size() << " FD dans la liste" << std::endl;
 				}
 			}
+			if (_fd[i].revents & POLLOUT)
+			{
+				Client *client = _clients[_fd[i].fd];
+
+				if (client->getReadyToSend() == true)
+				{
+				// faire la partie send ici
+				// generateResponse(_fd[i].fd, client);
+
+				send(_fd[i].fd, client->getResponse().c_str(), client->getResponse().size(), 0);
+
+				}
+			}
 		}
+
 
 	}
 	close(socketServer);

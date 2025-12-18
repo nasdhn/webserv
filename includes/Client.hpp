@@ -16,6 +16,8 @@ class Client {
         int getID() const;
         std::string& getRequest();
         std::string& getHeader();
+        std::string& getResponse();
+        bool& getReadyToSend();
 
         // fonction provisoire a remplacer ou a suppr par celle de class Request
         int& getContentSizeInt();
@@ -23,10 +25,13 @@ class Client {
 
 
 
+
     private :
         int _id;
         std::string _request;
         std::string _header;
+        std::string _response;
+        bool _readyToSend;
 
         // variable provisoire a remplacer par celle de class Request
         std::string _contentLenght_str;

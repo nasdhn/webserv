@@ -26,6 +26,8 @@ class Server {
 
 		int servInit();
 		void setupServ();
+		void generateResponse(int fd, Client *client);
+
 
 	private :
 		std::vector<struct pollfd> _fd;

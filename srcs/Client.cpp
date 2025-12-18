@@ -3,6 +3,9 @@
 Client::Client(int fd)
 {
 	_id = fd;
+	_readyToSend = false;
+	// provisoire ce que je met dedans
+	_response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 50\n\n<h1>bonjour ok voila</h1>";
 }
 
 Client::Client(const Client& other)
@@ -10,6 +13,10 @@ Client::Client(const Client& other)
 	_id = other._id;
 	_request = other._request;
 	_header = other._header;
+	_response = other._response;
+	_readyToSend = other._readyToSend;
+
+
 	// provisoire
 	_contentLenght_str = other._contentLenght_str;
 	_contentSize_int = other._contentSize_int;
@@ -22,6 +29,10 @@ Client& Client::operator=(const Client& other)
 		_id = other._id;
 		_request = other._request;
 		_header = other._header;
+		_response = other._response;
+		_readyToSend = other._readyToSend;
+
+
 		// provisoire
 		_contentLenght_str = other._contentLenght_str;
 		_contentSize_int = other._contentSize_int;
@@ -31,7 +42,7 @@ Client& Client::operator=(const Client& other)
 
 Client::~Client()
 {
-
+	_readyToSend = false;
 }
 
 int Client::getID() const
@@ -47,6 +58,16 @@ std::string& Client::getRequest()
 std::string& Client::getHeader()
 {
 	return _header;
+}
+
+std::string& Client::getResponse()
+{
+	return _response;
+}
+
+bool& Client::getReadyToSend()
+{
+	return _readyToSend;
 }
 
 // fonction provisoire a remplacer ou a suppr par celle de class Request

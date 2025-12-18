@@ -22,3 +22,25 @@ https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 https://blog.stephane-robert.info/docs/admin-serveurs/linux/curl/
 https://medium.com/@avocadi/what-is-epoll-9bbc74272f7c
 https://www.scaffoldgainford.com/blog/what-is-the-poll-function-for-sockets-311835.html
+
+
+
+
+Requete :
+Ligne de requete -> Methode / Target / Version HTTP
+Header -> info sur la requete host, content type, cookie, taille body etc..
+Montre comment interpreter la requete
+
+Body -> Donnee envoye par le client
+donnee pour CGI, upload un fichier, formulaire etc..
+
+Reponse :
+Ligne de statut -> Version HTTP / Code de statut / Message
+Montre si la requete a reussi ou pas
+Header -> decrit la reponse envoyee
+content type, content lenght, loation etc..
+Le navigateur utilise ca pour savoir comment interpreter le body
+
+Body -> page html, fichier, image ou reponse cgi
+C est le contenu de ce que le client recoit
+
