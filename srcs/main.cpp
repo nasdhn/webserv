@@ -16,6 +16,67 @@ std::string delWhiteSpace(std::string s)
 	return s;
 }
 
+std::string delSemiColon(std::string s)
+{
+	if (s.find(";") <= s.length())
+	{
+		int pos = s.find(";");
+		s.erase(pos, pos + 1);
+	}
+	return (s);
+}
+
+int parse_site(Site *site, std::string s)
+{
+	std::string del = " ";
+	std::string title;
+
+	s = delSemiColon(s);
+	title = s.substr(0, s.find(del));
+	s.erase(0, title.length() + 1);
+
+	if (title == "methods")
+	{
+		std::string method;
+		while (method.length() != s.length())
+		{
+			method = s.substr(0, s.find(del));
+			s.erase(0, s.find(del) + 1);
+			site->setMethod(method);
+		}
+	}
+	else if (title == "listDirectory")
+	{
+		
+	}
+	else if (title == "defaultFile")
+	{
+		
+	}
+	else if (title == "uploadingFile")
+	{
+		
+	}
+	else if (title == "root")
+	{
+		
+	}
+	else if (title == "redirection")
+	{
+		
+	}
+	else if (title == "CGI")
+	{
+		
+	}
+	else
+	{
+		std::cout << "Title : " <<  title << std::endl;
+	}
+
+	return 0;
+}
+
 int parse(Config *conf, int ac, char **av)
 {
 	std::ifstream file;
@@ -36,16 +97,22 @@ int parse(Config *conf, int ac, char **av)
 				//TODO de la merde voir mieux
 				std::string name = s.substr(0, s.find("{"));
 				name = name.substr(0, name.find(" "));
-				std::cout << "'" << name << "'"<< std::endl;
-				
+
 				site.setName(name);
 				while (std::getline(file, s))
 				{
 					s = delWhiteSpace(s);
+
 					title = s.substr(0, s.find(del));
-					std::cout << title << std::endl;
+					//std::cout << title << std::endl;
 					if (s.find("}") < s.length())
+					{
+						site.printData();
+						conf->setSite(site);
 						break;
+					}
+					else
+						parse_site(&site, s);
 				}
 			}
 			else
@@ -89,5 +156,5 @@ int main(int ac, char **av)
 
 	parse(&conf, ac, av);
 	
-	conf.printData();
+	//conf.printData();
 }

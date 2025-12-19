@@ -68,6 +68,10 @@ void Config::setListen(std::string s)
 	this->_listen.push_back(s);
 }
 
+void Config::setSite(Site s)
+{
+	this->_site.push_back(s);
+}
 
 void Config::printErrorPage()
 {
