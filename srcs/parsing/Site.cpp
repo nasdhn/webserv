@@ -1,7 +1,7 @@
 #include "Site.hpp"
 
 
-Site::Site()
+Site::Site():  _listDirectory(false), _uploadingFile(false)
 {
 
 }
@@ -47,6 +47,11 @@ void Site::setRedirection(std::string s)
 	this->_redirection.push_back(s);
 }
 
+void Site::setCGI(std::string s)
+{
+	this->_cgi = s;
+}
+
 void Site::printMethods()
 {
 	std::cout << "methods : " << std::endl;
@@ -61,7 +66,10 @@ void Site::printMethods()
 void Site::printListDirectory()
 {
 	std::cout << "list directory :" << std::endl;
-	std::cout << this->_listDirectory << std::endl;
+	if (this->_listDirectory)
+		std::cout << "true" << std::endl;
+	else
+		std::cout << "false" << std::endl;
 }
 
 void Site::printDefaultFile()
@@ -73,7 +81,10 @@ void Site::printDefaultFile()
 void Site::printUploadingFile()
 {
 	std::cout << "uploading file :" << std::endl;
-	std::cout << this->_uploadingFile << std::endl;
+		if (this->_uploadingFile)
+		std::cout << "true" << std::endl;
+	else
+		std::cout << "false" << std::endl;
 }
 
 void Site::printRoot()
@@ -103,4 +114,10 @@ void Site::printData()
 {
 	std::cout << "============= " << this->_name << " =============" << std::endl;
 	this->printMethods();
+	this->printListDirectory();
+	this->printDefaultFile();
+	this->printUploadingFile();
+	this->printRoot();
+	this->printRedirection();
+	this->printCGI();
 }

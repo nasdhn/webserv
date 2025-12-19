@@ -111,10 +111,23 @@ void Config::printMaxSize()
 	std::cout << "MaxSize : " << this->_maxSize << std::endl;
 }
 
+void Config::printSite()
+{
+	std::cout << "Site : " << std::endl;
+	for (std::vector<Site>::iterator it = this->_site.begin();
+		it != this->_site.end();
+		++it)
+	{
+		it->printData();
+	}
+}
+
 void Config::printData()
 {
+	std::cout << "============= Config =============" << std::endl;
 	this->printHostname();
 	this->printListen();
 	this->printErrorPage();
 	this->printMaxSize();
+	this->printSite();
 }

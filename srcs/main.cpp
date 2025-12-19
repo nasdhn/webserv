@@ -4,6 +4,9 @@
 #include <cstdlib>
 #include <sstream>
 #include <list>
+#include <sstream>
+#include <cctype>
+#include <clocale>
 
 #include <Config.hpp>
 
@@ -38,7 +41,7 @@ int parse_site(Site *site, std::string s)
 	if (title == "methods")
 	{
 		std::string method;
-		while (method.length() != s.length())
+		while (method.length() != s.length() || method != s)
 		{
 			method = s.substr(0, s.find(del));
 			s.erase(0, s.find(del) + 1);
@@ -47,27 +50,48 @@ int parse_site(Site *site, std::string s)
 	}
 	else if (title == "listDirectory")
 	{
-		
+		bool b;
+		//TODO check if is true or false with no caps
+		std::istringstream(s) >> std::boolalpha >> b;
+		site->setListDirectory(b);
 	}
 	else if (title == "defaultFile")
 	{
-		
+		if (s.find(" ") > s.length())
+			site->setDefaultFile(s);
+		else
+			std::cout << "MERDE" << std::endl;
 	}
 	else if (title == "uploadingFile")
 	{
-		
+		bool b;
+		//TODO check if is true or false with no caps
+		std::istringstream(s) >> std::boolalpha >> b;
+		site->setUploadingFile(b);
 	}
 	else if (title == "root")
 	{
-		
+		if (s.find(" ") > s.length())
+			site->setRoot(s);
+		else
+			std::cout << "MERDE" << std::endl;
 	}
 	else if (title == "redirection")
 	{
-		
+		std::string redir;
+		while (redir.length() != s.length() || redir != s)
+		{
+			redir = s.substr(0, s.find(del));
+			s.erase(0, s.find(del) + 1);
+			site->setRedirection(redir);
+		}
 	}
 	else if (title == "CGI")
 	{
-		
+		if (s.find(" ") > s.length())
+			site->setCGI(s);
+		else
+			std::cout << "MERDE" << std::endl;
 	}
 	else
 	{
@@ -77,12 +101,43 @@ int parse_site(Site *site, std::string s)
 	return 0;
 }
 
+int parse_config(Config *conf, std::string s)
+{
+	std::string del = " ";
+	std::string title;
+
+	s = delSemiColon(s);
+	title = s.substr(0, s.find(del));
+	s.erase(0, title.length() + 1);
+	//std::cout << title << std::endl;
+
+	//TODO find all params mandatory
+	//TODO error message ?
+
+	//TODO server part
+	if (title == "errorPage")
+	{
+		conf->setErrorPage(s);
+	}
+	else if (title == "maxSize")
+	{
+		conf->setMaxSize(s);
+	}
+	else if (title == "hostname")
+	{
+		conf->setHostname(s);
+	}
+	else if (title == "listen")
+	{
+		conf->setListen(s);
+	}
+	return (0);
+}
+
 int parse(Config *conf, int ac, char **av)
 {
 	std::ifstream file;
 	std::string s;
-	std::string del = " ";
-	std::string title;
 
 	file.open(av[ac - 1]);
 	std::getline(file, s);
@@ -102,12 +157,9 @@ int parse(Config *conf, int ac, char **av)
 				while (std::getline(file, s))
 				{
 					s = delWhiteSpace(s);
-
-					title = s.substr(0, s.find(del));
-					//std::cout << title << std::endl;
 					if (s.find("}") < s.length())
 					{
-						site.printData();
+						//site.printData();
 						conf->setSite(site);
 						break;
 					}
@@ -116,35 +168,7 @@ int parse(Config *conf, int ac, char **av)
 				}
 			}
 			else
-			{
-				title = s.substr(0, s.find(del));
-				//std::cout << title << std::endl;
-
-				//TODO find all params mandatory
-				//TODO error message ?
-
-				//TODO server part
-				if (title == "errorPage")
-				{
-					s.erase(0, title.length() + 1);
-					conf->setErrorPage(s);
-				}
-				else if (title == "maxSize")
-				{
-					s.erase(0, title.length() + 1);
-					conf->setMaxSize(s);
-				}
-				else if (title == "hostname")
-				{
-					s.erase(0, title.length() + 1);
-					conf->setHostname(s);
-				}
-				else if (title == "listen")
-				{
-					s.erase(0, title.length() + 1);
-					conf->setListen(s);
-				}
-			}
+				parse_config(conf, s);
 		}
 	}
 	return (0);
@@ -156,5 +180,5 @@ int main(int ac, char **av)
 
 	parse(&conf, ac, av);
 	
-	//conf.printData();
+	conf.printData();
 }

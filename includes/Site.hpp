@@ -11,9 +11,9 @@ class Site
 	private:
 		std::string _name;
 		std::vector<std::string> _methods;
-		bool _listDirectory;
+		bool _listDirectory; //can be empty
 		std::string _defaultFile;
-		bool _uploadingFile;
+		bool _uploadingFile; //can be empty
 		std::string _root;
 		std::vector<std::string> _redirection;
 		std::string _cgi;
@@ -28,6 +28,7 @@ class Site
 		void setUploadingFile(bool val);
 		void setRoot(std::string s);
 		void setRedirection(std::string s);
+		void setCGI(std::string s);
 
 		void printMethods();
 		void printListDirectory();
