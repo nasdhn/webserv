@@ -44,3 +44,16 @@ Le navigateur utilise ca pour savoir comment interpreter le body
 Body -> page html, fichier, image ou reponse cgi
 C est le contenu de ce que le client recoit
 
+
+A retirer et remplacer :
+- recherche manuelle du /r/n/r/n
+- le substr pour couper le header
+- la recherche de content lenght
+- la convertion pour avoir la taille
+- la str body
+- le header fake
+- l affectation 
+- le port 8080 que j aimis
+- l adresse ip
+- 
+

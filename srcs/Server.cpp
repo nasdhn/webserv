@@ -238,15 +238,39 @@ void Server::setupServ()
 
 				if (client->getReadyToSend() == true)
 				{
-				// faire la partie send ici
-				// generateResponse(_fd[i].fd, client);
+					// faire la partie send ici
+					// generateResponse(_fd[i].fd, client);
 
-				send(_fd[i].fd, client->getResponse().c_str(), client->getResponse().size(), 0);
+					std::string &msg = client->getResponse();
+					unsigned long total_size = client->getResponse().size();
+					unsigned long sent = client->getByteSend();
+
+					int ret = send(_fd[i].fd, msg.c_str() + sent, total_size - sent, 0);
+
+					if (ret > 0)
+					{
+						client->getByteSend() += ret;
+						std::cout << ret << " octets envoyés..." << std::endl;
+
+						if (client->getByteSend() >= total_size)
+						{
+							std::cout << "Envoi terminé pour le client " << _fd[i].fd << std::endl;
+							client->getReadyToSend() = false;
+							client->getByteSend() = 0;
+							client->getRequest().clear();
+							client->getResponse().clear();
+
+							_fd[i].events = POLLIN;
+						}
+					}
+					if (ret == -1)
+					{
+						std::cout << "Envoi echoué.. a retnter" << std::endl;
+					}
 
 				}
 			}
 		}
-
 
 	}
 	close(socketServer);

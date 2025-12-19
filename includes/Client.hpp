@@ -18,6 +18,7 @@ class Client {
         std::string& getHeader();
         std::string& getResponse();
         bool& getReadyToSend();
+        unsigned long& getByteSend();
 
         // fonction provisoire a remplacer ou a suppr par celle de class Request
         int& getContentSizeInt();
@@ -32,6 +33,7 @@ class Client {
         std::string _header;
         std::string _response;
         bool _readyToSend;
+        unsigned long _byteSend;;
 
         // variable provisoire a remplacer par celle de class Request
         std::string _contentLenght_str;

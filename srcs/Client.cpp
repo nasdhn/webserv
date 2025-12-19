@@ -4,6 +4,8 @@ Client::Client(int fd)
 {
 	_id = fd;
 	_readyToSend = false;
+	_byteSend = 0;
+
 	// provisoire ce que je met dedans
 	_response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 50\n\n<h1>bonjour ok voila</h1>";
 }
@@ -15,6 +17,7 @@ Client::Client(const Client& other)
 	_header = other._header;
 	_response = other._response;
 	_readyToSend = other._readyToSend;
+	_byteSend = other._byteSend;
 
 
 	// provisoire
@@ -31,6 +34,7 @@ Client& Client::operator=(const Client& other)
 		_header = other._header;
 		_response = other._response;
 		_readyToSend = other._readyToSend;
+		_byteSend = other._byteSend;
 
 
 		// provisoire
@@ -68,6 +72,11 @@ std::string& Client::getResponse()
 bool& Client::getReadyToSend()
 {
 	return _readyToSend;
+}
+
+unsigned long& Client::getByteSend()
+{
+	return _byteSend;
 }
 
 // fonction provisoire a remplacer ou a suppr par celle de class Request
