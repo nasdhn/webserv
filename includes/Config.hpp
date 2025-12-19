@@ -14,15 +14,7 @@ class Config
 		std::map<unsigned int, std::string> _errorPage;
 		std::vector<std::string> _hostname;
 		std::vector<std::string> _listen;
-		//std::vector<Site> _site;
-		//location
-			//methods list/vector
-			//listDirectory bool
-			//defaultFile string
-			//uploadingFile bool
-			//root string
-			//redirection map
-			//CGI string
+		std::vector<Site> _site;
 
 	public:
 		Config();
@@ -32,7 +24,7 @@ class Config
 		void setMaxSize(std::string s);
 		void setHostname(std::string s);
 		void setListen(std::string s);
-		void setSite(std::string s);
+		void setSite(Site s);
 
 
 		void printErrorPage();
