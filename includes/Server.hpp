@@ -26,7 +26,7 @@ class Server {
 
 		int servInit();
 		void setupServ();
-		void generateResponse(int fd, Client *client);
+		void sendResponse(Client *client, struct pollfd &pfd);
 
 
 	private :

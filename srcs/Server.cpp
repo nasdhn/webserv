@@ -2,18 +2,17 @@
 
 Server::Server()
 {
-
 }
 
-Server::Server(const Server& other)
+Server::Server(const Server &other)
 {
 	_fd = other._fd;
 	_clients = other._clients;
 }
-Server& Server::operator=(const Server& other)
-{	
+Server &Server::operator=(const Server &other)
+{
 	if (this != &other)
-	{	
+	{
 		_fd = other._fd;
 		_clients = other._clients;
 		_readyToSend = other._readyToSend;
@@ -23,7 +22,6 @@ Server& Server::operator=(const Server& other)
 
 Server::~Server()
 {
-
 }
 
 std::vector<struct pollfd> Server::getFD()
@@ -33,11 +31,35 @@ std::vector<struct pollfd> Server::getFD()
 
 // a implementer apres pour split le code
 
-// void Server::generateResponse(int fd, Client *client)
-// {
-// 	// ici mettre le send et tout ce qui va avec
-// 	send(fd, client->getResponse().c_str(), client->getResponse().size(), 0);
-// }
+void Server::sendResponse(Client *client, struct pollfd &pfd)
+{
+	std::string &msg = client->getResponse();
+	unsigned long total_size = client->getResponse().size();
+	unsigned long sent = client->getByteSend();
+
+	int ret = send(pfd.fd, msg.c_str() + sent, total_size - sent, 0);
+
+	if (ret > 0)
+	{
+		client->getByteSend() += ret;
+		std::cout << ret << " octets envoyés..." << std::endl;
+
+		if (client->getByteSend() >= total_size)
+		{
+			std::cout << "Envoi terminé pour le client " << pfd.fd << std::endl;
+			client->getReadyToSend() = false;
+			client->getByteSend() = 0;
+			client->getRequest().clear();
+			client->getResponse().clear();
+
+			pfd.events = POLLIN;
+		}
+	}
+	if (ret == -1)
+	{
+		std::cout << "Envoi echoué.. a retnter" << std::endl;
+	}
+}
 
 int Server::servInit()
 {
@@ -56,23 +78,23 @@ int Server::servInit()
 
 	int flag = fcntl(socketServer, F_GETFL, 0);
 	if (flag == -1)
-	{	
+	{
 		close(socketServer);
 		throw std::runtime_error("Error : Can't get socket flags !");
 	}
 	if (fcntl(socketServer, F_SETFL, flag | O_NONBLOCK) == -1)
-	{	
+	{
 		close(socketServer);
 		throw std::runtime_error("Error : Set non blocking's initialisation failed !");
 	}
-	if (bind(socketServer, (struct sockaddr*)&address, sizeof(address)) == -1)
-	{	
+	if (bind(socketServer, (struct sockaddr *)&address, sizeof(address)) == -1)
+	{
 		close(socketServer);
 		throw std::runtime_error("Error : Bind failed !");
 	}
 	std::cout << "Bind" << std::endl;
 	if (listen(socketServer, 10) == -1)
-	{	
+	{
 		close(socketServer);
 		throw std::runtime_error("Error : Listen failed !");
 	}
@@ -112,20 +134,20 @@ void Server::setupServ()
 				// a chaque client on passe la dedans
 				if (_fd[i].fd == socketServer)
 				{
-					int clientSocket = accept(socketServer, (struct sockaddr*)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
+					int clientSocket = accept(socketServer, (struct sockaddr *)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
 					if (clientSocket == -1)
 					{
 						std::cerr << "Error : Client's connexion failed.." << std::endl;
-                    	continue;
+						continue;
 					}
 					int flag = fcntl(clientSocket, F_GETFL, 0);
 					if (flag == -1)
-					{	
+					{
 						close(clientSocket);
 						throw std::runtime_error("Error : Can't get socket flags !");
 					}
 					if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1)
-					{	
+					{
 						close(clientSocket);
 						std::cerr << "Error fcntl : Client closed.." << std::endl;
 						continue;
@@ -150,7 +172,7 @@ void Server::setupServ()
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
-						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout 
+						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout
 						// si 0 on close
 						std::cout << "Déconnexion.." << std::endl;
 						close(_fd[i].fd);
@@ -162,7 +184,7 @@ void Server::setupServ()
 					if (ret > 0)
 					{
 						buffer[ret] = '\0';
-						client->getRequest().append(buffer, ret); 
+						client->getRequest().append(buffer, ret);
 
 						// DEBUG
 						// std::cout << "Message recu : " << buffer << std::endl;
@@ -172,12 +194,12 @@ void Server::setupServ()
 
 						unsigned long pos = client->getRequest().find("\r\n\r\n");
 						if (pos != std::string::npos)
-						{	
+						{
 							client->getHeader() = client->getRequest().substr(0, pos + 4);
 							client->getRequest().erase(0, pos + 4);
 
 							// Faire une class request pour les request
-							// code provisoire et variable a modifier une fois que la class sera faite 
+							// code provisoire et variable a modifier une fois que la class sera faite
 							// content_lenght et request
 							std::string CL = "Content-Length:";
 							unsigned long CL_pos = client->getHeader().find(CL);
@@ -212,14 +234,12 @@ void Server::setupServ()
 							// jusqu'ici
 
 							if (client->getReadyToSend() == true)
-							{
 								_fd[i].events = POLLOUT | POLLIN;
-							}
 
 							// DEBUG
 							std::cout << "Header : " << client->getHeader() << std::endl;
 							std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
-							
+
 							std::cout << "Requete complete" << std::endl;
 							// DEBUG
 						}
@@ -237,42 +257,9 @@ void Server::setupServ()
 				Client *client = _clients[_fd[i].fd];
 
 				if (client->getReadyToSend() == true)
-				{
-					// faire la partie send ici
-					// generateResponse(_fd[i].fd, client);
-
-					std::string &msg = client->getResponse();
-					unsigned long total_size = client->getResponse().size();
-					unsigned long sent = client->getByteSend();
-
-					int ret = send(_fd[i].fd, msg.c_str() + sent, total_size - sent, 0);
-
-					if (ret > 0)
-					{
-						client->getByteSend() += ret;
-						std::cout << ret << " octets envoyés..." << std::endl;
-
-						if (client->getByteSend() >= total_size)
-						{
-							std::cout << "Envoi terminé pour le client " << _fd[i].fd << std::endl;
-							client->getReadyToSend() = false;
-							client->getByteSend() = 0;
-							client->getRequest().clear();
-							client->getResponse().clear();
-
-							_fd[i].events = POLLIN;
-						}
-					}
-					if (ret == -1)
-					{
-						std::cout << "Envoi echoué.. a retnter" << std::endl;
-					}
-
-				}
+					sendResponse(client, _fd[i]);
 			}
 		}
-
 	}
 	close(socketServer);
 }
-
