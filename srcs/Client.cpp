@@ -5,6 +5,7 @@ Client::Client(int fd)
 	_id = fd;
 	_readyToSend = false;
 	_byteSend = 0;
+	_lastTime = time(NULL);
 
 	// provisoire ce que je met dedans
 	_response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 50\n\n<h1>bonjour ok voila</h1>";
@@ -49,6 +50,11 @@ Client::~Client()
 	_readyToSend = false;
 }
 
+void Client::setLastTime(time_t time)
+{
+	_lastTime = time;
+}
+
 int Client::getID() const
 {
 	return _id;
@@ -77,6 +83,11 @@ bool& Client::getReadyToSend()
 unsigned long& Client::getByteSend()
 {
 	return _byteSend;
+}
+
+time_t& Client::getLastTime()
+{
+	return _lastTime;
 }
 
 // fonction provisoire a remplacer ou a suppr par celle de class Request

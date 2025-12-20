@@ -27,6 +27,7 @@ class Server {
 		int servInit();
 		void setupServ();
 		void sendResponse(Client *client, struct pollfd &pfd);
+		void checkTimeOut();
 
 
 	private :

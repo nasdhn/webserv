@@ -29,7 +29,39 @@ std::vector<struct pollfd> Server::getFD()
 	return _fd;
 }
 
-// a implementer apres pour split le code
+void Server::checkTimeOut()
+{
+	std::vector<int> toDelete;
+	time_t curTime; 
+
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		curTime = time(NULL);
+
+		if ((curTime - it->second->getLastTime()) > 60) // le 60 sera changer par la valeur parser du .conf
+			toDelete.push_back(it->first);
+	}
+
+	for (unsigned int i = 0; i < toDelete.size(); i++)
+	{
+		int fd_kill = toDelete[i];
+		if (_clients.find(fd_kill) != _clients.end())
+		{
+			delete _clients[fd_kill];
+			_clients.erase(fd_kill);
+		}
+		close(fd_kill);
+
+		for (unsigned int j = 0; j < _fd.size(); j++)
+		{
+			if (_fd[j].fd == fd_kill)
+			{
+				_fd.erase(_fd.begin() + j);
+				break;
+			}
+		}
+	}
+}
 
 void Server::sendResponse(Client *client, struct pollfd &pfd)
 {
@@ -46,6 +78,7 @@ void Server::sendResponse(Client *client, struct pollfd &pfd)
 
 		if (client->getByteSend() >= total_size)
 		{
+			client->setLastTime(time(NULL));
 			std::cout << "Envoi terminé pour le client " << pfd.fd << std::endl;
 			client->getReadyToSend() = false;
 			client->getByteSend() = 0;
@@ -123,9 +156,14 @@ void Server::setupServ()
 
 	while (1)
 	{
+		checkTimeOut();
 		// integration de poll
-		if (poll(&_fd[0], _fd.size(), -1) == -1)
+
+		int pollret = poll(&_fd[0], _fd.size(), 1000);
+		if (pollret == -1)
 			throw std::runtime_error("Error : Poll's initialisation failed !");
+		if (pollret == 0)
+			continue;
 
 		for (unsigned int i = 0; i < _fd.size(); i++)
 		{
@@ -183,6 +221,7 @@ void Server::setupServ()
 					}
 					if (ret > 0)
 					{
+						client->setLastTime(time(NULL));
 						buffer[ret] = '\0';
 						client->getRequest().append(buffer, ret);
 
