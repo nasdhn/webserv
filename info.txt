@@ -38,3 +38,7 @@ A retirer et remplacer :
 - le port 8080 que j aimis
 - l adresse ip
 - remplacer le 60 sec du timeout par la valeur parser
+
+
+A faire :
+- ajouter la possibilié d'avoir plusieurs serveur
