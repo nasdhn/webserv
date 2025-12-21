@@ -2,12 +2,18 @@
 
 Server::Server()
 {
+	// pour tester avant d ajouter via le parsing
+	_port.push_back(8080);
+    _port.push_back(8180);
+    _port.push_back(9090);
 }
 
 Server::Server(const Server &other)
 {
 	_fd = other._fd;
 	_clients = other._clients;
+	_readyToSend = other._readyToSend;
+	_port = other._port;
 }
 Server &Server::operator=(const Server &other)
 {
@@ -16,6 +22,7 @@ Server &Server::operator=(const Server &other)
 		_fd = other._fd;
 		_clients = other._clients;
 		_readyToSend = other._readyToSend;
+		_port = other._port;
 	}
 	return (*this);
 }
@@ -27,6 +34,16 @@ Server::~Server()
 std::vector<struct pollfd> Server::getFD()
 {
 	return _fd;
+}
+
+bool Server::isServerSocket(int fd)
+{
+	for (unsigned int i = 0; i < _serverSockets.size(); i++)
+	{
+		if (_serverSockets[i] == fd)
+			return true;
+	}
+	return false;
 }
 
 void Server::checkTimeOut()
@@ -94,7 +111,7 @@ void Server::sendResponse(Client *client, struct pollfd &pfd)
 	}
 }
 
-int Server::servInit()
+void Server::servInit(int port)
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketServer == -1)
@@ -105,7 +122,7 @@ int Server::servInit()
 
 	struct sockaddr_in address = {};
 	address.sin_family = AF_INET;
-	address.sin_port = htons(8080); // a completer avec parsing
+	address.sin_port = htons(port); // a completer avec parsing
 	address.sin_addr.s_addr = INADDR_ANY;
 	// address.sin_zero[(sizeof(address))];
 
@@ -139,13 +156,16 @@ int Server::servInit()
 	sfd.events = POLLIN;
 	sfd.revents = 0;
 	_fd.push_back(sfd);
-
-	return (socketServer);
+	_serverSockets.push_back(socketServer);
 }
 
 void Server::setupServ()
 {
-	int socketServer = servInit();
+
+	for (unsigned long i = 0; i < _port.size(); i++)
+		servInit(_port[i]);
+
+	// int socketServer = servInit();
 
 	struct sockaddr_in clientAddr = {};
 	clientAddr.sin_family = AF_INET;
@@ -170,9 +190,9 @@ void Server::setupServ()
 			if (_fd[i].revents & POLLIN)
 			{
 				// a chaque client on passe la dedans
-				if (_fd[i].fd == socketServer)
+				if (isServerSocket(_fd[i].fd))
 				{
-					int clientSocket = accept(socketServer, (struct sockaddr *)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
+					int clientSocket = accept(_fd[i].fd, (struct sockaddr *)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
 					if (clientSocket == -1)
 					{
 						std::cerr << "Error : Client's connexion failed.." << std::endl;
@@ -300,5 +320,4 @@ void Server::setupServ()
 			}
 		}
 	}
-	close(socketServer);
 }

@@ -24,16 +24,22 @@ class Server {
 		~Server();
 		std::vector<struct pollfd> getFD();
 
-		int servInit();
+		void servInit(int port);
 		void setupServ();
 		void sendResponse(Client *client, struct pollfd &pfd);
 		void checkTimeOut();
+
+		bool isServerSocket(int fd);
 
 
 	private :
 		std::vector<struct pollfd> _fd;
 		std::map<int, Client*> _clients;
+		std::vector<int> _serverSockets;
 		bool _readyToSend;
+
+		// provisoir le temps d'avoir le parsing
+		std::vector<int> _port;
 };
 
 
