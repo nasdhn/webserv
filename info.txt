@@ -42,3 +42,4 @@ A retirer et remplacer :
 
 A faire :
 - ajouter la possibilié d'avoir plusieurs serveur
+- faire les signaux
