@@ -41,5 +41,6 @@ A retirer et remplacer :
 
 
 A faire :
-- ajouter la possibilié d'avoir plusieurs serveur
-- faire les signaux
+- ajouter la possibilié d'avoir plusieurs serveur - V
+- faire les signaux - V
+- le check ERRNO

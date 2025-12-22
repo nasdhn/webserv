@@ -5,7 +5,7 @@ INCDIR = ./includes/
 OBJDIR = ./build/
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g
 RM = rm -rf
 
 SRCS = $(shell find $(SRCDIR) -type f -name "*.cpp")

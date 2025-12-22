@@ -14,6 +14,7 @@
 #include "Client.hpp"
 #include <memory>
 #include <algorithm>
+#include <csignal>
 
 class Server {
 
@@ -28,7 +29,6 @@ class Server {
 		void setupServ();
 		void sendResponse(Client *client, struct pollfd &pfd);
 		void checkTimeOut();
-
 		bool isServerSocket(int fd);
 
 
@@ -41,6 +41,8 @@ class Server {
 		// provisoir le temps d'avoir le parsing
 		std::vector<int> _port;
 };
+
+void signalHandler(int sig);
 
 
 #endif

@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+volatile bool sigPressed = true; 
+
 Server::Server()
 {
 	// pour tester avant d ajouter via le parsing
@@ -34,6 +36,12 @@ Server::~Server()
 std::vector<struct pollfd> Server::getFD()
 {
 	return _fd;
+}
+
+void signalHandler(int sig)
+{
+	(void)sig;
+	sigPressed = false;
 }
 
 bool Server::isServerSocket(int fd)
@@ -174,14 +182,20 @@ void Server::setupServ()
 	// address.sin_zero[(sizeof(address))];
 	socklen_t sizeaddr = sizeof(clientAddr);
 
-	while (1)
+	signal(SIGINT, signalHandler);
+
+	while (sigPressed)
 	{
 		checkTimeOut();
 		// integration de poll
 
 		int pollret = poll(&_fd[0], _fd.size(), 1000);
 		if (pollret == -1)
+		{	
+			if (errno == EINTR)
+				break;
 			throw std::runtime_error("Error : Poll's initialisation failed !");
+		}
 		if (pollret == 0)
 			continue;
 
@@ -251,6 +265,7 @@ void Server::setupServ()
 						// std::cout << "Octet recu : " << ret << " | Total octet : " << client->getRequest().size() << std::endl;
 						// DEBUG
 
+						// le parsing ne gere pas les gros fichiers c est seulement temporaires, pas oublier de faire les modifs qund je pourrais
 						unsigned long pos = client->getRequest().find("\r\n\r\n");
 						if (pos != std::string::npos)
 						{
@@ -320,4 +335,18 @@ void Server::setupServ()
 			}
 		}
 	}
+
+	// DEBUG
+	std::cout << "Arret du serv" << std::endl;
+	// DEBUG
+
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		delete it->second;
+
+	for (unsigned int i = 0; i < _fd.size(); i++)
+	{	
+		if (_fd[i].fd >= 0)
+			close(_fd[i].fd);
+	}
+
 }
