@@ -88,6 +88,24 @@ void Server::checkTimeOut()
 	}
 }
 
+void Server::cleanAll()
+{
+	// DEBUG
+	std::cout << "Arret du serv" << std::endl;
+	// DEBUG
+
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		delete it->second;
+	_clients.clear();
+
+	for (unsigned int i = 0; i < _fd.size(); i++)
+	{	
+		if (_fd[i].fd >= 0)
+			close(_fd[i].fd);
+	}
+	_fd.clear();
+}
+
 void Server::sendResponse(Client *client, struct pollfd &pfd)
 {
 	std::string &msg = client->getResponse();
@@ -329,24 +347,11 @@ void Server::setupServ()
 			if (_fd[i].revents & POLLOUT)
 			{
 				Client *client = _clients[_fd[i].fd];
-
+				
 				if (client->getReadyToSend() == true)
 					sendResponse(client, _fd[i]);
 			}
 		}
 	}
-
-	// DEBUG
-	std::cout << "Arret du serv" << std::endl;
-	// DEBUG
-
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-		delete it->second;
-
-	for (unsigned int i = 0; i < _fd.size(); i++)
-	{	
-		if (_fd[i].fd >= 0)
-			close(_fd[i].fd);
-	}
-
+	cleanAll();
 }

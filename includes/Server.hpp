@@ -30,6 +30,7 @@ class Server {
 		void sendResponse(Client *client, struct pollfd &pfd);
 		void checkTimeOut();
 		bool isServerSocket(int fd);
+		void cleanAll();
 
 
 	private :
