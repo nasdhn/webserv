@@ -144,7 +144,7 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 	{
 		//std::cout << s << std::endl;
 
-		if (s.find("{") < s.length())
+		if (s.find("server") < s.length())
 		{
 			//std::cout << "========SERVER DATA========" << std::endl; 
 			Config conf;
