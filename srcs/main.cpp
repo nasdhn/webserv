@@ -134,41 +134,58 @@ int parse_config(Config *conf, std::string s)
 	return (0);
 }
 
-int parse(Config *conf, int ac, char **av)
+int parse(std::vector<Config> *serv, int ac, char **av)
 {
 	std::ifstream file;
 	std::string s;
 
 	file.open(av[ac - 1]);
-	std::getline(file, s);
-	if (!s.find("server"))
+	while (std::getline(file, s))
 	{
-		while (std::getline(file, s))
-		{
-			s = delWhiteSpace(s);
-			if (s.find("{") < s.length())
-			{
-				Site site;
-				//TODO de la merde voir mieux
-				std::string name = s.substr(0, s.find("{"));
-				name = name.substr(0, name.find(" "));
+		//std::cout << s << std::endl;
 
-				site.setName(name);
-				while (std::getline(file, s))
+		if (s.find("{") < s.length())
+		{
+			//std::cout << "========SERVER DATA========" << std::endl; 
+			Config conf;
+			while (std::getline(file, s))
+			{
+				//std::cout << s << std::endl;
+				if (s.find("}") < s.length())
 				{
-					s = delWhiteSpace(s);
-					if (s.find("}") < s.length())
-					{
-						//site.printData();
-						conf->setSite(site);
-						break;
-					}
-					else
-						parse_site(&site, s);
+					serv->push_back(conf);
+					break;
 				}
+				
+				s = delWhiteSpace(s);
+				if (s.find("{") < s.length())
+				{
+					Site site;
+					//TODO de la merde voir mieux
+					std::string name = s.substr(0, s.find("{"));
+					name = name.substr(0, name.find(" "));
+
+					site.setName(name);
+					
+					//std::cout << "========SITE DATA========" << std::endl;
+					while (std::getline(file, s))
+					{
+						
+						//std::cout << s << std::endl;
+						s = delWhiteSpace(s);
+						if (s.find("}") < s.length())
+						{
+							//site.printData();
+							conf.setSite(site);
+							break;
+						}
+						else
+							parse_site(&site, s);
+					}
+				}
+				else
+					parse_config(&conf, s);
 			}
-			else
-				parse_config(conf, s);
 		}
 	}
 	return (0);
@@ -176,9 +193,14 @@ int parse(Config *conf, int ac, char **av)
 
 int main(int ac, char **av)
 {
-	Config conf;
+	std::vector<Config> serv;
 
-	parse(&conf, ac, av);
+	parse(&serv, ac, av);
 	
-	conf.printData();
+	for (std::vector<Config>::iterator it = serv.begin();
+		it != serv.end();
+		++it)
+	{
+		it->printData();
+	}
 }
