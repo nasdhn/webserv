@@ -209,7 +209,11 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 					//TODO de la merde voir mieux
 					std::string name = s.substr(0, s.find("{"));
 					name = name.substr(0, name.find(" "));
-
+					if (name.empty())
+					{
+						std::cout << RED << "Error: missing site name at line " << line << RESET << std::endl;
+						return (1);
+					}
 					site.setName(name);
 					std::cout << YELLOW << "site config : " << site_conf << RESET << std::endl;
 					//std::cout << "========SITE DATA========" << std::endl;
