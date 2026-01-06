@@ -30,11 +30,33 @@ std::string delSemiColon(std::string s)
 	return (s);
 }
 
-int parse_site(Site *site, std::string s)
+int haveSemiColon(std::string s)
+{
+	if (s.find(";") < s.length())
+		return (1);
+	return 0;
+}
+
+int checkEmbrace(std::string s)
+{
+	for (size_t i = 0; i < s.length(); i++)
+	{
+		if (s[i] != '}' && !isspace(s[i]))
+			return (1);
+	}
+	return 0;
+}
+
+int parseSite(Site *site, std::string s)
 {
 	std::string del = " ";
 	std::string title;
 
+	if (!haveSemiColon(s))
+	{
+		std::cout << RED << "Error: missing semicolon";
+		return (1);
+	}
 	s = delSemiColon(s);
 	title = s.substr(0, s.find(del));
 	s.erase(0, title.length() + 1);
@@ -90,18 +112,23 @@ int parse_site(Site *site, std::string s)
 	}
 	else
 	{
-		std::cout << RED << "Error: This directive '" << title << "' does not exist in the site configuration" << RESET << std::endl;
+		std::cout << RED << "Error: This directive '" << title << "' does not exist in the site configuration";
 		return (1);
 	}
 
 	return 0;
 }
 
-int parse_config(Config *conf, std::string s)
+int parseConfig(Config *conf, std::string s)
 {
 	std::string del = " ";
 	std::string title;
 
+	if (!haveSemiColon(s))
+	{
+		std::cout << RED << "Error: missing semicolon";
+		return (1);
+	}
 	s = delSemiColon(s);
 	title = s.substr(0, s.find(del));
 	s.erase(0, title.length() + 1);
@@ -129,32 +156,24 @@ int parse_config(Config *conf, std::string s)
 	}
 	else
 	{
-		std::cout << RED << "Error: This directive '" << title << "' does not exist in the server configuration" << RESET << std::endl;
+		std::cout << RED << "Error: This directive '" << title << "' does not exist in the server configuration";
 		return (1);
 	}
 	return (0);
-}
-
-int check_embrace(std::string s)
-{
-	for (size_t i = 0; i < s.length(); i++)
-	{
-		if (s[i] != '}' && !isspace(s[i]))
-			return (1);
-	}
-	return 0;
 }
 
 int parse(std::vector<Config> *serv, int ac, char **av)
 {
 	std::ifstream file;
 	std::string s;
+	int line = 0;
 	bool server_conf = false;
 	bool site_conf = false;
 
 	file.open(av[ac - 1]);
 	while (std::getline(file, s))
 	{
+		line++;
 		//std::cout << s << std::endl;
 		std::cout << YELLOW << "server config : " << server_conf << RESET << std::endl;
 		if (s.find("server") < s.length() && !server_conf)
@@ -164,6 +183,7 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 			Config conf;
 			while (std::getline(file, s))
 			{
+				line++;
 				if (s.find("server") < s.length() || !server_conf)
 				{
 					std::cout << RED << "Error: missing accolade" << RESET << std::endl;
@@ -171,9 +191,9 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 				}
 				if (s.find("}") < s.length())
 				{
-					if (check_embrace(s))
+					if (checkEmbrace(s))
 					{
-						std::cout << RED << "Error: character after closed embrace" << RESET << std::endl;
+						std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
 						return (1);
 					}
 					serv->push_back(conf);
@@ -195,19 +215,20 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 					//std::cout << "========SITE DATA========" << std::endl;
 					while (std::getline(file, s))
 					{
+						line++;
 						//std::cout << s << std::endl;
 						if (s.find("{") < s.length() || !site_conf)
 						{
-							std::cout << RED << "Error: missing accolade" << RESET << std::endl;
+							std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 							return (1);
 						}
 						
 						s = delWhiteSpace(s);
 						if (s.find("}") < s.length())
 						{
-							if (check_embrace(s))
+							if (checkEmbrace(s))
 							{
-								std::cout << RED << "Error: character after closed embrace" << RESET << std::endl;
+								std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
 								return (1);
 							}
 							conf.setSite(site);
@@ -215,19 +236,34 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 							break;
 						}
 						else
-							if (parse_site(&site, s))
+						{
+							if (parseSite(&site, s))
+							{
+								std::cout << " at line " << line << RESET << std::endl;
 								return (1);
+							}
+						}
 					}
 				}
 				else
-					if (parse_config(&conf, s))
+				{
+					if (parseConfig(&conf, s))
+					{
+						std::cout << " at line " << line << RESET << std::endl;
 						return (1);
+					}
+				}
 			}
+		}
+		else
+		{
+			std::cout << RED << "Error: directive on root at line " << line << RESET << std::endl;
+			return (1);
 		}
 	}
 	if (server_conf || site_conf)
 	{
-		std::cout << RED << "Error: missing accolade" << RESET << std::endl;
+		std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 		return (1);
 	}
 	return (0);
