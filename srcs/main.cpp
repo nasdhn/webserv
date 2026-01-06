@@ -162,7 +162,7 @@ int parseConfig(Config *conf, std::string s)
 	return (0);
 }
 
-int parse(std::vector<Config> *serv, int ac, char **av)
+int parse(std::vector<Config> *serv, std::string filepath)
 {
 	std::ifstream file;
 	std::string s;
@@ -170,7 +170,7 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 	bool server_conf = false;
 	bool site_conf = false;
 
-	file.open(av[ac - 1]);
+	file.open(filepath.c_str());
 	while (std::getline(file, s))
 	{
 		line++;
@@ -277,20 +277,27 @@ int main(int ac, char **av)
 {
 	std::vector<Config> serv;
 	bool conf = false;
+	std::string filepath = av[ac - 1];
 
-	if (parse(&serv, ac, av) == 1)
+	std::ifstream f(filepath.c_str());
+	if (f.good())
 	{
-		return (1);
-	}
-
-	if (conf)
-	{
-		for (std::vector<Config>::iterator it = serv.begin();
-			it != serv.end();
-			++it)
+		if (parse(&serv, filepath) == 1)
 		{
-			it->printData();
+			return (1);
 		}
+
+		if (conf)
+		{
+			for (std::vector<Config>::iterator it = serv.begin();
+				it != serv.end();
+				++it)
+			{
+				it->printData();
+			}
+		}
+		return (0);
 	}
-	return (0);
+	std::cout << RED << "Error: file not exist" << RESET << std::endl;
+	return (1);
 }
