@@ -135,6 +135,16 @@ int parse_config(Config *conf, std::string s)
 	return (0);
 }
 
+int check_embrace(std::string s)
+{
+	for (size_t i = 0; i < s.length(); i++)
+	{
+		if (s[i] != '}' && !isspace(s[i]))
+			return (1);
+	}
+	return 0;
+}
+
 int parse(std::vector<Config> *serv, int ac, char **av)
 {
 	std::ifstream file;
@@ -161,6 +171,11 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 				}
 				if (s.find("}") < s.length())
 				{
+					if (check_embrace(s))
+					{
+						std::cout << RED << "Error: character after closed embrace" << RESET << std::endl;
+						return (1);
+					}
 					serv->push_back(conf);
 					server_conf = false;
 					break;
@@ -190,6 +205,11 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 						s = delWhiteSpace(s);
 						if (s.find("}") < s.length())
 						{
+							if (check_embrace(s))
+							{
+								std::cout << RED << "Error: character after closed embrace" << RESET << std::endl;
+								return (1);
+							}
 							conf.setSite(site);
 							site_conf = false;
 							break;
@@ -204,6 +224,11 @@ int parse(std::vector<Config> *serv, int ac, char **av)
 						return (1);
 			}
 		}
+	}
+	if (server_conf || site_conf)
+	{
+		std::cout << RED << "Error: missing accolade" << RESET << std::endl;
+		return (1);
 	}
 	return (0);
 }
