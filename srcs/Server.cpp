@@ -308,20 +308,20 @@ void Server::setupServ()
 								// avec content lenght check le buffer si il a tout lu ou si il en reste c est ce qui va etre le body
 								if ((size_t)client->getRequest().size() < (size_t)client->getContentSizeInt())
 								{
-									std::cout << "Body pas encore tout lu" << std::endl;
+									std::cout << "Body pas encore tout lu" << std::endl; // DEBUG
 									continue;
 								}
 								else
 								{
 									client->getReadyToSend() = true;
-									std::cout << "body entierement lu" << std::endl;
+									std::cout << "body entierement lu" << std::endl;// DEBUG
 								}
 							}
 							else
 							{
 								// pas de content lenght donc direct passer a la reponse
 								client->getReadyToSend() = true;
-								std::cout << "pas de content leghnt" << std::endl;
+								std::cout << "pas de content leghnt" << std::endl;// DEBUG
 							}
 							// jusqu'ici
 

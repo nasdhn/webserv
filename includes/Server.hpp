@@ -15,6 +15,7 @@
 #include <memory>
 #include <algorithm>
 #include <csignal>
+#include <cerrno>
 
 class Server {
 
