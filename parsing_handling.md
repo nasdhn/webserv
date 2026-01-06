@@ -291,10 +291,149 @@ Fais un parser en **2 passes** :
 
 ---
 
-Si tu veux, je peux :
 
-* te faire **une checklist officielle type webserv**
-* te proposer une **grammar BNF**
-* t’aider à structurer un parser propre (lexer + parser)
+# 🧩 Parser de configuration – Checklist
 
-Dis-moi 🔥
+## 1️⃣ Lecture & Pré-traitement
+- [x] Ouvrir le fichier `.conf`
+- [ ] Gérer erreur si fichier introuvable / illisible
+- [x] Lire le fichier ligne par ligne
+- [ ] Supprimer les espaces inutiles (trim)
+- [ ] Ignorer les lignes vides
+- [ ] Gérer les commentaires (`# ...`)
+
+---
+
+## 2️⃣ Vérifications syntaxiques (FATALES)
+
+### Accolades
+- [x] Vérifier l’équilibre `{` / `}`
+- [x] Refuser `}` sans `{`
+- [x] Refuser fin de fichier avec blocs ouverts
+- [x] Interdire texte après `}` sur une ligne
+
+### Point-virgule
+- [x] Exiger `;` pour toute directive
+- [ ] Interdire `;` dans les blocs (`server {`, `site {`)
+- [x] Détecter lignes sans `;`
+
+### Structure globale
+- [x] Autoriser uniquement `server {}` au niveau racine
+- [x] Interdire directives hors `server`
+- [x] Refuser bloc inconnu hors `server`
+
+---
+
+## 3️⃣ Parsing des blocs
+
+### Bloc `server`
+- [x] Créer une nouvelle instance `Server/Config`
+- [x] Parser les directives autorisées :
+  - [x] `hostname`
+  - [x] `listen`
+  - [x] `errorPage`
+  - [x] `maxSize`
+- [x] Autoriser plusieurs `listen`
+- [x] Stocker les sites (`location`)
+
+### Bloc `site` (location)
+- [x] Détecter le nom du site
+- [x] Refuser site sans nom
+- [x] Refuser site hors `server`
+- [x] Parser les directives autorisées :
+  - [x] `methods`
+  - [x] `listDirectory`
+  - [x] `defaultFile`
+  - [x] `uploadingFile`
+  - [x] `root`
+  - [x] `redirection`
+  - [x] `CGI`
+
+---
+
+## 4️⃣ Vérifications de niveau (server / site)
+- [x] Refuser directive `site` dans `server`
+- [x] Refuser directive `server` dans `site`
+- [x] Refuser directive inconnue
+- [x] Message d’erreur clair avec ligne concernée
+
+---
+
+## 5️⃣ Validation des valeurs (SÉMANTIQUE)
+
+### Boolean
+- [ ] Accepter uniquement `true` / `false`
+- [ ] Refuser toute autre valeur
+
+### methods
+- [ ] Autoriser seulement `GET`, `POST`, `DELETE`
+- [ ] Refuser doublons
+- [ ] Refuser méthode inconnue
+- [ ] Refuser liste vide
+
+### listen
+- [ ] Vérifier format `host:port`
+- [ ] Vérifier port ∈ [1–65535]
+- [ ] Refuser host vide
+
+### errorPage
+- [ ] Vérifier codes HTTP ∈ [400–599]
+- [ ] Exiger au moins un code
+- [ ] Vérifier présence d’un path
+
+### maxSize
+- [ ] Vérifier entier positif
+- [ ] Refuser valeurs négatives ou nulles
+
+### paths (`root`, `defaultFile`, `CGI`)
+- [ ] Refuser path vide
+- [ ] Refuser espaces non échappés
+- [ ] (Optionnel) Vérifier existence du fichier
+
+---
+
+## 6️⃣ Règles de cohérence
+
+### server
+- [ ] Refuser plusieurs `maxSize`
+- [ ] Refuser plusieurs `hostname`
+- [ ] Refuser doublons `listen`
+- [ ] Détecter conflit hostname + listen entre servers
+
+### site
+- [ ] Refuser deux sites avec le même nom
+- [ ] Exiger `root`
+- [ ] Avertir si `defaultFile` sans `root`
+
+---
+
+## 7️⃣ Gestion des erreurs
+- [ ] Afficher la ligne fautive
+- [ ] Indiquer le type d’erreur
+- [ ] Arrêter le parsing sur erreur fatale
+- [ ] Différencier erreur / warning
+
+---
+
+## 8️⃣ Nettoyage mémoire
+- [ ] Libérer les objets alloués
+- [ ] Éviter les fuites mémoire
+- [ ] (Bonus) Passer à `std::unique_ptr`
+
+---
+
+## 9️⃣ Tests
+- [ ] Fichier valide minimal
+- [ ] Fichier sans `server`
+- [ ] Accolades manquantes
+- [ ] Directive inconnue
+- [ ] Valeurs invalides
+- [ ] Fichier avec plusieurs servers
+
+---
+
+## 🚀 Bonus (si temps)
+- [ ] Lexer (tokenisation propre)
+- [ ] Parser à états
+- [ ] Support commentaires inline
+- [ ] Messages d’erreur type nginx
