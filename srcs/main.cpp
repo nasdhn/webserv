@@ -178,6 +178,11 @@ int parse(std::vector<Config> *serv, std::string filepath)
 		std::cout << YELLOW << "server config : " << server_conf << RESET << std::endl;
 		if (s.find("server") < s.length() && !server_conf)
 		{
+			if (haveSemiColon(s))
+			{
+				std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
+				return (1);
+			}
 			server_conf = true;
 			//std::cout << "========SERVER DATA========" << std::endl; 
 			Config conf;
@@ -186,9 +191,10 @@ int parse(std::vector<Config> *serv, std::string filepath)
 				line++;
 				if (s.find("server") < s.length() || !server_conf)
 				{
-					std::cout << RED << "Error: missing accolade" << RESET << std::endl;
+					std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 					return (1);
 				}
+				
 				if (s.find("}") < s.length())
 				{
 					if (checkEmbrace(s))
@@ -204,6 +210,11 @@ int parse(std::vector<Config> *serv, std::string filepath)
 				s = delWhiteSpace(s);
 				if (s.find("{") < s.length() && !site_conf)
 				{
+					if (haveSemiColon(s))
+					{
+						std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
+						return (1);
+					}
 					site_conf = true;
 					Site site;
 					//TODO de la merde voir mieux
