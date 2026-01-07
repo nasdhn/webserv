@@ -314,7 +314,7 @@ Fais un parser en **2 passes** :
 
 ### Point-virgule
 - [x] Exiger `;` pour toute directive
-- [ ] Interdire `;` dans les blocs (`server {`, `site {`)
+- [x] Interdire `;` dans les blocs (`server {`, `site {`)
 - [x] Détecter lignes sans `;`
 
 ### Structure globale
@@ -362,28 +362,28 @@ Fais un parser en **2 passes** :
 ## 5️⃣ Validation des valeurs (SÉMANTIQUE)
 
 ### Boolean
-- [ ] Accepter uniquement `true` / `false`
-- [ ] Refuser toute autre valeur
+- [x] Accepter uniquement `true` / `false`
+- [x] Refuser toute autre valeur
 
 ### methods
-- [ ] Autoriser seulement `GET`, `POST`, `DELETE`
-- [ ] Refuser doublons
-- [ ] Refuser méthode inconnue
-- [ ] Refuser liste vide
+- [x] Autoriser seulement `GET`, `POST`, `DELETE`
+- [x] Refuser doublons
+- [x] Refuser méthode inconnue
+- [x] Refuser liste vide
 
 ### listen
-- [ ] Vérifier format `host:port`
-- [ ] Vérifier port ∈ [1–65535]
-- [ ] Refuser host vide
+- [x] Vérifier format `host:port`
+- [x] Vérifier port ∈ [1–65535]
+- [x] Refuser host vide
 
 ### errorPage
-- [ ] Vérifier codes HTTP ∈ [400–599]
-- [ ] Exiger au moins un code
-- [ ] Vérifier présence d’un path
+- [x] Vérifier codes HTTP ∈ [400–599]
+- [x] Exiger au moins un code
+- [x] Vérifier présence d’un path
 
 ### maxSize
-- [ ] Vérifier entier positif
-- [ ] Refuser valeurs négatives ou nulles
+- [x] Vérifier entier positif
+- [x] Refuser valeurs négatives ou nulles
 
 ### paths (`root`, `defaultFile`, `CGI`)
 - [ ] Refuser path vide

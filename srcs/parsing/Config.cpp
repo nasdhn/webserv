@@ -3,74 +3,38 @@
 // Default constructor
 Config::Config()
 {
-	
+	this->_maxSize = 0;
 }
 
-int isDigits(std::string str)
+void Config::setErrorPage(int ep, std::string path)
 {
-	for (int i = 0; (size_t)i < str.length(); i++) {
-		if (!(str[i] >= 48 && str[i] <= 57)) {
-			return false;
-		}
-	}
-	return true;
+	this->_errorPage.insert(std::make_pair(ep, path));
 }
 
-int getContent(std::string s)
+void Config::setMaxSize(unsigned int size)
 {
-	int i = 0;
-
-	while (!std::isspace(s[i]))
-		i++;
-	return (i);
-}
-
-void Config::setErrorPage(std::string s)
-{
-	std::string token;
-	std::vector<unsigned int> lst;
-  	std::vector<unsigned int>::iterator it;
-	std::string path;
-
-	it = lst.begin();
-	while (s.length() != 0)
-	{
-		token = s.substr(0, getContent(s));
-		s.erase(0, token.length() + 1);
-		if (isDigits(token))
-			lst.push_back(atoi(token.c_str()));
-		if (!isDigits(token))
-		{
-			token.erase(token.length() - 1, token.length());
-			path = token;
-		}
-	}
-	for (std::vector<unsigned int>::iterator vit = lst.begin(); vit != lst.end(); ++vit)
-		this->_errorPage.insert(std::make_pair(*vit, path));
-}
-
-void Config::setMaxSize(std::string s)
-{
-	s.erase(s.length() - 1, s.length());
-	if (isDigits(s))
-		this->_maxSize = std::atoi(s.c_str());
+	this->_maxSize = size;
 }
 
 void Config::setHostname(std::string s)
 {
-	s.erase(s.length() - 1, s.length());
 	this->_hostname.push_back(s);
 }
 
-void Config::setListen(std::string s)
+void Config::setListen(ListenUrl s)
 {
-	s.erase(s.length() - 1, s.length());
+	
 	this->_listen.push_back(s);
 }
 
 void Config::setSite(Site s)
 {
 	this->_site.push_back(s);
+}
+
+unsigned int Config::getMaxSize()
+{
+	return (this->_maxSize);
 }
 
 void Config::printErrorPage()
@@ -98,11 +62,11 @@ void Config::printHostname()
 void Config::printListen()
 {
 	std::cout << "listen : " << std::endl;
-	for (std::vector<std::string>::iterator it = this->_listen.begin();
+	for (std::vector<ListenUrl>::iterator it = this->_listen.begin();
 		it != this->_listen.end();
 		++it)
 	{
-		std::cout << *it << std::endl;
+		std::cout << it->host << " " << it->port << std::endl;
 	}
 }
 

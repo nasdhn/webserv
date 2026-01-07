@@ -52,6 +52,11 @@ void Site::setCGI(std::string s)
 	this->_cgi = s;
 }
 
+std::vector<std::string> Site::getMethods()
+{
+	return (this->_methods);
+}
+
 void Site::printMethods()
 {
 	std::cout << "methods : " << std::endl;

@@ -1,50 +1,9 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstdlib>
-#include <sstream>
-#include <list>
-#include <sstream>
-#include <cctype>
-#include <clocale>
-
-#include <../colors.hpp>
+#include <header.hpp>
 #include <Config.hpp>
 
-std::string delWhiteSpace(std::string s)
+bool checkContent(const std::vector<std::string>& v, const std::string& texte)
 {
-	int i = 0;
-	while (std::isspace(s[i]))
-		i++;
-	s.erase(0, i);
-	return s;
-}
-
-std::string delSemiColon(std::string s)
-{
-	if (s.find(";") <= s.length())
-	{
-		int pos = s.find(";");
-		s.erase(pos, pos + 1);
-	}
-	return (s);
-}
-
-int haveSemiColon(std::string s)
-{
-	if (s.find(";") < s.length())
-		return (1);
-	return 0;
-}
-
-int checkEmbrace(std::string s)
-{
-	for (size_t i = 0; i < s.length(); i++)
-	{
-		if (s[i] != '}' && !isspace(s[i]))
-			return (1);
-	}
-	return 0;
+    return std::find(v.begin(), v.end(), texte) != v.end();
 }
 
 int parseSite(Site *site, std::string s)
@@ -63,20 +22,48 @@ int parseSite(Site *site, std::string s)
 
 	if (title == "methods")
 	{
+		if (checkOnlySpace(s))
+		{
+			std::cout << RED << "Error: method list empty";
+			return (1);
+		}
 		std::string method;
 		while (method.length() != s.length() || method != s)
 		{
 			method = s.substr(0, s.find(del));
+			if (checkMethod(method))
+			{
+				std::cout << RED << "Error: methods invalid (GET/POST/DELETE) ";
+				return (1);
+			}
 			s.erase(0, s.find(del) + 1);
+			if(checkContent(site->getMethods(), method))
+			{
+				std::cout << RED << "Error: double methods";
+				return (1);
+			}
+
 			site->setMethod(method);
+		}
+		if (site->getMethods().empty())
+		{
+			std::cout << RED << "Error: method list empty";
+			return (1);
 		}
 	}
 	else if (title == "listDirectory")
 	{
+		if (checkBoolean(s))
+		{
+			std::cout << RED << "Error: boolean incorrect (true/false)";
+			return (1);
+		}
 		bool b;
+
 		//TODO check if is true or false with no caps
 		std::istringstream(s) >> std::boolalpha >> b;
 		site->setListDirectory(b);
+		
 	}
 	else if (title == "defaultFile")
 	{
@@ -85,6 +72,11 @@ int parseSite(Site *site, std::string s)
 	}
 	else if (title == "uploadingFile")
 	{
+		if (checkBoolean(s))
+		{
+			std::cout << RED << "Error: boolean incorrect (true/false) ";
+			return (1);
+		}
 		bool b;
 		//TODO check if is true or false with no caps
 		std::istringstream(s) >> std::boolalpha >> b;
@@ -119,6 +111,15 @@ int parseSite(Site *site, std::string s)
 	return 0;
 }
 
+int getContent(std::string s)
+{
+	int i = 0;
+
+	while (!std::isspace(s[i]))
+		i++;
+	return (i);
+}
+
 int parseConfig(Config *conf, std::string s)
 {
 	std::string del = " ";
@@ -132,19 +133,74 @@ int parseConfig(Config *conf, std::string s)
 	s = delSemiColon(s);
 	title = s.substr(0, s.find(del));
 	s.erase(0, title.length() + 1);
-	//std::cout << title << std::endl;
 
-	//TODO find all params mandatory
 	//TODO error message ?
-
-	//TODO server part
 	if (title == "errorPage")
 	{
-		conf->setErrorPage(s);
+		std::string token;
+		std::vector<unsigned int> lst;
+		std::vector<unsigned int>::iterator it;
+		std::string path;
+
+		it = lst.begin();
+		while (s.length() != 0)
+		{
+			token = s.substr(0, getContent(s));
+			s.erase(0, token.length() + 1);
+			if (isDigits(token))
+			{
+				if (checkHTTPCode(std::atoi(token.c_str())))
+				{
+					std::cout << RED << "Error: invalid error code '" << token << "'";
+					return (1);
+				}
+				lst.push_back(atoi(token.c_str()));
+			}
+			if (!isDigits(token))
+			{
+				token.erase(token.length() - 1, token.length());
+				path = token;
+			}
+		}
+		if (lst.empty())
+		{
+			std::cout << RED << "Error: error code list empty";
+			return (1);
+		}
+		if (path.empty())
+		{
+			std::cout << RED << "Error: error path is empty";
+			return (1);
+		}
+		for (std::vector<unsigned int>::iterator vit = lst.begin(); vit != lst.end(); ++vit)
+			conf->setErrorPage(*vit, path);
 	}
 	else if (title == "maxSize")
 	{
-		conf->setMaxSize(s);
+		std::cout << conf->getMaxSize() << std::endl;
+		if (conf->getMaxSize() != 0)
+		{
+			std::cout << RED << "Error: double directive maxSize";
+			return (1);
+		}
+		//TODO verifier si maxSize est deja remplit dans la classe
+		if (!isDigits(s))
+		{
+			if (std::atoi(s.c_str()) < 0)
+			{
+				std::cout << RED << "Error: maxSize negativ";
+				return (1);
+			}
+			std::cout << RED << "Error: invalid char";
+			return (1);
+		}
+		if (s.empty())
+		{
+			std::cout << RED << "Error: maxSize null";
+			return (1);
+		}
+		
+		conf->setMaxSize(std::atoi(s.c_str()));
 	}
 	else if (title == "hostname")
 	{
@@ -152,7 +208,31 @@ int parseConfig(Config *conf, std::string s)
 	}
 	else if (title == "listen")
 	{
-		conf->setListen(s);
+		if (!(s.find(":") < s.length()))
+		{
+			std::cout << RED << "Error: colon missing";
+			return (1);
+		}
+		ListenUrl lu;
+		lu.host = s.substr(0, s.find(":"));
+		s.erase(0, lu.host.length() + 1);
+		if (!checkOnlyNumber(s))
+		{
+			std::cout << RED << "Error: port isn't a number";
+			return (1);
+		}
+		lu.port = std::atoi(s.c_str());
+
+		if (lu.host.empty())
+			lu.host = "0.0.0.0";
+		if (lu.port == 0)
+			lu.port = 80;
+		if (!(lu.port >= 1 && lu.port <= 65535))
+		{
+			std::cout << RED << "Error: port out of bounds (1-65535)";
+			return (1);
+		}
+		conf->setListen(lu);
 	}
 	else
 	{

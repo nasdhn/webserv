@@ -30,6 +30,8 @@ class Site
 		void setRedirection(std::string s);
 		void setCGI(std::string s);
 
+		std::vector<std::string> getMethods();
+
 		void printMethods();
 		void printListDirectory();
 		void printDefaultFile();

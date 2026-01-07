@@ -7,25 +7,31 @@
 # include <algorithm>
 # include "Site.hpp"
 
+struct ListenUrl
+{
+    std::string host;
+    int port;
+};
+
 class Config
 {
 	private:
-		int _maxSize;
+		unsigned int _maxSize;
 		std::map<unsigned int, std::string> _errorPage;
 		std::vector<std::string> _hostname;
-		std::vector<std::string> _listen;
+		std::vector<ListenUrl> _listen;
 		std::vector<Site> _site;
 
 	public:
 		Config();
 
-
-		void setErrorPage(std::string s);
-		void setMaxSize(std::string s);
+		void setErrorPage(int ep, std::string path);
+		void setMaxSize(unsigned int size);
 		void setHostname(std::string s);
-		void setListen(std::string s);
+		void setListen(ListenUrl s);
 		void setSite(Site s);
 
+		unsigned int getMaxSize();
 
 		void printErrorPage();
 		void printHostname();
