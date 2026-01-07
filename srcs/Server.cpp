@@ -152,7 +152,7 @@ void Server::servInit(int port)
 	address.sin_addr.s_addr = INADDR_ANY;
 	// address.sin_zero[(sizeof(address))];
 
-	int flag = fcntl(socketServer, F_GETFL, 0);
+	int flag = fcntl(socketServer, F_GETFL, 0); // voir pour changer getfl
 	if (flag == -1)
 	{
 		close(socketServer);
