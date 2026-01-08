@@ -67,8 +67,17 @@ int parseSite(Site *site, std::string s)
 	}
 	else if (title == "defaultFile")
 	{
-		if (s.find(" ") > s.length())
-			site->setDefaultFile(s);
+		if (s.empty())
+		{
+			std::cout << RED << "Error: empty path";
+			return (1);
+		}
+		if (s.find(" ") < s.length())
+		{
+			std::cout << RED << "Error: space in path";
+			return (1);
+		}
+		site->setDefaultFile(s);
 	}
 	else if (title == "uploadingFile")
 	{
@@ -84,8 +93,17 @@ int parseSite(Site *site, std::string s)
 	}
 	else if (title == "root")
 	{
-		if (s.find(" ") > s.length())
-			site->setRoot(s);
+		if (s.empty())
+		{
+			std::cout << RED << "Error: empty path";
+			return (1);
+		}
+		if (s.find(" ") < s.length())
+		{
+			std::cout << RED << "Error: space in path";
+			return (1);
+		}
+		site->setRoot(s);
 	}
 	else if (title == "redirection")
 	{
@@ -99,8 +117,17 @@ int parseSite(Site *site, std::string s)
 	}
 	else if (title == "CGI")
 	{
-		if (s.find(" ") > s.length())
-			site->setCGI(s);
+		if (s.empty())
+		{
+			std::cout << RED << "Error: empty path";
+			return (1);
+		}
+		if (s.find(" ") < s.length())
+		{
+			std::cout << RED << "Error: space in path";
+			return (1);
+		}
+		site->setCGI(s);
 	}
 	else
 	{
@@ -177,7 +204,6 @@ int parseConfig(Config *conf, std::string s)
 	}
 	else if (title == "maxSize")
 	{
-		std::cout << conf->getMaxSize() << std::endl;
 		if (conf->getMaxSize() != 0)
 		{
 			std::cout << RED << "Error: double directive maxSize";

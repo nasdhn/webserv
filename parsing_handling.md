@@ -386,8 +386,8 @@ Fais un parser en **2 passes** :
 - [x] Refuser valeurs négatives ou nulles
 
 ### paths (`root`, `defaultFile`, `CGI`)
-- [ ] Refuser path vide
-- [ ] Refuser espaces non échappés
+- [x] Refuser path vide
+- [x] Refuser espaces non échappés
 - [ ] (Optionnel) Vérifier existence du fichier
 
 ---
