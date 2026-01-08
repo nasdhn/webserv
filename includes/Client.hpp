@@ -36,7 +36,7 @@ class Client {
         std::string _header;
         std::string _response;
         bool _readyToSend;
-        unsigned long _byteSend;;
+        unsigned long _byteSend;
         time_t _lastTime;
 
         // variable provisoire a remplacer par celle de class Request

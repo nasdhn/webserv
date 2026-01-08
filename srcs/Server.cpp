@@ -2,14 +2,14 @@
 
 // vu qu'on peut pas check errno, je fait confiance a poll et si send echoue je suppr le fd;
 
-volatile bool sigPressed = true; 
+volatile bool sigPressed = true;
 
 Server::Server()
 {
 	// pour tester avant d ajouter via le parsing
 	_port.push_back(8080);
-    _port.push_back(8180);
-    _port.push_back(9090);
+	_port.push_back(8180);
+	_port.push_back(9090);
 }
 
 Server::Server(const Server &other)
@@ -59,9 +59,9 @@ bool Server::isServerSocket(int fd)
 void Server::checkTimeOut()
 {
 	std::vector<int> toDelete;
-	time_t curTime; 
+	time_t curTime;
 
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		curTime = time(NULL);
 
@@ -96,12 +96,12 @@ void Server::cleanAll()
 	std::cout << "Arret du serv" << std::endl;
 	// DEBUG
 
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		delete it->second;
 	_clients.clear();
 
 	for (unsigned int i = 0; i < _fd.size(); i++)
-	{	
+	{
 		if (_fd[i].fd >= 0)
 			close(_fd[i].fd);
 	}
@@ -160,8 +160,8 @@ void Server::servInit(int port)
 
 	if (fcntl(socketServer, F_SETFL, O_NONBLOCK) == -1)
 	{
-    	close(socketServer);
-    	throw std::runtime_error("Error : Set non blocking's initialisation failed !");
+		close(socketServer);
+		throw std::runtime_error("Error : Set non blocking's initialisation failed !");
 	}
 	if (bind(socketServer, (struct sockaddr *)&address, sizeof(address)) == -1)
 	{
@@ -209,7 +209,7 @@ void Server::setupServ()
 
 		int pollret = poll(&_fd[0], _fd.size(), 1000);
 		if (pollret == -1)
-		{	
+		{
 			if (errno == EINTR)
 				break;
 			throw std::runtime_error("Error : Poll's initialisation failed !");
@@ -252,13 +252,13 @@ void Server::setupServ()
 				else
 				{
 					Client *client = _clients[_fd[i].fd];
-					char buffer[1024] = {0};
+					char buffer[4096] = {0};
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
 						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout / a voir si je met ca ou pas
 						// si 0 on close
-						// normalement je laisse comme ca sans check errno car pas le droit 
+						// normalement je laisse comme ca sans check errno car pas le droit
 						std::cout << "Déconnexion.." << std::endl;
 						close(_fd[i].fd);
 						_clients.erase(_fd[i].fd);
@@ -269,81 +269,29 @@ void Server::setupServ()
 					}
 					if (ret > 0)
 					{
-						client->setLastTime(time(NULL));
-						buffer[ret] = '\0';
-						client->getRequest().append(buffer, ret);
+						client->processRequest(buffer, ret); // gere la requete et lecture du body coder en dure pour l isntant a modifier
+
+						if (client->getReadyToSend() == true)
+							_fd[i].events = POLLOUT | POLLIN;
 
 						// DEBUG
-						// std::cout << "Message recu : " << buffer << std::endl;
-						// std::cout << "Message de id : " << client->getID() << " dans _client : " << client->getRequest() << std::endl;
-						// std::cout << "Octet recu : " << ret << " | Total octet : " << client->getRequest().size() << std::endl;
+						std::cout << "Header : " << client->getHeader() << std::endl;
+						std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
+
+						std::cout << "Requete complete" << std::endl;
 						// DEBUG
-
-						// le parsing ne gere pas les gros fichiers c est seulement temporaires, pas oublier de faire les modifs qund je pourrais
-						unsigned long pos = client->getRequest().find("\r\n\r\n");
-						if (pos != std::string::npos)
-						{
-							client->getHeader() = client->getRequest().substr(0, pos + 4);
-							client->getRequest().erase(0, pos + 4);
-
-							// Faire une class request pour les request
-							// code provisoire et variable a modifier une fois que la class sera faite
-							// content_lenght et request
-							std::string CL = "Content-Length:";
-							unsigned long CL_pos = client->getHeader().find(CL);
-							if (CL_pos != std::string::npos)
-							{
-								unsigned long endLine = client->getHeader().find('\n', CL_pos);
-								client->getContentSizeString() = client->getHeader().substr(CL_pos + 16, endLine - (CL_pos + 16));
-
-								std::istringstream iss(client->getContentSizeString());
-								std::cout << "Content size string : " << client->getContentSizeString() << std::endl;
-								iss >> client->getContentSizeInt();
-								std::cout << "Le content lenght existe et la taille est : " << client->getContentSizeInt() << std::endl;
-
-								// avec content lenght check le buffer si il a tout lu ou si il en reste c est ce qui va etre le body
-								if ((size_t)client->getRequest().size() < (size_t)client->getContentSizeInt())
-								{
-									std::cout << "Body pas encore tout lu" << std::endl; // DEBUG
-									continue;
-								}
-								else
-								{
-									client->getReadyToSend() = true;
-									std::cout << "body entierement lu" << std::endl;// DEBUG
-								}
-							}
-							else
-							{
-								// pas de content lenght donc direct passer a la reponse
-								client->getReadyToSend() = true;
-								std::cout << "pas de content leghnt" << std::endl;// DEBUG
-							}
-							// jusqu'ici
-
-							if (client->getReadyToSend() == true)
-								_fd[i].events = POLLOUT | POLLIN;
-
-							// DEBUG
-							std::cout << "Header : " << client->getHeader() << std::endl;
-							std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
-
-							std::cout << "Requete complete" << std::endl;
-							// DEBUG
-						}
-						else
-							continue;
 					}
-
-					// DEBUG
-					std::cout << "client parle.." << std::endl;
-					std::cout << _fd.size() << " FD dans la liste" << std::endl;
 				}
+
+				// DEBUG
+				std::cout << "client parle.." << std::endl;
+				std::cout << _fd.size() << " FD dans la liste" << std::endl;
 			}
+
 			if (_fd[i].revents & POLLOUT)
 			{
 				Client *client = _clients[_fd[i].fd];
-				
+
 				if (client->getReadyToSend() == true)
 					if (sendResponse(client, _fd[i]) == false)
 					{
