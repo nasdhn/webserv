@@ -1,5 +1,4 @@
 #include <header.hpp>
-#include <Server.hpp>
 
 int getContent(std::string s)
 {
@@ -8,11 +7,6 @@ int getContent(std::string s)
 	while (!std::isspace(s[i]))
 		i++;
 	return (i);
-}
-
-bool checkContent(const std::vector<std::string>& v, const std::string& texte)
-{
-    return std::find(v.begin(), v.end(), texte) != v.end();
 }
 
 int parseLocation(Location *location, std::string s)
@@ -260,6 +254,11 @@ int parseConfig(Server *serv, std::string s)
 		if (!(lu.port >= 1 && lu.port <= 65535))
 		{
 			std::cout << RED << "Error: port out of bounds (1-65535)";
+			return (1);
+		}
+		if (checkDoubleListen(serv->getListen(), lu))
+		{
+			std::cout << RED << "Error: duplicate listen";
 			return (1);
 		}
 		serv->setListen(lu);

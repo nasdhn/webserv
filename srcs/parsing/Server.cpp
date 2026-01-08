@@ -37,6 +37,11 @@ unsigned int Server::getMaxSize()
 	return (this->_maxSize);
 }
 
+std::vector<ListenUrl> Server::getListen()
+{
+	return (this->_listen);
+}
+
 void Server::printErrorPage()
 {
 	std::cout << "errorPage : " << std::endl;

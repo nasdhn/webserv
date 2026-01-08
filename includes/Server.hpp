@@ -1,17 +1,8 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <string>
-# include <map>
-# include <vector>
-# include <algorithm>
+# include "header.hpp"
 # include "Location.hpp"
-
-struct ListenUrl
-{
-    std::string host;
-    int port;
-};
 
 class Server
 {
@@ -32,6 +23,7 @@ class Server
 		void setLocation(Location s);
 
 		unsigned int getMaxSize();
+		std::vector<ListenUrl> getListen();
 
 		void printErrorPage();
 		void printHostname();

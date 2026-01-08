@@ -11,8 +11,12 @@
 # include <cctype>
 # include <clocale>
 # include <algorithm>
+# include <map>
+# include <vector>
 
+# include "struct.hpp"
 # include "colors.hpp"
+# include "Server.hpp"
 
 //delete.cpp
 std::string delWhiteSpace(std::string s);
@@ -27,5 +31,7 @@ int checkOnlySpace(std::string s);
 int checkOnlyNumber(std::string s);
 int isDigits(std::string str);
 int checkHTTPCode(unsigned int code);
+bool checkContent(const std::vector<std::string>& v, const std::string& texte);
+bool checkDoubleListen(const std::vector<ListenUrl>& v, const ListenUrl& s);
 
 #endif

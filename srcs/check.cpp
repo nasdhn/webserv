@@ -77,3 +77,20 @@ int checkHTTPCode(unsigned int code)
 	}
 	return (1);
 }
+
+bool checkContent(const std::vector<std::string>& v, const std::string& s)
+{
+	return std::find(v.begin(), v.end(), s) != v.end();
+}
+
+bool checkDoubleListen(const std::vector<ListenUrl>& v, const ListenUrl& s)
+{
+	for (std::vector<ListenUrl>::const_iterator it = v.begin();
+		it != v.end();
+		++it)
+    {
+        if (it->host == s.host && it->port == s.port)
+            return true;
+    }
+    return false;
+}
