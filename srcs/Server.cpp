@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+// vu qu'on peut pas check errno, je fait confiance a poll et si send echoue je suppr le fd;
+
 volatile bool sigPressed = true; 
 
 Server::Server()
@@ -106,7 +108,7 @@ void Server::cleanAll()
 	_fd.clear();
 }
 
-void Server::sendResponse(Client *client, struct pollfd &pfd)
+bool Server::sendResponse(Client *client, struct pollfd &pfd)
 {
 	std::string &msg = client->getResponse();
 	unsigned long total_size = client->getResponse().size();
@@ -130,11 +132,15 @@ void Server::sendResponse(Client *client, struct pollfd &pfd)
 
 			pfd.events = POLLIN;
 		}
+		return true;
 	}
 	if (ret == -1)
 	{
 		std::cout << "Envoi echoué.. a retnter" << std::endl;
+		// tout close si ca echoue
+		return false;
 	}
+	return true;
 }
 
 void Server::servInit(int port)
@@ -152,16 +158,10 @@ void Server::servInit(int port)
 	address.sin_addr.s_addr = INADDR_ANY;
 	// address.sin_zero[(sizeof(address))];
 
-	int flag = fcntl(socketServer, F_GETFL, 0); // voir pour changer getfl
-	if (flag == -1)
+	if (fcntl(socketServer, F_SETFL, O_NONBLOCK) == -1)
 	{
-		close(socketServer);
-		throw std::runtime_error("Error : Can't get socket flags !");
-	}
-	if (fcntl(socketServer, F_SETFL, flag | O_NONBLOCK) == -1)
-	{
-		close(socketServer);
-		throw std::runtime_error("Error : Set non blocking's initialisation failed !");
+    	close(socketServer);
+    	throw std::runtime_error("Error : Set non blocking's initialisation failed !");
 	}
 	if (bind(socketServer, (struct sockaddr *)&address, sizeof(address)) == -1)
 	{
@@ -230,13 +230,7 @@ void Server::setupServ()
 						std::cerr << "Error : Client's connexion failed.." << std::endl;
 						continue;
 					}
-					int flag = fcntl(clientSocket, F_GETFL, 0);
-					if (flag == -1)
-					{
-						close(clientSocket);
-						throw std::runtime_error("Error : Can't get socket flags !");
-					}
-					if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1)
+					if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1)
 					{
 						close(clientSocket);
 						std::cerr << "Error fcntl : Client closed.." << std::endl;
@@ -262,14 +256,16 @@ void Server::setupServ()
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
-						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout
+						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout / a voir si je met ca ou pas
 						// si 0 on close
+						// normalement je laisse comme ca sans check errno car pas le droit 
 						std::cout << "Déconnexion.." << std::endl;
 						close(_fd[i].fd);
 						_clients.erase(_fd[i].fd);
 						delete client;
 						_fd.erase(_fd.begin() + i);
 						i--;
+						continue;
 					}
 					if (ret > 0)
 					{
@@ -349,7 +345,15 @@ void Server::setupServ()
 				Client *client = _clients[_fd[i].fd];
 				
 				if (client->getReadyToSend() == true)
-					sendResponse(client, _fd[i]);
+					if (sendResponse(client, _fd[i]) == false)
+					{
+						close(_fd[i].fd);
+						_clients.erase(_fd[i].fd);
+						delete client;
+						_fd.erase(_fd.begin() + i);
+						i--;
+						continue;
+					}
 			}
 		}
 	}

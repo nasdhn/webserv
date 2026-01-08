@@ -21,6 +21,7 @@ class Client {
         unsigned long& getByteSend();
         time_t& getLastTime();
         void setLastTime(time_t time);
+        void processRequest(const char* buffer, int size);
 
         // fonction provisoire a remplacer ou a suppr par celle de class Request
         int& getContentSizeInt();

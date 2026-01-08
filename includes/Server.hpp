@@ -28,7 +28,7 @@ class Server {
 
 		void servInit(int port);
 		void setupServ();
-		void sendResponse(Client *client, struct pollfd &pfd);
+		bool sendResponse(Client *client, struct pollfd &pfd);
 		void checkTimeOut();
 		bool isServerSocket(int fd);
 		void cleanAll();

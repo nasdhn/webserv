@@ -50,6 +50,11 @@ Client::~Client()
 	_readyToSend = false;
 }
 
+void Client::processRequest(const char *buffer, int size)
+{
+	
+}
+
 void Client::setLastTime(time_t time)
 {
 	_lastTime = time;
