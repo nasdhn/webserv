@@ -1,12 +1,21 @@
 #include <header.hpp>
-#include <Config.hpp>
+#include <Server.hpp>
+
+int getContent(std::string s)
+{
+	int i = 0;
+
+	while (!std::isspace(s[i]))
+		i++;
+	return (i);
+}
 
 bool checkContent(const std::vector<std::string>& v, const std::string& texte)
 {
     return std::find(v.begin(), v.end(), texte) != v.end();
 }
 
-int parseSite(Site *site, std::string s)
+int parseLocation(Location *location, std::string s)
 {
 	std::string del = " ";
 	std::string title;
@@ -37,15 +46,15 @@ int parseSite(Site *site, std::string s)
 				return (1);
 			}
 			s.erase(0, s.find(del) + 1);
-			if(checkContent(site->getMethods(), method))
+			if(checkContent(location->getMethods(), method))
 			{
 				std::cout << RED << "Error: double methods";
 				return (1);
 			}
 
-			site->setMethod(method);
+			location->setMethod(method);
 		}
-		if (site->getMethods().empty())
+		if (location->getMethods().empty())
 		{
 			std::cout << RED << "Error: method list empty";
 			return (1);
@@ -62,7 +71,7 @@ int parseSite(Site *site, std::string s)
 
 		//TODO check if is true or false with no caps
 		std::istringstream(s) >> std::boolalpha >> b;
-		site->setListDirectory(b);
+		location->setListDirectory(b);
 		
 	}
 	else if (title == "defaultFile")
@@ -77,7 +86,7 @@ int parseSite(Site *site, std::string s)
 			std::cout << RED << "Error: space in path";
 			return (1);
 		}
-		site->setDefaultFile(s);
+		location->setDefaultFile(s);
 	}
 	else if (title == "uploadingFile")
 	{
@@ -89,7 +98,7 @@ int parseSite(Site *site, std::string s)
 		bool b;
 		//TODO check if is true or false with no caps
 		std::istringstream(s) >> std::boolalpha >> b;
-		site->setUploadingFile(b);
+		location->setUploadingFile(b);
 	}
 	else if (title == "root")
 	{
@@ -103,7 +112,7 @@ int parseSite(Site *site, std::string s)
 			std::cout << RED << "Error: space in path";
 			return (1);
 		}
-		site->setRoot(s);
+		location->setRoot(s);
 	}
 	else if (title == "redirection")
 	{
@@ -112,7 +121,7 @@ int parseSite(Site *site, std::string s)
 		{
 			redir = s.substr(0, s.find(del));
 			s.erase(0, s.find(del) + 1);
-			site->setRedirection(redir);
+			location->setRedirection(redir);
 		}
 	}
 	else if (title == "CGI")
@@ -127,27 +136,18 @@ int parseSite(Site *site, std::string s)
 			std::cout << RED << "Error: space in path";
 			return (1);
 		}
-		site->setCGI(s);
+		location->setCGI(s);
 	}
 	else
 	{
-		std::cout << RED << "Error: This directive '" << title << "' does not exist in the site configuration";
+		std::cout << RED << "Error: This directive '" << title << "' does not exist in the Location configuration";
 		return (1);
 	}
 
 	return 0;
 }
 
-int getContent(std::string s)
-{
-	int i = 0;
-
-	while (!std::isspace(s[i]))
-		i++;
-	return (i);
-}
-
-int parseConfig(Config *conf, std::string s)
+int parseConfig(Server *serv, std::string s)
 {
 	std::string del = " ";
 	std::string title;
@@ -200,16 +200,15 @@ int parseConfig(Config *conf, std::string s)
 			return (1);
 		}
 		for (std::vector<unsigned int>::iterator vit = lst.begin(); vit != lst.end(); ++vit)
-			conf->setErrorPage(*vit, path);
+			serv->setErrorPage(*vit, path);
 	}
 	else if (title == "maxSize")
 	{
-		if (conf->getMaxSize() != 0)
+		if (serv->getMaxSize() != 0)
 		{
 			std::cout << RED << "Error: double directive maxSize";
 			return (1);
 		}
-		//TODO verifier si maxSize est deja remplit dans la classe
 		if (!isDigits(s))
 		{
 			if (std::atoi(s.c_str()) < 0)
@@ -226,11 +225,16 @@ int parseConfig(Config *conf, std::string s)
 			return (1);
 		}
 		
-		conf->setMaxSize(std::atoi(s.c_str()));
+		serv->setMaxSize(std::atoi(s.c_str()));
 	}
 	else if (title == "hostname")
 	{
-		conf->setHostname(s);
+		if (s.empty())
+		{
+			std::cout << RED << "Error: hostname null";
+			return (1);
+		}
+		serv->setHostname(s);
 	}
 	else if (title == "listen")
 	{
@@ -258,7 +262,7 @@ int parseConfig(Config *conf, std::string s)
 			std::cout << RED << "Error: port out of bounds (1-65535)";
 			return (1);
 		}
-		conf->setListen(lu);
+		serv->setListen(lu);
 	}
 	else
 	{
@@ -268,34 +272,34 @@ int parseConfig(Config *conf, std::string s)
 	return (0);
 }
 
-int parse(std::vector<Config> *serv, std::string filepath)
+int parse(std::vector<Server> *serv, std::string filepath)
 {
 	std::ifstream file;
 	std::string s;
 	int line = 0;
-	bool server_conf = false;
-	bool site_conf = false;
+	bool serverConf = false;
+	bool locationConf = false;
 
 	file.open(filepath.c_str());
 	while (std::getline(file, s))
 	{
 		line++;
 		//std::cout << s << std::endl;
-		std::cout << YELLOW << "server config : " << server_conf << RESET << std::endl;
-		if (s.find("server") < s.length() && !server_conf)
+		std::cout << YELLOW << "server config : " << serverConf << RESET << std::endl;
+		if (s.find("server") < s.length() && !serverConf)
 		{
 			if (haveSemiColon(s))
 			{
 				std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
 				return (1);
 			}
-			server_conf = true;
+			serverConf = true;
 			//std::cout << "========SERVER DATA========" << std::endl; 
-			Config conf;
+			Server server;
 			while (std::getline(file, s))
 			{
 				line++;
-				if (s.find("server") < s.length() || !server_conf)
+				if (s.find("server") < s.length() || !serverConf)
 				{
 					std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 					return (1);
@@ -308,37 +312,37 @@ int parse(std::vector<Config> *serv, std::string filepath)
 						std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
 						return (1);
 					}
-					serv->push_back(conf);
-					server_conf = false;
+					serv->push_back(server);
+					serverConf = false;
 					break;
 				}
 				
 				s = delWhiteSpace(s);
-				if (s.find("{") < s.length() && !site_conf)
+				if (s.find("{") < s.length() && !locationConf)
 				{
 					if (haveSemiColon(s))
 					{
 						std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
 						return (1);
 					}
-					site_conf = true;
-					Site site;
+					locationConf = true;
+					Location location;
 					//TODO de la merde voir mieux
 					std::string name = s.substr(0, s.find("{"));
 					name = name.substr(0, name.find(" "));
 					if (name.empty())
 					{
-						std::cout << RED << "Error: missing site name at line " << line << RESET << std::endl;
+						std::cout << RED << "Error: missing Location name at line " << line << RESET << std::endl;
 						return (1);
 					}
-					site.setName(name);
-					std::cout << YELLOW << "site config : " << site_conf << RESET << std::endl;
-					//std::cout << "========SITE DATA========" << std::endl;
+					location.setName(name);
+					std::cout << YELLOW << "Location config : " << locationConf << RESET << std::endl;
+					//std::cout << "========Location DATA========" << std::endl;
 					while (std::getline(file, s))
 					{
 						line++;
 						//std::cout << s << std::endl;
-						if (s.find("{") < s.length() || !site_conf)
+						if (s.find("{") < s.length() || !locationConf)
 						{
 							std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 							return (1);
@@ -352,13 +356,13 @@ int parse(std::vector<Config> *serv, std::string filepath)
 								std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
 								return (1);
 							}
-							conf.setSite(site);
-							site_conf = false;
+							server.setLocation(location);
+							locationConf = false;
 							break;
 						}
 						else
 						{
-							if (parseSite(&site, s))
+							if (parseLocation(&location, s))
 							{
 								std::cout << " at line " << line << RESET << std::endl;
 								return (1);
@@ -368,7 +372,7 @@ int parse(std::vector<Config> *serv, std::string filepath)
 				}
 				else
 				{
-					if (parseConfig(&conf, s))
+					if (parseConfig(&server, s))
 					{
 						std::cout << " at line " << line << RESET << std::endl;
 						return (1);
@@ -382,7 +386,7 @@ int parse(std::vector<Config> *serv, std::string filepath)
 			return (1);
 		}
 	}
-	if (server_conf || site_conf)
+	if (serverConf || locationConf)
 	{
 		std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 		return (1);
@@ -392,7 +396,7 @@ int parse(std::vector<Config> *serv, std::string filepath)
 
 int main(int ac, char **av)
 {
-	std::vector<Config> serv;
+	std::vector<Server> serv;
 	bool conf = false;
 	std::string filepath = av[ac - 1];
 
@@ -406,7 +410,7 @@ int main(int ac, char **av)
 
 		if (conf)
 		{
-			for (std::vector<Config>::iterator it = serv.begin();
+			for (std::vector<Server>::iterator it = serv.begin();
 				it != serv.end();
 				++it)
 			{

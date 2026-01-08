@@ -395,8 +395,7 @@ Fais un parser en **2 passes** :
 ## 6️⃣ Règles de cohérence
 
 ### server
-- [ ] Refuser plusieurs `maxSize`
-- [ ] Refuser plusieurs `hostname`
+- [x] Refuser plusieurs `maxSize`
 - [ ] Refuser doublons `listen`
 - [ ] Détecter conflit hostname + listen entre servers
 

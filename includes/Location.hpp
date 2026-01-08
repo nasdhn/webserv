@@ -1,12 +1,12 @@
-#ifndef SITE_HPP
-# define SITE_HPP
+#ifndef LOCATION_HPP
+# define LOCATION_HPP
 
 # include <string>
 # include <map>
 # include <vector>
 # include <iostream>
 
-class Site
+class Location
 {
 	private:
 		std::string _name;
@@ -18,8 +18,8 @@ class Site
 		std::vector<std::string> _redirection;
 		std::string _cgi;
 	public:
-		Site();
-		~Site();
+		Location();
+		~Location();
 
 		void setName(std::string n);
 		void setMethod(std::string s);

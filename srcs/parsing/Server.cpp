@@ -1,43 +1,43 @@
-#include "Config.hpp"
+#include "Server.hpp"
 #include <iostream>
 // Default constructor
-Config::Config()
+Server::Server()
 {
 	this->_maxSize = 0;
 }
 
-void Config::setErrorPage(int ep, std::string path)
+void Server::setErrorPage(int ep, std::string path)
 {
 	this->_errorPage.insert(std::make_pair(ep, path));
 }
 
-void Config::setMaxSize(unsigned int size)
+void Server::setMaxSize(unsigned int size)
 {
 	this->_maxSize = size;
 }
 
-void Config::setHostname(std::string s)
+void Server::setHostname(std::string s)
 {
 	this->_hostname.push_back(s);
 }
 
-void Config::setListen(ListenUrl s)
+void Server::setListen(ListenUrl s)
 {
 	
 	this->_listen.push_back(s);
 }
 
-void Config::setSite(Site s)
+void Server::setLocation(Location s)
 {
-	this->_site.push_back(s);
+	this->_location.push_back(s);
 }
 
-unsigned int Config::getMaxSize()
+unsigned int Server::getMaxSize()
 {
 	return (this->_maxSize);
 }
 
-void Config::printErrorPage()
+void Server::printErrorPage()
 {
 	std::cout << "errorPage : " << std::endl;
 	for (std::map<unsigned int, std::string>::iterator it = this->_errorPage.begin();
@@ -48,7 +48,7 @@ void Config::printErrorPage()
 	}
 }
 
-void Config::printHostname()
+void Server::printHostname()
 {
 	std::cout << "hostname : " << std::endl;
 	for (std::vector<std::string>::iterator it = this->_hostname.begin();
@@ -59,7 +59,7 @@ void Config::printHostname()
 	}
 }
 
-void Config::printListen()
+void Server::printListen()
 {
 	std::cout << "listen : " << std::endl;
 	for (std::vector<ListenUrl>::iterator it = this->_listen.begin();
@@ -70,28 +70,28 @@ void Config::printListen()
 	}
 }
 
-void Config::printMaxSize()
+void Server::printMaxSize()
 {
 	std::cout << "MaxSize : " << this->_maxSize << std::endl;
 }
 
-void Config::printSite()
+void Server::printLocation()
 {
-	std::cout << "Site : " << std::endl;
-	for (std::vector<Site>::iterator it = this->_site.begin();
-		it != this->_site.end();
+	std::cout << "Location : " << std::endl;
+	for (std::vector<Location>::iterator it = this->_location.begin();
+		it != this->_location.end();
 		++it)
 	{
 		it->printData();
 	}
 }
 
-void Config::printData()
+void Server::printData()
 {
-	std::cout << "============= Config =============" << std::endl;
+	std::cout << "============= Server =============" << std::endl;
 	this->printHostname();
 	this->printListen();
 	this->printErrorPage();
 	this->printMaxSize();
-	this->printSite();
+	this->printLocation();
 }

@@ -1,63 +1,63 @@
-#include "Site.hpp"
+#include "Location.hpp"
 
 
-Site::Site():  _listDirectory(false), _uploadingFile(false)
+Location::Location():  _listDirectory(false), _uploadingFile(false)
 {
 
 }
 
-Site::~Site()
+Location::~Location()
 {
 
 }
 
 
-void Site::setName(std::string n)
+void Location::setName(std::string n)
 {
 	this->_name = n;
 }
 
-void Site::setMethod(std::string s)
+void Location::setMethod(std::string s)
 {
 	this->_methods.push_back(s);
 }
 
-void Site::setListDirectory(bool val)
+void Location::setListDirectory(bool val)
 {
 	this->_listDirectory = val;
 }
 
-void Site::setDefaultFile(std::string s)
+void Location::setDefaultFile(std::string s)
 {
 	this->_defaultFile = s;
 }
 
-void Site::setUploadingFile(bool val)
+void Location::setUploadingFile(bool val)
 {
 	this->_uploadingFile = val;
 }
 
-void Site::setRoot(std::string s)
+void Location::setRoot(std::string s)
 {
 	this->_root = s;
 }
 
-void Site::setRedirection(std::string s)
+void Location::setRedirection(std::string s)
 {
 	this->_redirection.push_back(s);
 }
 
-void Site::setCGI(std::string s)
+void Location::setCGI(std::string s)
 {
 	this->_cgi = s;
 }
 
-std::vector<std::string> Site::getMethods()
+std::vector<std::string> Location::getMethods()
 {
 	return (this->_methods);
 }
 
-void Site::printMethods()
+void Location::printMethods()
 {
 	std::cout << "methods : " << std::endl;
 	for (std::vector<std::string>::iterator it = this->_methods.begin();
@@ -68,7 +68,7 @@ void Site::printMethods()
 	}
 }
 
-void Site::printListDirectory()
+void Location::printListDirectory()
 {
 	std::cout << "list directory :" << std::endl;
 	if (this->_listDirectory)
@@ -77,13 +77,13 @@ void Site::printListDirectory()
 		std::cout << "false" << std::endl;
 }
 
-void Site::printDefaultFile()
+void Location::printDefaultFile()
 {
 	std::cout << "default file :" << std::endl;
 	std::cout << this->_defaultFile << std::endl;
 }
 
-void Site::printUploadingFile()
+void Location::printUploadingFile()
 {
 	std::cout << "uploading file :" << std::endl;
 		if (this->_uploadingFile)
@@ -92,13 +92,13 @@ void Site::printUploadingFile()
 		std::cout << "false" << std::endl;
 }
 
-void Site::printRoot()
+void Location::printRoot()
 {
 	std::cout << "root :" << std::endl;
 	std::cout << this->_root << std::endl;
 }
 
-void Site::printRedirection()
+void Location::printRedirection()
 {
 	std::cout << "redirection : " << std::endl;
 	for (std::vector<std::string>::iterator it = this->_redirection.begin();
@@ -109,13 +109,13 @@ void Site::printRedirection()
 	}
 }
 
-void Site::printCGI()
+void Location::printCGI()
 {
 	std::cout << "CGI :" << std::endl;
 	std::cout << this->_cgi << std::endl;
 }
 
-void Site::printData()
+void Location::printData()
 {
 	std::cout << "============= " << this->_name << " =============" << std::endl;
 	this->printMethods();
