@@ -21,7 +21,7 @@ void Server::setHostname(std::string s)
 	this->_hostname.push_back(s);
 }
 
-void Server::setListen(ListenUrl s)
+void Server::setListen(listenUrl s)
 {
 	
 	this->_listen.push_back(s);
@@ -32,12 +32,42 @@ void Server::setLocation(Location s)
 	this->_location.push_back(s);
 }
 
+void Server::setServerName(std::string name)
+{
+	this->_serverName = name;
+}
+
+void Server::setRoot(std::string s)
+{
+	this->_root = s;
+}
+
+void Server::setIndex(std::string s)
+{
+	this->_index = s;
+}
+
+void Server::setAutoIndex(bool s)
+{
+	this->_autoIndex = s;
+}
+
+std::string Server::getRoot()
+{
+	return (this->_root);
+}
+
+std::string Server::getServerName()
+{
+	return (this->_serverName);
+}
+
 unsigned int Server::getMaxSize()
 {
 	return (this->_maxSize);
 }
 
-std::vector<ListenUrl> Server::getListen()
+std::vector<listenUrl> Server::getListen()
 {
 	return (this->_listen);
 }
@@ -67,7 +97,7 @@ void Server::printHostname()
 void Server::printListen()
 {
 	std::cout << "listen : " << std::endl;
-	for (std::vector<ListenUrl>::iterator it = this->_listen.begin();
+	for (std::vector<listenUrl>::iterator it = this->_listen.begin();
 		it != this->_listen.end();
 		++it)
 	{
@@ -94,6 +124,7 @@ void Server::printLocation()
 void Server::printData()
 {
 	std::cout << "============= Server =============" << std::endl;
+	std::cout << "name : " << std::endl << this->_serverName << std::endl;
 	this->printHostname();
 	this->printListen();
 	this->printErrorPage();

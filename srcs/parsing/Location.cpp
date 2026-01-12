@@ -1,9 +1,9 @@
 #include "Location.hpp"
 
 
-Location::Location():  _listDirectory(false), _uploadingFile(false)
+Location::Location():  _listDirectory(false)
 {
-
+	this->_redirection.code = 0;
 }
 
 Location::~Location()
@@ -27,14 +27,14 @@ void Location::setListDirectory(bool val)
 	this->_listDirectory = val;
 }
 
-void Location::setDefaultFile(std::string s)
+void Location::setIndex(std::string s)
 {
-	this->_defaultFile = s;
+	this->_index = s;
 }
 
-void Location::setUploadingFile(bool val)
+void Location::setUploadPath(std::string s)
 {
-	this->_uploadingFile = val;
+	this->_uploadPath = s;
 }
 
 void Location::setRoot(std::string s)
@@ -42,14 +42,14 @@ void Location::setRoot(std::string s)
 	this->_root = s;
 }
 
-void Location::setRedirection(std::string s)
+void Location::setRedirection(redir r)
 {
-	this->_redirection.push_back(s);
+	this->_redirection = r;
 }
 
-void Location::setCGI(std::string s)
+void Location::setCGI(cgi c)
 {
-	this->_cgi = s;
+	this->_cgi.push_back(c);
 }
 
 std::vector<std::string> Location::getMethods()
@@ -80,16 +80,13 @@ void Location::printListDirectory()
 void Location::printDefaultFile()
 {
 	std::cout << "default file :" << std::endl;
-	std::cout << this->_defaultFile << std::endl;
+	std::cout << this->_index << std::endl;
 }
 
 void Location::printUploadingFile()
 {
-	std::cout << "uploading file :" << std::endl;
-		if (this->_uploadingFile)
-		std::cout << "true" << std::endl;
-	else
-		std::cout << "false" << std::endl;
+	std::cout << "uploading path :" << std::endl;
+	std::cout << this->_uploadPath << std::endl;
 }
 
 void Location::printRoot()
@@ -101,18 +98,19 @@ void Location::printRoot()
 void Location::printRedirection()
 {
 	std::cout << "redirection : " << std::endl;
-	for (std::vector<std::string>::iterator it = this->_redirection.begin();
-		it != this->_redirection.end();
-		++it)
-	{
-		std::cout << *it << std::endl;
-	}
+	std::cout << this->_redirection.code << " " << this->_redirection.link << std::endl;
+	
 }
 
 void Location::printCGI()
 {
 	std::cout << "CGI :" << std::endl;
-	std::cout << this->_cgi << std::endl;
+	for (std::vector<cgi>::iterator it = this->_cgi.begin();
+		it != this->_cgi.end();
+		++it)
+	{
+		std::cout << it->ext << " " << it->path << std::endl;
+	}
 }
 
 void Location::printData()

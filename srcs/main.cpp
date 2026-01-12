@@ -9,21 +9,37 @@ int getContent(std::string s)
 	return (i);
 }
 
+int getNbParams(std::string s)
+{
+	size_t i = 0;
+	int p = 0;
+
+	if (std::isprint(s[i]))
+		p++;
+	while (i < s.length())
+	{
+		if (std::isspace(s[i]) && !std::isspace(s[i + 1]))
+			p++;
+		i++;
+	}
+	return (p);
+}
+
 int parseLocation(Location *location, std::string s)
 {
 	std::string del = " ";
 	std::string title;
 
-	if (!haveSemiColon(s))
+	/*if (!haveSemiColon(s))
 	{
 		std::cout << RED << "Error: missing semicolon";
 		return (1);
-	}
+	}*/
 	s = delSemiColon(s);
 	title = s.substr(0, s.find(del));
 	s.erase(0, title.length() + 1);
 
-	if (title == "methods")
+	if (title == "allow_methods")
 	{
 		if (checkOnlySpace(s))
 		{
@@ -54,11 +70,11 @@ int parseLocation(Location *location, std::string s)
 			return (1);
 		}
 	}
-	else if (title == "listDirectory")
+	else if (title == "autoindex")
 	{
-		if (checkBoolean(s))
+		if (s != "on" && s != "off")
 		{
-			std::cout << RED << "Error: boolean incorrect (true/false)";
+			std::cout << RED << "Error: boolean incorrect (on/off)";
 			return (1);
 		}
 		bool b;
@@ -68,7 +84,7 @@ int parseLocation(Location *location, std::string s)
 		location->setListDirectory(b);
 		
 	}
-	else if (title == "defaultFile")
+	else if (title == "index")
 	{
 		if (s.empty())
 		{
@@ -80,19 +96,16 @@ int parseLocation(Location *location, std::string s)
 			std::cout << RED << "Error: space in path";
 			return (1);
 		}
-		location->setDefaultFile(s);
+		location->setIndex(s);
 	}
-	else if (title == "uploadingFile")
+	else if (title == "upload_path")
 	{
-		if (checkBoolean(s))
+		if (s.empty())
 		{
-			std::cout << RED << "Error: boolean incorrect (true/false) ";
+			std::cout << RED << "Error: upload path empty";
 			return (1);
 		}
-		bool b;
-		//TODO check if is true or false with no caps
-		std::istringstream(s) >> std::boolalpha >> b;
-		location->setUploadingFile(b);
+		location->setUploadPath(s);
 	}
 	else if (title == "root")
 	{
@@ -108,29 +121,56 @@ int parseLocation(Location *location, std::string s)
 		}
 		location->setRoot(s);
 	}
-	else if (title == "redirection")
+	else if (title == "return")
 	{
-		std::string redir;
-		while (redir.length() != s.length() || redir != s)
+		redir r;
+		if (getNbParams(s) < 1 && getNbParams(s) > 2)
 		{
-			redir = s.substr(0, s.find(del));
-			s.erase(0, s.find(del) + 1);
-			location->setRedirection(redir);
+			std::cout << RED << "Error: too much or not enough params";
+			return (1);
 		}
+		if (!checkOnlyNumber(s.substr(0, s.find(" "))))
+		{
+			std::cout << RED << "Error: code need to be first";
+			return (1);
+		}
+		r.code = std::atoi(s.substr(0, s.find(" ")).c_str());
+		s.erase(0, s.find(" ") + 1);
+		r.link = s;
+		location->setRedirection(r);
 	}
-	else if (title == "CGI")
+	else if (title == "cgi")
 	{
-		if (s.empty())
+		if (getNbParams(s) != 2)
+		{
+			std::cout << RED << "Error: needed 2 params in cgi";
+			return (1);
+		}
+		cgi c;
+		c.ext = s.substr(0, s.find(" "));
+		if (c.ext.empty())
+		{
+			std::cout << RED << "Error: extension path";
+			return (1);
+		}
+		if (c.ext[0] != '.')
+		{
+			std::cout << RED << "Error: extension need to start with '.'";
+			return (1);
+		}
+		s.erase(0, c.ext.length() + 1);
+		c.path = s.substr(0, s.find(" "));
+		if (c.path.empty())
 		{
 			std::cout << RED << "Error: empty path";
 			return (1);
 		}
-		if (s.find(" ") < s.length())
+		if (c.path.find(" ") < s.length())
 		{
 			std::cout << RED << "Error: space in path";
 			return (1);
 		}
-		location->setCGI(s);
+		location->setCGI(c);
 	}
 	else
 	{
@@ -146,17 +186,17 @@ int parseConfig(Server *serv, std::string s)
 	std::string del = " ";
 	std::string title;
 
-	if (!haveSemiColon(s))
+	/*if (!haveSemiColon(s))
 	{
 		std::cout << RED << "Error: missing semicolon";
 		return (1);
-	}
+	}*/
 	s = delSemiColon(s);
 	title = s.substr(0, s.find(del));
 	s.erase(0, title.length() + 1);
 
 	//TODO error message ?
-	if (title == "errorPage")
+	if (title == "error_page")
 	{
 		std::string token;
 		std::vector<unsigned int> lst;
@@ -196,11 +236,12 @@ int parseConfig(Server *serv, std::string s)
 		for (std::vector<unsigned int>::iterator vit = lst.begin(); vit != lst.end(); ++vit)
 			serv->setErrorPage(*vit, path);
 	}
-	else if (title == "maxSize")
+	else if (title == "client_max_body_size")
 	{
+		//TODO can have char ?
 		if (serv->getMaxSize() != 0)
 		{
-			std::cout << RED << "Error: double directive maxSize";
+			std::cout << RED << "Error: double directive client_max_body_size";
 			return (1);
 		}
 		if (!isDigits(s))
@@ -237,7 +278,7 @@ int parseConfig(Server *serv, std::string s)
 			std::cout << RED << "Error: colon missing";
 			return (1);
 		}
-		ListenUrl lu;
+		listenUrl lu;
 		lu.host = s.substr(0, s.find(":"));
 		s.erase(0, lu.host.length() + 1);
 		if (!checkOnlyNumber(s))
@@ -263,6 +304,35 @@ int parseConfig(Server *serv, std::string s)
 		}
 		serv->setListen(lu);
 	}
+	else if (title == "server_name")
+	{
+		//TODO can be multiple
+		if (!serv->getServerName().empty())
+		{
+			std::cout << RED << "Error: double directive server_name";
+			return (1);
+		}
+		if (s.empty())
+		{
+			std::cout << RED << "Error: server_name null";
+			return (1);
+		}
+		serv->setServerName(s);
+	}
+	else if (title == "root")
+	{
+		if (!serv->getRoot().empty())
+		{
+			std::cout << RED << "Error: double directive root";
+			return (1);
+		}
+		if (s.empty())
+		{
+			std::cout << RED << "Error: root path null";
+			return (1);
+		}
+		serv->setRoot(s);
+	}
 	else
 	{
 		std::cout << RED << "Error: This directive '" << title << "' does not exist in the server configuration";
@@ -283,8 +353,6 @@ int parse(std::vector<Server> *serv, std::string filepath)
 	while (std::getline(file, s))
 	{
 		line++;
-		//std::cout << s << std::endl;
-		std::cout << YELLOW << "server config : " << serverConf << RESET << std::endl;
 		if (s.find("server") < s.length() && !serverConf)
 		{
 			if (haveSemiColon(s))
@@ -298,12 +366,11 @@ int parse(std::vector<Server> *serv, std::string filepath)
 			while (std::getline(file, s))
 			{
 				line++;
-				if (s.find("server") < s.length() || !serverConf)
+				if ((s.find("server") < s.length() && !(s.find("server_name") < s.length())) || !serverConf)
 				{
 					std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 					return (1);
-				}
-				
+				}			
 				if (s.find("}") < s.length())
 				{
 					if (checkEmbrace(s))
@@ -315,66 +382,68 @@ int parse(std::vector<Server> *serv, std::string filepath)
 					serverConf = false;
 					break;
 				}
-				
-				s = delWhiteSpace(s);
-				if (s.find("{") < s.length() && !locationConf)
+				if (!(s.find("#") < s.length()) && !(s.empty()))
 				{
-					if (haveSemiColon(s))
+					s = delWhiteSpace(s);
+					if (s.find("location") < s.length() && !locationConf)
 					{
-						std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
-						return (1);
-					}
-					locationConf = true;
-					Location location;
-					//TODO de la merde voir mieux
-					std::string name = s.substr(0, s.find("{"));
-					name = name.substr(0, name.find(" "));
-					if (name.empty())
-					{
-						std::cout << RED << "Error: missing Location name at line " << line << RESET << std::endl;
-						return (1);
-					}
-					location.setName(name);
-					std::cout << YELLOW << "Location config : " << locationConf << RESET << std::endl;
-					//std::cout << "========Location DATA========" << std::endl;
-					while (std::getline(file, s))
-					{
-						line++;
-						//std::cout << s << std::endl;
-						if (s.find("{") < s.length() || !locationConf)
+						if (haveSemiColon(s))
 						{
-							std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
+							std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
 							return (1);
 						}
-						
-						s = delWhiteSpace(s);
-						if (s.find("}") < s.length())
+						locationConf = true;
+						Location location;
+						//TODO de la merde voir mieux
+						s.erase(0, 9);
+						std::string name = s.substr(0, s.find(" "));
+						if (name.empty())
 						{
-							if (checkEmbrace(s))
-							{
-								std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
-								return (1);
-							}
-							server.setLocation(location);
-							locationConf = false;
-							break;
+							std::cout << RED << "Error: missing Location name at line " << line << RESET << std::endl;
+							return (1);
 						}
-						else
+						location.setName(name);
+						while (std::getline(file, s))
 						{
-							if (parseLocation(&location, s))
+							line++;
+							if (!(s.find("#") < s.length()) && !(s.empty()))
 							{
-								std::cout << " at line " << line << RESET << std::endl;
-								return (1);
+								if (s.find("{") < s.length() || !locationConf)
+								{
+									std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
+									return (1);
+								}
+								
+								s = delWhiteSpace(s);
+								if (s.find("}") < s.length())
+								{
+									if (checkEmbrace(s))
+									{
+										std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
+										return (1);
+									}
+									server.setLocation(location);
+									locationConf = false;
+									break;
+								}
+								else
+								{
+									if (parseLocation(&location, s))
+									{
+										std::cout << " at line " << line << RESET << std::endl;
+										return (1);
+									}
+								}
 							}
 						}
 					}
-				}
-				else
-				{
-					if (parseConfig(&server, s))
+					else
 					{
-						std::cout << " at line " << line << RESET << std::endl;
-						return (1);
+						if (parseConfig(&server, s))
+						{
+							std::cout << " at line " << line << RESET << std::endl;
+							return (1);
+						}
 					}
 				}
 			}
@@ -396,7 +465,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 int main(int ac, char **av)
 {
 	std::vector<Server> serv;
-	bool conf = false;
+	bool conf = true;
 	std::string filepath = av[ac - 1];
 
 	std::ifstream f(filepath.c_str());

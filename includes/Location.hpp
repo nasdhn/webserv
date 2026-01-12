@@ -6,17 +6,46 @@
 # include <vector>
 # include <iostream>
 
+struct cgi
+{
+	std::string ext;
+	std::string path;
+};
+
+struct redir
+{
+	unsigned int code;
+	std::string link;
+};
+
+//allow_methods
+//index
+//alias
+//autoindex
+//cgi
+
+//root
+//autoindex
+//client_max_body_size
+//index
+//error_page
+//cgi_handler
+//limit_except
+//upload_store
+//return
+
 class Location
 {
 	private:
 		std::string _name;
 		std::vector<std::string> _methods;
 		bool _listDirectory; //can be empty
-		std::string _defaultFile;
-		bool _uploadingFile; //can be empty
+		std::string _index;
+		std::string _uploadPath; //can be empty
 		std::string _root;
-		std::vector<std::string> _redirection;
-		std::string _cgi;
+		redir _redirection;
+		std::vector<cgi> _cgi;
+
 	public:
 		Location();
 		~Location();
@@ -24,11 +53,11 @@ class Location
 		void setName(std::string n);
 		void setMethod(std::string s);
 		void setListDirectory(bool val);
-		void setDefaultFile(std::string s);
-		void setUploadingFile(bool val);
+		void setIndex(std::string s);
+		void setUploadPath(std::string s);
 		void setRoot(std::string s);
-		void setRedirection(std::string s);
-		void setCGI(std::string s);
+		void setRedirection(redir r);
+		void setCGI(cgi c);
 
 		std::vector<std::string> getMethods();
 

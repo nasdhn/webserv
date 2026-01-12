@@ -83,9 +83,9 @@ bool checkContent(const std::vector<std::string>& v, const std::string& s)
 	return std::find(v.begin(), v.end(), s) != v.end();
 }
 
-bool checkDoubleListen(const std::vector<ListenUrl>& v, const ListenUrl& s)
+bool checkDoubleListen(const std::vector<listenUrl>& v, const listenUrl& s)
 {
-	for (std::vector<ListenUrl>::const_iterator it = v.begin();
+	for (std::vector<listenUrl>::const_iterator it = v.begin();
 		it != v.end();
 		++it)
     {
