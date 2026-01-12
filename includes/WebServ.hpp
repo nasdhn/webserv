@@ -17,13 +17,13 @@
 #include <csignal>
 #include <cerrno>
 
-class Server {
+class WebServ {
 
 	public :
-		Server();
-		Server(const Server& other);
-		Server& operator=(const Server& other);
-		~Server();
+		WebServ();
+		WebServ(const WebServ& other);
+		WebServ& operator=(const WebServ& other);
+		~WebServ();
 		std::vector<struct pollfd> getFD();
 
 		void servInit(int port);

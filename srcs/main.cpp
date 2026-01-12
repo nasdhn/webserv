@@ -1,12 +1,12 @@
-#include "Server.hpp"
+#include "WebServ.hpp"
 
 int main()
 {
 	try
 	{
-		Server s;
+		WebServ server;
 
-		s.setupServ();
+		server.setupServ();
 	}
 	catch(const std::exception& e)
 	{

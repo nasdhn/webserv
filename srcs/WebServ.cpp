@@ -1,10 +1,10 @@
-#include "Server.hpp"
+#include "WebServ.hpp"
 
 // vu qu'on peut pas check errno, je fait confiance a poll et si send echoue je suppr le fd;
 
 volatile bool sigPressed = true;
 
-Server::Server()
+WebServ::WebServ()
 {
 	// pour tester avant d ajouter via le parsing
 	_port.push_back(8080);
@@ -12,14 +12,14 @@ Server::Server()
 	_port.push_back(9090);
 }
 
-Server::Server(const Server &other)
+WebServ::WebServ(const WebServ &other)
 {
 	_fd = other._fd;
 	_clients = other._clients;
 	_readyToSend = other._readyToSend;
 	_port = other._port;
 }
-Server &Server::operator=(const Server &other)
+WebServ &WebServ::operator=(const WebServ &other)
 {
 	if (this != &other)
 	{
@@ -31,11 +31,11 @@ Server &Server::operator=(const Server &other)
 	return (*this);
 }
 
-Server::~Server()
+WebServ::~WebServ()
 {
 }
 
-std::vector<struct pollfd> Server::getFD()
+std::vector<struct pollfd> WebServ::getFD()
 {
 	return _fd;
 }
@@ -46,7 +46,7 @@ void signalHandler(int sig)
 	sigPressed = false;
 }
 
-bool Server::isServerSocket(int fd)
+bool WebServ::isServerSocket(int fd)
 {
 	for (unsigned int i = 0; i < _serverSockets.size(); i++)
 	{
@@ -56,7 +56,7 @@ bool Server::isServerSocket(int fd)
 	return false;
 }
 
-void Server::checkTimeOut()
+void WebServ::checkTimeOut()
 {
 	std::vector<int> toDelete;
 	time_t curTime;
@@ -90,7 +90,7 @@ void Server::checkTimeOut()
 	}
 }
 
-void Server::cleanAll()
+void WebServ::cleanAll()
 {
 	// DEBUG
 	std::cout << "Arret du serv" << std::endl;
@@ -108,7 +108,7 @@ void Server::cleanAll()
 	_fd.clear();
 }
 
-bool Server::sendResponse(Client *client, struct pollfd &pfd)
+bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 {
 	std::string &msg = client->getResponse();
 	unsigned long total_size = client->getResponse().size();
@@ -143,7 +143,7 @@ bool Server::sendResponse(Client *client, struct pollfd &pfd)
 	return true;
 }
 
-void Server::servInit(int port)
+void WebServ::servInit(int port)
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketServer == -1)
@@ -185,7 +185,7 @@ void Server::servInit(int port)
 	_serverSockets.push_back(socketServer);
 }
 
-void Server::setupServ()
+void WebServ::setupServ()
 {
 
 	for (unsigned long i = 0; i < _port.size(); i++)
