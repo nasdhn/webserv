@@ -16,11 +16,18 @@ class Response {
         void setStatus(int code);
         void setHeader(const std::string& key, const std::string& value);
         void setBody(const std::string& body);
-		//pour nasim
-        std::string toString() const;
+        void setBodyfd(int fd);
+        bool is_fd();
+        void setpid(pid_t pid);
+        std::string get_header() const;
+        int get_body_fd();
+        std::string get_body_string();
 
     private:
+        bool _is_fd;
         int _status;
+        int _fd_body;
+        pid_t _cgi_pid;
         std::string _body;
         std::map<std::string, std::string> _headers;
         std::string _getStatusMessage(int code) const;
