@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: nadahman <nadahman@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/12/10 14:18:55 by cgoldens          #+#    #+#              #
+#    Updated: 2026/01/13 10:07:15 by nadahman         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 NAME = webserv
 
 SRCDIR = ./srcs/
@@ -5,7 +17,7 @@ INCDIR = ./includes/
 OBJDIR = ./build/
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g
+CFLAGS = -Wall -Wextra -Werror -std=c++98
 RM = rm -rf
 
 SRCS = $(shell find $(SRCDIR) -type f -name "*.cpp")

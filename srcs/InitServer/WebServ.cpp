@@ -1,15 +1,53 @@
 #include "WebServ.hpp"
+#include "Server.hpp"
 
 // vu qu'on peut pas check errno, je fait confiance a poll et si send echoue je suppr le fd;
 
 volatile bool sigPressed = true;
 
-WebServ::WebServ()
+
+WebServ::WebServ(std::vector<Server> &serv)
 {
-	// pour tester avant d ajouter via le parsing
-	_port.push_back(8080);
-	_port.push_back(8180);
-	_port.push_back(9090);
+    std::vector<SocketInfo> socket_open;
+
+    for (size_t i = 0; i < serv.size(); i++)
+    {
+        for (size_t j = 0; j < serv[i].getListen().size(); j++)
+        {
+            std::string tmp_ip = serv[i].getListen()[j].host;
+            int tmp_port = serv[i].getListen()[j].port;
+            bool is_open = false;
+
+            for (size_t p = 0; p < socket_open.size(); p++)
+            {
+                if (socket_open[p].ip == tmp_ip && socket_open[p].port == tmp_port)
+                {
+                    is_open = true;
+                    break;
+                }
+            }
+            if (is_open == false)
+            {
+                try 
+				{
+                    servInit(tmp_ip, tmp_port);
+                    
+                    SocketInfo info;
+                    info.ip = tmp_ip;
+                    info.port = tmp_port;
+                    socket_open.push_back(info);
+
+                    // DEBUG
+					std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
+					// DEBUG
+                }
+                catch (std::exception &e) 
+				{
+                    std::cerr << "Erreur sur " << tmp_ip << ":" << tmp_port << " -> " << e.what() << std::endl;
+                }
+            }
+        }
+    }
 }
 
 WebServ::WebServ(const WebServ &other)
@@ -17,7 +55,6 @@ WebServ::WebServ(const WebServ &other)
 	_fd = other._fd;
 	_clients = other._clients;
 	_readyToSend = other._readyToSend;
-	_port = other._port;
 }
 WebServ &WebServ::operator=(const WebServ &other)
 {
@@ -26,7 +63,6 @@ WebServ &WebServ::operator=(const WebServ &other)
 		_fd = other._fd;
 		_clients = other._clients;
 		_readyToSend = other._readyToSend;
-		_port = other._port;
 	}
 	return (*this);
 }
@@ -143,7 +179,7 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 	return true;
 }
 
-void WebServ::servInit(int port)
+void WebServ::servInit(std::string ip, int port)
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketServer == -1)
@@ -154,8 +190,13 @@ void WebServ::servInit(int port)
 
 	struct sockaddr_in address = {};
 	address.sin_family = AF_INET;
-	address.sin_port = htons(port); // a completer avec parsing
-	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(port);
+	address.sin_addr.s_addr = inet_addr(ip.c_str());
+	if (address.sin_addr.s_addr == INADDR_NONE)
+	{
+    	close(socketServer);
+    	throw std::runtime_error("Error : Invalid IP !");
+	}	
 	// address.sin_zero[(sizeof(address))];
 
 	if (fcntl(socketServer, F_SETFL, O_NONBLOCK) == -1)
@@ -188,14 +229,15 @@ void WebServ::servInit(int port)
 void WebServ::setupServ()
 {
 
-	for (unsigned long i = 0; i < _port.size(); i++)
-		servInit(_port[i]);
+	// for (unsigned long i = 0; i < _port.size(); i++)
+	// 	servInit(_port[i]);
+
 
 	// int socketServer = servInit();
 
 	struct sockaddr_in clientAddr = {};
 	clientAddr.sin_family = AF_INET;
-	clientAddr.sin_port = htons(8080); // a completer avec parsing
+	clientAddr.sin_port = htons(0);
 	clientAddr.sin_addr.s_addr = INADDR_ANY;
 	// address.sin_zero[(sizeof(address))];
 	socklen_t sizeaddr = sizeof(clientAddr);

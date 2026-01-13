@@ -40,7 +40,7 @@ class Client {
         time_t _lastTime;
 
         // variable provisoire a remplacer par celle de class Request
-        std::string _contentLenght_str;
+        std::string _contentLenght_str; 
         int _contentSize_int;
      
 };

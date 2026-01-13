@@ -1,5 +1,5 @@
-#ifndef SERVEUR_HPP
-#define SERVEUR_HPP
+#ifndef WEBSERV_HPP
+#define WEBSERV_HPP
 
 #include <iostream>
 #include <string>
@@ -16,17 +16,25 @@
 #include <algorithm>
 #include <csignal>
 #include <cerrno>
+#include "Server.hpp"
+
+class Server;
+
+struct SocketInfo {
+    std::string ip;
+    int port;
+};
 
 class WebServ {
 
 	public :
-		WebServ();
+		WebServ(std::vector<Server> &serv);
 		WebServ(const WebServ& other);
 		WebServ& operator=(const WebServ& other);
 		~WebServ();
 		std::vector<struct pollfd> getFD();
 
-		void servInit(int port);
+		void servInit(std::string ip, int port);
 		void setupServ();
 		bool sendResponse(Client *client, struct pollfd &pfd);
 		void checkTimeOut();
@@ -39,9 +47,6 @@ class WebServ {
 		std::map<int, Client*> _clients;
 		std::vector<int> _serverSockets;
 		bool _readyToSend;
-
-		// provisoir le temps d'avoir le parsing
-		std::vector<int> _port;
 };
 
 void signalHandler(int sig);
