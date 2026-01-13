@@ -37,16 +37,6 @@ void Server::setRoot(std::string s)
 	this->_root = s;
 }
 
-void Server::setIndex(std::string s)
-{
-	this->_index = s;
-}
-
-void Server::setAutoIndex(bool s)
-{
-	this->_autoIndex = s;
-}
-
 std::string Server::getRoot()
 {
 	return (this->_root);
