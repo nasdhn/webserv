@@ -41,6 +41,9 @@ class WebServ {
 		bool isServerSocket(int fd);
 		void cleanAll();
 
+		void printLog(const std::string &msg, const std::string &color);
+		std::string intToStr(int n);
+
 
 	private :
 		std::vector<struct pollfd> _fd;

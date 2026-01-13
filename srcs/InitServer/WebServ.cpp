@@ -5,6 +5,24 @@
 
 volatile bool sigPressed = true;
 
+std::string WebServ::intToStr(int n) 
+{
+    std::ostringstream ss;
+    ss << n;
+    return ss.str();
+}
+
+void WebServ::printLog(const std::string &msg, const std::string &color)
+{
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+
+    char buffer[80];
+    strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", ltm);
+
+    std::cout << "[" << buffer << "] -> " << color << msg << RESET << std::endl;
+}
+
 
 WebServ::WebServ(std::vector<Server> &serv)
 {
@@ -38,12 +56,13 @@ WebServ::WebServ(std::vector<Server> &serv)
                     socket_open.push_back(info);
 
                     // DEBUG
-					std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
+					printLog("Port " + intToStr(tmp_port) + " ouvert avec succès !", GREEN);
+					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
                 catch (std::exception &e) 
 				{
-                    std::cerr << "Erreur sur " << tmp_ip << ":" << tmp_port << " -> " << e.what() << std::endl;
+					printLog(tmp_ip + ":" + intToStr(tmp_port) + " : " + e.what(), RED);
                 }
             }
         }
