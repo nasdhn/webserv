@@ -39,10 +39,9 @@ class Location
 	private:
 		std::string _name;
 		std::vector<std::string> _methods;
-		bool _listDirectory; //can be empty
-		std::string _index;
+		bool _autoIndex;
+		std::vector<std::string> _index;
 		std::string _uploadPath; //can be empty
-		std::string _root;
 		redir _redirection;
 		std::vector<cgi> _cgi;
 
@@ -55,17 +54,16 @@ class Location
 		void setListDirectory(bool val);
 		void setIndex(std::string s);
 		void setUploadPath(std::string s);
-		void setRoot(std::string s);
 		void setRedirection(redir r);
 		void setCGI(cgi c);
 
 		std::vector<std::string> getMethods();
+		std::vector<cgi> getCgi();
 
 		void printMethods();
 		void printListDirectory();
 		void printDefaultFile();
 		void printUploadingFile();
-		void printRoot();
 		void printRedirection();
 		void printCGI();
 		void printData();

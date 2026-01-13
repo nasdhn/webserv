@@ -107,20 +107,6 @@ int parseLocation(Location *location, std::string s)
 		}
 		location->setUploadPath(s);
 	}
-	else if (title == "root")
-	{
-		if (s.empty())
-		{
-			std::cout << RED << "Error: empty path";
-			return (1);
-		}
-		if (s.find(" ") < s.length())
-		{
-			std::cout << RED << "Error: space in path";
-			return (1);
-		}
-		location->setRoot(s);
-	}
 	else if (title == "return")
 	{
 		redir r;
@@ -433,6 +419,11 @@ int parse(std::vector<Server> *serv, std::string filepath)
 							std::cout << RED << "Error: missing Location name at line " << line << RESET << std::endl;
 							return (1);
 						}
+						if (name.find("{") < name.length())
+						{
+							std::cout << RED << "Error: { next to location's name" << line << RESET << std::endl;
+							return (1);
+						}
 						location.setName(name);
 						while (std::getline(file, s))
 						{
@@ -496,7 +487,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 int main(int ac, char **av)
 {
 	std::vector<Server> serv;
-	bool conf = false;
+	bool conf = true;
 	std::string filepath = av[ac - 1];
 
 	std::ifstream f(filepath.c_str());

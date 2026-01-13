@@ -1,7 +1,7 @@
 #include "Location.hpp"
 
 
-Location::Location():  _listDirectory(false)
+Location::Location():  _autoIndex(false)
 {
 	this->_redirection.code = 0;
 }
@@ -24,22 +24,17 @@ void Location::setMethod(std::string s)
 
 void Location::setListDirectory(bool val)
 {
-	this->_listDirectory = val;
+	this->_autoIndex = val;
 }
 
 void Location::setIndex(std::string s)
 {
-	this->_index = s;
+	this->_index.push_back(s);
 }
 
 void Location::setUploadPath(std::string s)
 {
 	this->_uploadPath = s;
-}
-
-void Location::setRoot(std::string s)
-{
-	this->_root = s;
 }
 
 void Location::setRedirection(redir r)
@@ -71,7 +66,7 @@ void Location::printMethods()
 void Location::printListDirectory()
 {
 	std::cout << "list directory :" << std::endl;
-	if (this->_listDirectory)
+	if (this->_autoIndex)
 		std::cout << "true" << std::endl;
 	else
 		std::cout << "false" << std::endl;
@@ -80,19 +75,18 @@ void Location::printListDirectory()
 void Location::printDefaultFile()
 {
 	std::cout << "default file :" << std::endl;
-	std::cout << this->_index << std::endl;
+		for (std::vector<std::string>::iterator it = this->_index.begin();
+		it != this->_index.end();
+		++it)
+	{
+		std::cout << *it << std::endl;
+	}
 }
 
 void Location::printUploadingFile()
 {
 	std::cout << "uploading path :" << std::endl;
 	std::cout << this->_uploadPath << std::endl;
-}
-
-void Location::printRoot()
-{
-	std::cout << "root :" << std::endl;
-	std::cout << this->_root << std::endl;
 }
 
 void Location::printRedirection()
@@ -120,7 +114,6 @@ void Location::printData()
 	this->printListDirectory();
 	this->printDefaultFile();
 	this->printUploadingFile();
-	this->printRoot();
 	this->printRedirection();
 	this->printCGI();
 }
