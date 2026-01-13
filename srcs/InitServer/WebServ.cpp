@@ -55,6 +55,7 @@ WebServ::WebServ(const WebServ &other)
 	_fd = other._fd;
 	_clients = other._clients;
 	_readyToSend = other._readyToSend;
+	_serverSockets = other._serverSockets;
 }
 WebServ &WebServ::operator=(const WebServ &other)
 {
@@ -63,6 +64,7 @@ WebServ &WebServ::operator=(const WebServ &other)
 		_fd = other._fd;
 		_clients = other._clients;
 		_readyToSend = other._readyToSend;
+		_serverSockets = other._serverSockets;
 	}
 	return (*this);
 }
@@ -228,13 +230,6 @@ void WebServ::servInit(std::string ip, int port)
 
 void WebServ::setupServ()
 {
-
-	// for (unsigned long i = 0; i < _port.size(); i++)
-	// 	servInit(_port[i]);
-
-
-	// int socketServer = servInit();
-
 	struct sockaddr_in clientAddr = {};
 	clientAddr.sin_family = AF_INET;
 	clientAddr.sin_port = htons(0);
