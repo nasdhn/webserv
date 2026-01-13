@@ -19,13 +19,12 @@
 class Server
 {
 	private:
-		std::string _serverName;
+		std::vector<std::string> _serverName;
 		std::string _root;
 		std::string _index;
 		bool _autoIndex;
 		unsigned int _maxSize;
 		std::map<unsigned int, std::string> _errorPage;
-		std::vector<std::string> _hostname; //?
 		std::vector<listenUrl> _listen;
 		std::vector<Location> _location;
 
@@ -34,7 +33,6 @@ class Server
 
 		void setErrorPage(int ep, std::string path);
 		void setMaxSize(unsigned int size);
-		void setHostname(std::string s);
 		void setListen(listenUrl s);
 		void setLocation(Location s);
 		void setServerName(std::string name);
@@ -43,13 +41,13 @@ class Server
 		void setAutoIndex(bool s);
 
 
-		std::string getServerName();
+		std::vector<std::string> getServerName();
 		std::string getRoot();
 		unsigned int getMaxSize();
 		std::vector<listenUrl> getListen();
 
 		void printErrorPage();
-		void printHostname();
+		void printServerName();
 		void printListen();
 		void printMaxSize();
 		void printLocation();

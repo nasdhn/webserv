@@ -198,10 +198,21 @@ int parseConfig(Server *serv, std::string s)
 	//TODO error message ?
 	if (title == "error_page")
 	{
+		if (s.empty())
+		{
+			std::cout << RED << "Error: params empty";
+			return (1);
+		}
+		if (getNbParams(s) < 2)
+		{
+			std::cout << RED << "Error: not enough params";
+			return (1);
+		}
 		std::string token;
 		std::vector<unsigned int> lst;
 		std::vector<unsigned int>::iterator it;
 		std::string path;
+		bool isLink = false;
 
 		it = lst.begin();
 		while (s.length() != 0)
@@ -210,6 +221,11 @@ int parseConfig(Server *serv, std::string s)
 			s.erase(0, token.length() + 1);
 			if (isDigits(token))
 			{
+				if (isLink)
+				{
+					std::cout << RED << "Error: error code after link";
+					return (1);
+				}
 				if (checkHTTPCode(std::atoi(token.c_str())))
 				{
 					std::cout << RED << "Error: invalid error code '" << token << "'";
@@ -221,6 +237,7 @@ int parseConfig(Server *serv, std::string s)
 			{
 				token.erase(token.length() - 1, token.length());
 				path = token;
+				isLink = true;
 			}
 		}
 		if (lst.empty())
@@ -244,6 +261,16 @@ int parseConfig(Server *serv, std::string s)
 			std::cout << RED << "Error: double directive client_max_body_size";
 			return (1);
 		}
+		if (s.empty())
+		{
+			std::cout << RED << "Error: maxSize null";
+			return (1);
+		}
+		if (getNbParams(s) > 1)
+		{
+			std::cout << RED << "Error: too much params";
+			return (1);
+		}
 		if (!isDigits(s))
 		{
 			if (std::atoi(s.c_str()) < 0)
@@ -254,28 +281,19 @@ int parseConfig(Server *serv, std::string s)
 			std::cout << RED << "Error: invalid char";
 			return (1);
 		}
-		if (s.empty())
-		{
-			std::cout << RED << "Error: maxSize null";
-			return (1);
-		}
 		
 		serv->setMaxSize(std::atoi(s.c_str()));
-	}
-	else if (title == "hostname")
-	{
-		if (s.empty())
-		{
-			std::cout << RED << "Error: hostname null";
-			return (1);
-		}
-		serv->setHostname(s);
 	}
 	else if (title == "listen")
 	{
 		if (!(s.find(":") < s.length()))
 		{
 			std::cout << RED << "Error: colon missing";
+			return (1);
+		}
+		if (getNbParams(s) > 1)
+		{
+			std::cout << RED << "Error: too many params";
 			return (1);
 		}
 		listenUrl lu;
@@ -307,17 +325,25 @@ int parseConfig(Server *serv, std::string s)
 	else if (title == "server_name")
 	{
 		//TODO can be multiple
-		if (!serv->getServerName().empty())
-		{
-			std::cout << RED << "Error: double directive server_name";
-			return (1);
-		}
 		if (s.empty())
 		{
 			std::cout << RED << "Error: server_name null";
 			return (1);
 		}
-		serv->setServerName(s);
+		std::string name;
+		while (name.length() != s.length() || name != s)
+		{
+			name = s.substr(0, s.find(del));
+			s.erase(0, s.find(del) + 1);
+			std::cout << YELLOW << name << RESET << std::endl;
+			if(checkContent(serv->getServerName(), name))
+			{
+				std::cout << RED << "Error: same server name";
+				return (1);
+			}
+
+			serv->setServerName(name);
+		}
 	}
 	else if (title == "root")
 	{
@@ -329,6 +355,11 @@ int parseConfig(Server *serv, std::string s)
 		if (s.empty())
 		{
 			std::cout << RED << "Error: root path null";
+			return (1);
+		}
+		if (getNbParams(s) > 1)
+		{
+			std::cout << RED << "Error: too many params";
 			return (1);
 		}
 		serv->setRoot(s);
@@ -465,7 +496,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 int main(int ac, char **av)
 {
 	std::vector<Server> serv;
-	bool conf = true;
+	bool conf = false;
 	std::string filepath = av[ac - 1];
 
 	std::ifstream f(filepath.c_str());
