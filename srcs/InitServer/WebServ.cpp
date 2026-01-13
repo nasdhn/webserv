@@ -56,7 +56,7 @@ WebServ::WebServ(std::vector<Server> &serv)
                     socket_open.push_back(info);
 
                     // DEBUG
-					printLog("Port " + intToStr(tmp_port) + " ouvert avec succès !", GREEN);
+					printLog("Port " + intToStr(tmp_port) + " open !", GREEN);
 					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
@@ -149,9 +149,7 @@ void WebServ::checkTimeOut()
 
 void WebServ::cleanAll()
 {
-	// DEBUG
-	std::cout << "Arret du serv" << std::endl;
-	// DEBUG
+	printLog("Server shutdown !", MAGENTA);
 
 	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		delete it->second;
