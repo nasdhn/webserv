@@ -2,17 +2,46 @@
 
 Request::Request()
 {
+	_method = "";
+	_path = "";
+	_httpVersion = "";
+	_body = "";
+	_tempBuffer = "";
+	_contentLength = 0;
+	_maxBodySize = 0;
+	_state = REQ_START_LINE;
+	_errorCode = 0;
 
 }
 
 Request::Request(const Request& other)
 {
-
+	_method = other._method;
+	_path = other._path;
+	_httpVersion = other._httpVersion;
+	_body = other._body;
+	_tempBuffer = other._tempBuffer;
+	_contentLength = other._contentLength;
+	_maxBodySize = other._maxBodySize;
+	_state = other._state;
+	_errorCode = other._errorCode;
 }
 
 Request& Request::operator=(const Request& other)
 {
-
+	if (this != &other)
+	{
+		_method = other._method;
+		_path = other._path;
+		_httpVersion = other._httpVersion;
+		_body = other._body;
+		_tempBuffer = other._tempBuffer;
+		_contentLength = other._contentLength;
+		_maxBodySize = other._maxBodySize;
+		_state = other._state;
+		_errorCode = other._errorCode;
+	}
+	return (*this);
 }
 
 Request::~Request()
@@ -40,14 +69,71 @@ std::string Request::getBody() const
 	return _body;
 }
 
-std::map<std::string, std::string> Request::getHeader(const std::string& key) const
+bool Request::isComplete() const
 {
-	return _headers;
+    return (_state == REQ_COMPLETE);
+}
+
+int Request::getErrorCode() const
+{
+    return _errorCode;
+}
+
+std::string Request::getHeader(const std::string& key) const
+{
+	std::map<std::string, std::string>::const_iterator it;
+
+    it = _headers.find(key);
+
+    if (it != _headers.end())
+        return it->second;
+    return "";
 }
 
 
 bool Request::parse(const char* data, size_t size)
 {
+	if (size > 0 && data != NULL)
+		_tempBuffer.append(data, size);
+
+	bool stateChanged = true;
+
+	while (stateChanged && _state != REQ_COMPLETE && _state != REQ_ERROR)
+    {
+        stateChanged = false;
+        
+        RequestState previousState = _state;
+
+        switch (_state)
+        {
+            case REQ_START_LINE:
+                if (parseStartLine() == false)
+                    return false;
+                break;
+
+            case REQ_HEADERS:
+                if (parseHeaders() == false)
+                    return false;
+                break;
+
+            case REQ_BODY:
+                if (parseBody() == false)
+                    return false;
+                break;
+
+            case REQ_COMPLETE:
+            case REQ_ERROR:
+                break;
+        }
+
+        if (_state != previousState)
+            stateChanged = true;
+	}
+
+	if (_state == REQ_ERROR)
+    	return false;
+	else
+    	return true;
 
 }
 
@@ -134,6 +220,8 @@ bool Request::parseHeaders()
             value.erase(0, 1);
 		_headers[key] = value;
 
+		//	faire que content lenght soit minuscule majuscule n importe soit accepte
+
 		if (key == "Content-Length")
 		{
 			std::istringstream iss(value);
@@ -145,4 +233,28 @@ bool Request::parseHeaders()
 }
 
 
-bool parseBody();
+bool Request::parseBody()
+{
+	if (_contentLength > _maxBodySize)
+	{
+		_errorCode = 413;
+		_state = REQ_ERROR;
+		return false;
+	}
+
+	size_t needed = _contentLength - _body.size();
+
+	if (_tempBuffer.length() >= needed)
+	{
+		_body.append(_tempBuffer, 0, needed);
+		_tempBuffer.erase(0, needed);
+		_state = REQ_COMPLETE;
+	}
+	else
+	{
+		_body.append(_tempBuffer);
+		_tempBuffer.clear();
+	}
+
+	return true;
+}

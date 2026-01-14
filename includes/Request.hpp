@@ -33,7 +33,7 @@ class Request {
         std::string getPath() const;
         std::string getVersion() const;
         std::string getBody() const;
-        std::map<std::string, std::string> getHeader(const std::string& key) const;
+        std::string getHeader(const std::string& key) const;
 
         void setMaxBodySize(size_t size);
 
@@ -53,6 +53,8 @@ class Request {
         bool parseStartLine();
         bool parseHeaders();
         bool parseBody();
+
+        // ajouter plus tard le pars chunked jspquoi
         
 };
 

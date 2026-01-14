@@ -4,6 +4,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include "Request.hpp"
 
 class Client {
 
@@ -14,8 +15,6 @@ class Client {
         ~Client();
     
         int getID() const;
-        std::string& getRequest();
-        std::string& getHeader();
         std::string& getResponse();
         bool& getReadyToSend();
         unsigned long& getByteSend();
@@ -23,26 +22,21 @@ class Client {
         void setLastTime(time_t time);
         void processRequest(const char* buffer, int size);
 
-        // fonction provisoire a remplacer ou a suppr par celle de class Request
-        int& getContentSizeInt();
-        std::string& getContentSizeString();
+
+        Request& getRequest();
+
 
 
 
 
     private :
         int _id;
-        std::string _request;
-        std::string _header;
         std::string _response;
         bool _readyToSend;
         unsigned long _byteSend;
         time_t _lastTime;
 
-        // variable provisoire a remplacer par celle de class Request
-        std::string _contentLenght_str; 
-        int _contentSize_int;
-     
+        Request _request;
 };
 
 

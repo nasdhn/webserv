@@ -182,8 +182,8 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 			std::cout << "Envoi terminé pour le client " << pfd.fd << std::endl;
 			client->getReadyToSend() = false;
 			client->getByteSend() = 0;
-			client->getRequest().clear();
-			client->getResponse().clear();
+			// client->getRequest().clear();
+			// client->getResponse().clear();
 
 			pfd.events = POLLIN;
 		}
@@ -329,10 +329,10 @@ void WebServ::setupServ()
 							_fd[i].events = POLLOUT | POLLIN;
 
 						// DEBUG
-						std::cout << "Header : " << client->getHeader() << std::endl;
-						std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
+						// std::cout << "Header : " << client->getHeader() << std::endl;
+						// std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
 
-						std::cout << "Requete complete" << std::endl;
+						// std::cout << "Requete complete" << std::endl;
 						// DEBUG
 					}
 				}
