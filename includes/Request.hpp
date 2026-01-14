@@ -33,7 +33,7 @@ class Request {
         std::string getPath() const;
         std::string getVersion() const;
         std::string getBody() const;
-        std::string getHeader(const std::string& key) const;
+        std::map<std::string, std::string> getHeader(const std::string& key) const;
 
         void setMaxBodySize(size_t size);
 

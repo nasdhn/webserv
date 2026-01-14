@@ -20,6 +20,30 @@ Request::~Request()
 
 }
 
+std::string Request::getMethod() const
+{
+	return _method;
+}
+
+std::string Request::getPath() const
+{
+	return _path;
+}
+
+std::string Request::getVersion() const
+{
+	return _httpVersion;
+}
+
+std::string Request::getBody() const
+{
+	return _body;
+}
+
+std::map<std::string, std::string> Request::getHeader(const std::string& key) const
+{
+	return _headers;
+}
 
 
 bool Request::parse(const char* data, size_t size)
