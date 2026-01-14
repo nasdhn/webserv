@@ -11,7 +11,7 @@ void Server::setErrorPage(int ep, std::string path)
 	this->_errorPage.insert(std::make_pair(ep, path));
 }
 
-void Server::setMaxSize(unsigned int size)
+void Server::setMaxSize(unsigned long long size)
 {
 	this->_maxSize = size;
 }
@@ -47,7 +47,7 @@ std::vector<std::string> Server::getServerName()
 	return (this->_serverName);
 }
 
-unsigned int Server::getMaxSize()
+unsigned long long Server::getMaxSize()
 {
 	return (this->_maxSize);
 }

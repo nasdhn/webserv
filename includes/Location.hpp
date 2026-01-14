@@ -18,28 +18,12 @@ struct redir
 	std::string link;
 };
 
-//allow_methods
-//index
-//alias
-//autoindex
-//cgi
-
-//root
-//autoindex
-//client_max_body_size
-//index
-//error_page
-//cgi_handler
-//limit_except
-//upload_store
-//return
-
 class Location
 {
 	private:
 		std::string _name;
 		std::vector<std::string> _methods;
-		bool _autoIndex;
+		int _autoIndex;
 		std::vector<std::string> _index;
 		std::string _uploadPath; //can be empty
 		redir _redirection;
@@ -59,6 +43,9 @@ class Location
 
 		std::vector<std::string> getMethods();
 		std::vector<cgi> getCgi();
+		int getAutoIndex();
+		std::string getUploadPath();
+		redir getRedir();
 
 		void printMethods();
 		void printListDirectory();

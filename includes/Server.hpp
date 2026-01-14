@@ -4,12 +4,18 @@
 # include "header.hpp"
 # include "Location.hpp"
 
+struct listenUrl
+{
+	std::string host;
+	int port;
+};
+
 class Server
 {
 	private:
 		std::vector<std::string> _serverName;
 		std::string _root;
-		unsigned int _maxSize;
+		unsigned long long _maxSize;
 		std::map<unsigned int, std::string> _errorPage;
 		std::vector<listenUrl> _listen;
 		std::vector<Location> _location;
@@ -18,7 +24,7 @@ class Server
 		Server();
 
 		void setErrorPage(int ep, std::string path);
-		void setMaxSize(unsigned int size);
+		void setMaxSize(unsigned long long size);
 		void setListen(listenUrl s);
 		void setLocation(Location s);
 		void setServerName(std::string name);
@@ -26,7 +32,7 @@ class Server
 
 		std::vector<std::string> getServerName();
 		std::string getRoot();
-		unsigned int getMaxSize();
+		unsigned long long getMaxSize();
 		std::vector<listenUrl> getListen();
 
 		void printErrorPage();

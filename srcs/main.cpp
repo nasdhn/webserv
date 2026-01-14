@@ -9,6 +9,15 @@ int getContent(std::string s)
 	return (i);
 }
 
+void delComment(std::string &s)
+{
+	size_t pos = s.find('#');
+	if (pos != std::string::npos)
+		s.erase(pos);
+	if (s[s.length() - 1] == ' ')
+		s.erase(s.length() - 1);
+}
+
 int getNbParams(std::string s)
 {
 	size_t i = 0;
@@ -18,7 +27,7 @@ int getNbParams(std::string s)
 		p++;
 	while (i < s.length())
 	{
-		if (std::isspace(s[i]) && !std::isspace(s[i + 1]))
+		if ((std::isspace(s[i]) && !std::isspace(s[i + 1])))
 			p++;
 		i++;
 	}
@@ -47,7 +56,7 @@ int parseLocation(Location *location, std::string s)
 			return (1);
 		}
 		std::string method;
-		while (method.length() != s.length() || method != s)
+		while (s.length() > 0)
 		{
 			method = s.substr(0, s.find(del));
 			if (checkMethod(method))
@@ -55,13 +64,12 @@ int parseLocation(Location *location, std::string s)
 				std::cout << RED << "Error: methods invalid (GET/POST/DELETE) ";
 				return (1);
 			}
-			s.erase(0, s.find(del) + 1);
+			s.erase(0, method.length() + 1);
 			if(checkContent(location->getMethods(), method))
 			{
 				std::cout << RED << "Error: double methods";
 				return (1);
 			}
-
 			location->setMethod(method);
 		}
 		if (location->getMethods().empty())
@@ -72,15 +80,21 @@ int parseLocation(Location *location, std::string s)
 	}
 	else if (title == "autoindex")
 	{
+		if (location->getAutoIndex() != 2)
+		{
+			std::cout << RED << "Error: double autoindex directive";
+			return (1);
+		}
 		if (s != "on" && s != "off")
 		{
 			std::cout << RED << "Error: boolean incorrect (on/off)";
 			return (1);
 		}
 		bool b;
-
-		//TODO check if is true or false with no caps
-		std::istringstream(s) >> std::boolalpha >> b;
+		if (s == "on")
+			b = true;
+		else if (s == "off")
+			b = false;
 		location->setListDirectory(b);
 		
 	}
@@ -100,6 +114,16 @@ int parseLocation(Location *location, std::string s)
 	}
 	else if (title == "upload_path")
 	{
+		if (!location->getUploadPath().empty())
+		{
+			std::cout << RED << "Error: double upload_path directive";
+			return (1);
+		}
+		if (getNbParams(s) > 1)
+		{
+			std::cout << RED << "Error: too much params";
+			return (1);
+		}
 		if (s.empty())
 		{
 			std::cout << RED << "Error: upload path empty";
@@ -109,8 +133,13 @@ int parseLocation(Location *location, std::string s)
 	}
 	else if (title == "return")
 	{
+		if (location->getRedir().code != 0)
+		{
+			std::cout << RED << "Error: double return directive";
+			return (1);
+		}
 		redir r;
-		if (getNbParams(s) < 1 && getNbParams(s) > 2)
+		if (getNbParams(s) < 1 || getNbParams(s) > 2)
 		{
 			std::cout << RED << "Error: too much or not enough params";
 			return (1);
@@ -136,7 +165,7 @@ int parseLocation(Location *location, std::string s)
 		c.ext = s.substr(0, s.find(" "));
 		if (c.ext.empty())
 		{
-			std::cout << RED << "Error: extension path";
+			std::cout << RED << "Error: extension path empty";
 			return (1);
 		}
 		if (c.ext[0] != '.')
@@ -156,6 +185,12 @@ int parseLocation(Location *location, std::string s)
 			std::cout << RED << "Error: space in path";
 			return (1);
 		}
+		if(checkDoubleCgi(location->getCgi(), c))
+		{
+			std::cout << RED << "Error: double cgi";
+			return (1);
+		}
+			
 		location->setCGI(c);
 	}
 	else
@@ -257,18 +292,34 @@ int parseConfig(Server *serv, std::string s)
 			std::cout << RED << "Error: too much params";
 			return (1);
 		}
-		if (!isDigits(s))
+		unsigned long long size;
+		if (s.find("m") < s.length() || s.find("M") < s.length())
 		{
-			if (std::atoi(s.c_str()) < 0)
+			s.erase(s.length() - 1);
+			size = std::atoi(s.c_str());
+			size *= 1024 * 1024;
+		}
+		else if (s.find("k") < s.length() || s.find("K") < s.length())
+		{
+			s.erase(s.length() - 1);
+			size = std::atoi(s.c_str());
+			size *= 1024;
+		}
+		else
+		{
+			if (!isDigits(s))
 			{
-				std::cout << RED << "Error: maxSize negativ";
+				if (std::atoi(s.c_str()) < 0)
+				{
+					std::cout << RED << "Error: maxSize negativ";
+					return (1);
+				}
+				std::cout << RED << "Error: invalid char";
 				return (1);
 			}
-			std::cout << RED << "Error: invalid char";
-			return (1);
 		}
 		
-		serv->setMaxSize(std::atoi(s.c_str()));
+		serv->setMaxSize(size);
 	}
 	else if (title == "listen")
 	{
@@ -321,7 +372,6 @@ int parseConfig(Server *serv, std::string s)
 		{
 			name = s.substr(0, s.find(del));
 			s.erase(0, s.find(del) + 1);
-			std::cout << YELLOW << name << RESET << std::endl;
 			if(checkContent(serv->getServerName(), name))
 			{
 				std::cout << RED << "Error: same server name";
@@ -370,6 +420,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 	while (std::getline(file, s))
 	{
 		line++;
+		delComment(s);
 		if (s.find("server") < s.length() && !serverConf)
 		{
 			if (haveSemiColon(s))
@@ -383,6 +434,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 			while (std::getline(file, s))
 			{
 				line++;
+				delComment(s);
 				if ((s.find("server") < s.length() && !(s.find("server_name") < s.length())) || !serverConf)
 				{
 					std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
@@ -399,72 +451,78 @@ int parse(std::vector<Server> *serv, std::string filepath)
 					serverConf = false;
 					break;
 				}
-				if (!(s.find("#") < s.length()) && !(s.empty()))
+				//TODO if # is a start of line after del white space
+				if (!(s.empty()))
 				{
 					s = delWhiteSpace(s);
-					if (s.find("location") < s.length() && !locationConf)
+					if (!(s[0] == '#'))
 					{
-						if (haveSemiColon(s))
+						if (s.find("location") < s.length() && !locationConf)
 						{
-							std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
-							return (1);
-						}
-						locationConf = true;
-						Location location;
-						//TODO de la merde voir mieux
-						s.erase(0, 9);
-						std::string name = s.substr(0, s.find(" "));
-						if (name.empty())
-						{
-							std::cout << RED << "Error: missing Location name at line " << line << RESET << std::endl;
-							return (1);
-						}
-						if (name.find("{") < name.length())
-						{
-							std::cout << RED << "Error: { next to location's name" << line << RESET << std::endl;
-							return (1);
-						}
-						location.setName(name);
-						while (std::getline(file, s))
-						{
-							line++;
-							if (!(s.find("#") < s.length()) && !(s.empty()))
+							if (haveSemiColon(s))
 							{
-								if (s.find("{") < s.length() || !locationConf)
-								{
-									std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
-									return (1);
-								}
-								
+								std::cout << RED << "Error: semicolon present after open embrace at line " << line << RESET << std::endl;
+								return (1);
+							}
+							locationConf = true;
+							Location location;
+							//TODO de la merde voir mieux
+							s.erase(0, 9);
+							std::string name = s.substr(0, s.find(" "));
+							if (name.empty())
+							{
+								std::cout << RED << "Error: missing Location name at line " << line << RESET << std::endl;
+								return (1);
+							}
+							if (name.find("{") < name.length())
+							{
+								std::cout << RED << "Error: { next to location's name" << line << RESET << std::endl;
+								return (1);
+							}
+							location.setName(name);
+							while (std::getline(file, s))
+							{
+								line++;
+								delComment(s);
 								s = delWhiteSpace(s);
-								if (s.find("}") < s.length())
+								if (!(s.empty()))
 								{
-									if (checkEmbrace(s))
+									if (s.find("{") < s.length() || !locationConf)
 									{
-										std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
+										std::cout << RED << "Error: missing accolade at line " << line << RESET << std::endl;
 										return (1);
 									}
-									server.setLocation(location);
-									locationConf = false;
-									break;
-								}
-								else
-								{
-									if (parseLocation(&location, s))
+									
+									s = delWhiteSpace(s);
+									if (s.find("}") < s.length())
 									{
-										std::cout << " at line " << line << RESET << std::endl;
-										return (1);
+										if (checkEmbrace(s))
+										{
+											std::cout << RED << "Error: character after closed embrace at line " << line << RESET << std::endl;
+											return (1);
+										}
+										server.setLocation(location);
+										locationConf = false;
+										break;
+									}
+									else
+									{
+										if (parseLocation(&location, s))
+										{
+											std::cout << " at line " << line << RESET << std::endl;
+											return (1);
+										}
 									}
 								}
 							}
 						}
-					}
-					else
-					{
-						if (parseConfig(&server, s))
+						else
 						{
-							std::cout << " at line " << line << RESET << std::endl;
-							return (1);
+							if (parseConfig(&server, s))
+							{
+								std::cout << " at line " << line << RESET << std::endl;
+								return (1);
+							}
 						}
 					}
 				}
@@ -487,7 +545,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 int main(int ac, char **av)
 {
 	std::vector<Server> serv;
-	bool conf = true;
+	bool conf = false;
 	std::string filepath = av[ac - 1];
 
 	std::ifstream f(filepath.c_str());

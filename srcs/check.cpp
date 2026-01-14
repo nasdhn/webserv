@@ -88,9 +88,21 @@ bool checkDoubleListen(const std::vector<listenUrl>& v, const listenUrl& s)
 	for (std::vector<listenUrl>::const_iterator it = v.begin();
 		it != v.end();
 		++it)
-    {
-        if (it->host == s.host && it->port == s.port)
-            return true;
-    }
-    return false;
+	{
+		if (it->host == s.host && it->port == s.port)
+			return true;
+	}
+	return false;
+}
+
+bool checkDoubleCgi(const std::vector<cgi>& v, const cgi& s)
+{
+	for (std::vector<cgi>::const_iterator it = v.begin();
+		it != v.end();
+		++it)
+	{
+		if (it->ext == s.ext && it->path == s.path)
+			return true;
+	}
+	return false;
 }

@@ -1,9 +1,11 @@
 #include "Location.hpp"
 
 
-Location::Location():  _autoIndex(false)
+Location::Location()
 {
 	this->_redirection.code = 0;
+	this->_autoIndex = 2;
+	this->_uploadPath = "";
 }
 
 Location::~Location()
@@ -50,6 +52,25 @@ void Location::setCGI(cgi c)
 std::vector<std::string> Location::getMethods()
 {
 	return (this->_methods);
+}
+
+std::vector<cgi> Location::getCgi()
+{
+	return (this->_cgi);
+}
+
+int Location::getAutoIndex()
+{
+	return (this->_autoIndex);
+}
+std::string Location::getUploadPath()
+{
+	return (this->_uploadPath);
+}
+
+redir Location::getRedir()
+{
+	return (this->_redirection);
 }
 
 void Location::printMethods()

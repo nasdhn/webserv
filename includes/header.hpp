@@ -33,5 +33,6 @@ int isDigits(std::string str);
 int checkHTTPCode(unsigned int code);
 bool checkContent(const std::vector<std::string>& v, const std::string& texte);
 bool checkDoubleListen(const std::vector<listenUrl>& v, const listenUrl& s);
+bool checkDoubleCgi(const std::vector<cgi>& v, const cgi& s);
 
 #endif
