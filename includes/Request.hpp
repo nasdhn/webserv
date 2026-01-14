@@ -4,9 +4,10 @@
 #include <string>
 #include <map>
 #include <iostream>
-#include <cstdlib> // pour strtoul, etc.
+#include <cstdlib>
+#include <sstream>
 
-// On garde tes états, c'est très bien
+
 enum RequestState {
     REQ_START_LINE,
     REQ_HEADERS,
@@ -53,7 +54,6 @@ class Request {
         bool parseHeaders();
         bool parseBody();
         
-        void trim(std::string &s);
 };
 
 #endif
