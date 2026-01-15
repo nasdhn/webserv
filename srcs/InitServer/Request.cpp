@@ -51,6 +51,16 @@ Request::~Request()
 
 }
 
+std::string Request::getPath() const
+{
+	return _path;
+}
+
+std::string Request::getQuery() const
+{
+	return _query;
+}
+
 std::string Request::getMethod() const
 {
 	return _method;
@@ -150,6 +160,7 @@ bool Request::parseStartLine()
 		_state = REQ_ERROR;
 		return false;
 	}
+	parseUri();
 	if (_httpVersion != "HTTP/1.1")
 	{
 		_errorCode = 505;
@@ -158,7 +169,9 @@ bool Request::parseStartLine()
 	}
 	// DEBUG
 	std::cout << "Methode : " << _method << std::endl;
-	std::cout << "Path : " << _uri << std::endl;
+	std::cout << "URI : " << _uri << std::endl;
+	std::cout << "Path : " << _path << std::endl;
+	std::cout << "Query : " << _query << std::endl;
 	std::cout << "htpp Version : " << _httpVersion << std::endl;
 	// DEBUG
 
@@ -250,18 +263,51 @@ bool Request::parseBody()
 	return true;
 }
 
+static std::string urlDecode(const std::string &str)
+{
+    std::string decoded;
+    char ch;
+    int ii;
+
+    for (size_t i = 0; i < str.length(); i++)
+    {
+        if (str[i] == '%')
+        {
+            if (i + 2 < str.length())
+            {
+                std::istringstream hex(str.substr(i + 1, 2));
+                if (hex >> std::hex >> ii)
+                {
+                    ch = static_cast<char>(ii);
+                    decoded += ch;
+                    i += 2;
+                }
+                else
+                    decoded += str[i];
+            }
+            else
+                decoded += str[i];
+        }
+        else if (str[i] == '+')
+            decoded += ' ';
+        else
+            decoded += str[i]; 
+    }
+    return decoded;
+}
+
 void Request::parseUri()
 {
 	size_t pos = _uri.find('?');
 
 	if (pos == std::string::npos)
 	{	
-		_path = _uri;
+		_path = urlDecode(_uri);
 		_query = "";
 	}
 	else
 	{
-		_path = _uri.substr(0, pos);
+		_path = urlDecode(_uri.substr(0, pos));
 		_query = _uri.substr(pos + 1);
 	}
 }

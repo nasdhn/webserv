@@ -33,8 +33,10 @@ class Request {
         std::string getVersion() const;
         std::string getBody() const;
         std::string getHeader(const std::string& key) const;
+        std::string getURI() const;
+        std::string getPath() const;
+        std::string getQuery() const;
 
-        std::string getURI() const;  // voir pour encore parser ca pour URI/PATH/INFO-CGI
 
 
         void setMaxBodySize(size_t size);

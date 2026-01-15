@@ -149,7 +149,7 @@ void WebServ::checkTimeOut()
 
 void WebServ::cleanAll()
 {
-	printLog("Server shutdown !", MAGENTA);
+	printLog("SERVER SHUTDOWN", MAGENTA);
 
 	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		delete it->second;
