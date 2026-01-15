@@ -8,7 +8,7 @@ Request::Request()
 	_body = "";
 	_tempBuffer = "";
 	_contentLength = 0;
-	_maxBodySize = 0;
+	_maxBodySize = 1048576;
 	_state = REQ_START_LINE;
 	_errorCode = 0;
 
@@ -25,6 +25,7 @@ Request::Request(const Request& other)
 	_maxBodySize = other._maxBodySize;
 	_state = other._state;
 	_errorCode = other._errorCode;
+	_headers= other._headers;
 }
 
 Request& Request::operator=(const Request& other)
@@ -40,6 +41,7 @@ Request& Request::operator=(const Request& other)
 		_maxBodySize = other._maxBodySize;
 		_state = other._state;
 		_errorCode = other._errorCode;
+		_headers= other._headers;
 	}
 	return (*this);
 }
@@ -101,40 +103,32 @@ bool Request::parse(const char* data, size_t size)
 	while (stateChanged && _state != REQ_COMPLETE && _state != REQ_ERROR)
     {
         stateChanged = false;
-        
         RequestState previousState = _state;
-
         switch (_state)
         {
             case REQ_START_LINE:
                 if (parseStartLine() == false)
                     return false;
                 break;
-
             case REQ_HEADERS:
                 if (parseHeaders() == false)
                     return false;
                 break;
-
             case REQ_BODY:
                 if (parseBody() == false)
                     return false;
                 break;
-
             case REQ_COMPLETE:
             case REQ_ERROR:
                 break;
         }
-
         if (_state != previousState)
             stateChanged = true;
 	}
-
 	if (_state == REQ_ERROR)
     	return false;
 	else
     	return true;
-
 }
 
 bool Request::parseStartLine()
@@ -147,7 +141,6 @@ bool Request::parseStartLine()
 	std::string line = _tempBuffer.substr(0, pos);
 	_tempBuffer.erase(0, pos + 2);
 
-
 	std::stringstream ss(line);
 	ss >> _method >> _path >> _httpVersion;
 
@@ -157,15 +150,12 @@ bool Request::parseStartLine()
 		_state = REQ_ERROR;
 		return false;
 	}
-
 	if (_httpVersion != "HTTP/1.1")
 	{
 		_errorCode = 505;
 		_state = REQ_ERROR;
 		return false;
 	}
-
-
 	// DEBUG
 	std::cout << "Methode : " <<_method << std::endl;
 	std::cout << "Path : " <<_path << std::endl;
@@ -174,7 +164,6 @@ bool Request::parseStartLine()
 
 	_state = REQ_HEADERS;
 	return true;
-
 }
 
 
@@ -218,11 +207,13 @@ bool Request::parseHeaders()
 
 		if (!value.empty() && value[0] == ' ')
             value.erase(0, 1);
+
+		for (size_t i = 0; i < key.length(); i++)
+			key[i] = std::tolower(key[i]);
+		
 		_headers[key] = value;
 
-		//	faire que content lenght soit minuscule majuscule n importe soit accepte
-
-		if (key == "Content-Length")
+		if (key == "content-length")
 		{
 			std::istringstream iss(value);
 			iss >> _contentLength; 
