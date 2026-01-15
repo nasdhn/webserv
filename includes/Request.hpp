@@ -30,19 +30,25 @@ class Request {
         int  getErrorCode() const;
 
         std::string getMethod() const;
-        std::string getPath() const;
         std::string getVersion() const;
         std::string getBody() const;
         std::string getHeader(const std::string& key) const;
+
+        std::string getURI() const;  // voir pour encore parser ca pour URI/PATH/INFO-CGI
+
 
         void setMaxBodySize(size_t size);
 
     private:
         std::string _method;
-        std::string _path;
         std::string _httpVersion;
         std::map<std::string, std::string> _headers;
         std::string _body;
+
+        std::string _uri;
+        std::string _path;
+        std::string _query;
+
 
         std::string _tempBuffer; 
         size_t      _contentLength;
@@ -53,6 +59,8 @@ class Request {
         bool parseStartLine();
         bool parseHeaders();
         bool parseBody();
+        void parseUri();
+
 
         // ajouter plus tard le pars chunked jspquoi
         

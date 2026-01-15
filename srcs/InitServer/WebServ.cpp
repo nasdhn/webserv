@@ -56,7 +56,7 @@ WebServ::WebServ(std::vector<Server> &serv)
                     socket_open.push_back(info);
 
                     // DEBUG
-					printLog("Port " + intToStr(tmp_port) + " open !", GREEN);
+					printLog("PORT " + intToStr(tmp_port) + " OPEN", GREEN);
 					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
@@ -228,13 +228,13 @@ void WebServ::servInit(std::string ip, int port)
 		close(socketServer);
 		throw std::runtime_error("Error : Bind failed !");
 	}
-	std::cout << "Bind" << std::endl;
+	// std::cout << "Bind" << std::endl;
 	if (listen(socketServer, 10) == -1)
 	{
 		close(socketServer);
 		throw std::runtime_error("Error : Listen failed !");
 	}
-	std::cout << "Mode ecoute" << std::endl;
+	// std::cout << "Mode ecoute" << std::endl;
 
 	// integration de poll
 	struct pollfd sfd;

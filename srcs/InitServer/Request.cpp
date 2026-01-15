@@ -3,12 +3,12 @@
 Request::Request()
 {
 	_method = "";
-	_path = "";
+	_uri= "";
 	_httpVersion = "";
 	_body = "";
 	_tempBuffer = "";
 	_contentLength = 0;
-	_maxBodySize = 1048576;
+	_maxBodySize = 1048576; // mettre le truc de cyril
 	_state = REQ_START_LINE;
 	_errorCode = 0;
 
@@ -17,7 +17,7 @@ Request::Request()
 Request::Request(const Request& other)
 {
 	_method = other._method;
-	_path = other._path;
+	_uri = other._uri;
 	_httpVersion = other._httpVersion;
 	_body = other._body;
 	_tempBuffer = other._tempBuffer;
@@ -33,7 +33,7 @@ Request& Request::operator=(const Request& other)
 	if (this != &other)
 	{
 		_method = other._method;
-		_path = other._path;
+		_uri = other._uri;
 		_httpVersion = other._httpVersion;
 		_body = other._body;
 		_tempBuffer = other._tempBuffer;
@@ -56,9 +56,9 @@ std::string Request::getMethod() const
 	return _method;
 }
 
-std::string Request::getPath() const
+std::string Request::getURI() const
 {
-	return _path;
+	return _uri;
 }
 
 std::string Request::getVersion() const
@@ -142,9 +142,9 @@ bool Request::parseStartLine()
 	_tempBuffer.erase(0, pos + 2);
 
 	std::stringstream ss(line);
-	ss >> _method >> _path >> _httpVersion;
+	ss >> _method >> _uri >> _httpVersion;
 
-	if (_method.empty() || _path.empty() || _httpVersion.empty())
+	if (_method.empty() || _uri.empty() || _httpVersion.empty())
 	{
 		_errorCode = 400;
 		_state = REQ_ERROR;
@@ -157,9 +157,9 @@ bool Request::parseStartLine()
 		return false;
 	}
 	// DEBUG
-	std::cout << "Methode : " <<_method << std::endl;
-	std::cout << "Path : " <<_path << std::endl;
-	std::cout << "htpp Version : " <<_httpVersion << std::endl;
+	std::cout << "Methode : " << _method << std::endl;
+	std::cout << "Path : " << _uri << std::endl;
+	std::cout << "htpp Version : " << _httpVersion << std::endl;
 	// DEBUG
 
 	_state = REQ_HEADERS;
@@ -248,4 +248,20 @@ bool Request::parseBody()
 	}
 
 	return true;
+}
+
+void Request::parseUri()
+{
+	size_t pos = _uri.find('?');
+
+	if (pos == std::string::npos)
+	{	
+		_path = _uri;
+		_query = "";
+	}
+	else
+	{
+		_path = _uri.substr(0, pos);
+		_query = _uri.substr(pos + 1);
+	}
 }
