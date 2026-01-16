@@ -11,6 +11,8 @@ Request::Request()
 	_maxBodySize = 1048576; // mettre le truc de cyril
 	_state = REQ_START_LINE;
 	_errorCode = 0;
+	_isChunked = false;
+	_chunkSize = 0;
 
 }
 
@@ -26,6 +28,8 @@ Request::Request(const Request& other)
 	_state = other._state;
 	_errorCode = other._errorCode;
 	_headers= other._headers;
+	_chunkSize = other._chunkSize;
+	_isChunked = other._isChunked;
 }
 
 Request& Request::operator=(const Request& other)
@@ -128,6 +132,10 @@ bool Request::parse(const char* data, size_t size)
                 if (parseBody() == false)
                     return false;
                 break;
+			case REQ_CHUNKED_BODY:
+				if (parseChunkBody() == false)
+					return false;
+				break;
             case REQ_COMPLETE:
             case REQ_ERROR:
                 break;
@@ -195,7 +203,9 @@ bool Request::parseHeaders()
 		if (pos == 0)
 		{	
 			_tempBuffer.erase(0, 2);
-			if (_contentLength > 0)
+			if (_isChunked)
+				_state = REQ_CHUNKED_BODY;
+			else if (_contentLength > 0)
 				_state = REQ_BODY;
 			else
 				_state = REQ_COMPLETE;
@@ -226,12 +236,13 @@ bool Request::parseHeaders()
 		
 		_headers[key] = value;
 
-		if (key == "content-length")
+		if (key == "transfer-encoding" && value.find("chunked") != std::string::npos)
+				_isChunked = true;
+		else if (key == "content-length" && _isChunked == false)
 		{
 			std::istringstream iss(value);
 			iss >> _contentLength; 
 		}
-
 	}
 	return true;
 }
@@ -309,5 +320,48 @@ void Request::parseUri()
 	{
 		_path = urlDecode(_uri.substr(0, pos));
 		_query = _uri.substr(pos + 1);
+	}
+}
+
+bool Request::parseChunkBody()
+{
+	std::string line = "";
+	size_t needed = 0;
+
+	while (true)
+	{
+		if (_chunkSize == 0)
+		{
+			size_t pos = _tempBuffer.find("\r\n");
+			if (pos == std::string::npos)
+				return true;
+			else
+			{
+				line = _tempBuffer.substr(0, pos);
+				std::stringstream ss;
+				ss << std::hex << line;
+				ss >> _chunkSize;
+				_tempBuffer.erase(0, pos + 2);
+				if (_chunkSize == 0)
+				{	
+					_state = REQ_COMPLETE;
+					return true;
+				}
+				_tempBuffer.erase(0, pos + 2);
+			}
+		}
+		else
+		{
+			needed = _chunkSize + 2;
+			if (_tempBuffer.size() < needed)
+				return true;
+			else
+			{
+				_body.append(_tempBuffer, 0, _chunkSize);
+				_tempBuffer.erase(0, needed);
+				_chunkSize = 0;
+			}
+		}
+
 	}
 }

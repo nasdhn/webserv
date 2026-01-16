@@ -12,6 +12,7 @@ enum RequestState {
     REQ_START_LINE,
     REQ_HEADERS,
     REQ_BODY,
+    REQ_CHUNKED_BODY,
     REQ_COMPLETE,
     REQ_ERROR
 };
@@ -58,10 +59,15 @@ class Request {
         RequestState _state;
         int          _errorCode;
 
+        bool _isChunked;
+        size_t _chunkSize;
+
         bool parseStartLine();
         bool parseHeaders();
         bool parseBody();
+        bool parseChunkBody();
         void parseUri();
+        
 
 
         // ajouter plus tard le pars chunked jspquoi
