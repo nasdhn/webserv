@@ -1,5 +1,22 @@
 #include "Request.hpp"
 
+/* ************************************************************************** */
+/* Analyseur de requêtes HTTP 1.1. Transforme le flux d'octets bruts (TCP)    */
+/* en un objet structuré et utilisable par le serveur.                        */
+/* 																			  */
+/* Fonctionnalités clés :                                                     */
+/* - Machine à états : Lit ligne de départ -> En-têtes -> Corps (Body).       */
+/* - Décodage Chunked : Gère automatiquement le 'Transfer-Encoding: chunked'. */
+/* - Nettoyage : Décode les URI (enlève les %20) et sépare la Query String.   */
+/* - Sécurité : Vérifie les erreurs (400 Bad Request, 505 Version HTTP).      */
+/* - Protection : Bloque la requête si le body dépasse la limite configurée   */
+/* dans le serveur (Erreur 413).                                              */
+/* 																			  */
+/* ************************************************************************** */
+
+
+// A FAIRE : MAX SIZE DEPUIS LE PARSING A INCLURE
+
 Request::Request()
 {
 	_method = "";
@@ -8,7 +25,7 @@ Request::Request()
 	_body = "";
 	_tempBuffer = "";
 	_contentLength = 0;
-	_maxBodySize = 1048576; // mettre le truc de cyril
+	_maxBodySize = 2147483648; // valeur temporaire avant de mettre le truc de cyril
 	_state = REQ_START_LINE;
 	_errorCode = 0;
 	_isChunked = false;
@@ -53,6 +70,16 @@ Request& Request::operator=(const Request& other)
 Request::~Request()
 {
 
+}
+
+void Request::setErrorCode(int code)
+{
+    _errorCode = code;
+}
+
+void Request::setMaxBodySize(size_t size)
+{
+    _maxBodySize = size;
 }
 
 std::string Request::getPath() const
@@ -347,7 +374,6 @@ bool Request::parseChunkBody()
 					_state = REQ_COMPLETE;
 					return true;
 				}
-				_tempBuffer.erase(0, pos + 2);
 			}
 		}
 		else

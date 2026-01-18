@@ -50,9 +50,14 @@ void Location::setCGI(cgi c)
 	this->_cgi.push_back(c);
 }
 
-std::vector<std::string> Location::getMethods()
+std::vector<std::string> Location::getMethods() const
 {
 	return (this->_methods);
+}
+
+std::string Location::getName() const
+{
+	return (this->_name);
 }
 
 std::string Location::getRoot()

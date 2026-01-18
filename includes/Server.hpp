@@ -34,6 +34,7 @@ class Server
 		std::string getRoot();
 		unsigned long long getMaxSize();
 		std::vector<listenUrl> getListen();
+		std::vector<Location>& getLocation();
 
 		void printErrorPage();
 		void printServerName();

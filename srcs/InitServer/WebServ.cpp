@@ -1,7 +1,20 @@
 #include "WebServ.hpp"
 #include "Server.hpp"
 
-// vu qu'on peut pas check errno, je fait confiance a poll et si send echoue je suppr le fd;
+/* ************************************************************************** */
+/* Gestionnaire principal du serveur. Il s'occupe du démarrage, de la boucle  */
+/* principale d'événements et de l'accès à la configuration globale.          */
+/* 																			  */
+/* Responsabilités clés :                                                     */
+/* 1. Initialisation : Ouvre les ports d'écoute (sockets) selon la config.    */
+/* 2. Multiplexing : Utilise poll() pour surveiller plusieurs connexions      */
+/* (clients et serveurs) en même temps sans bloquer le programme.             */
+/* 3. Cycle de vie : Accepte les nouveaux clients et supprime ceux qui sont   */
+/* déconnectés ou inactifs (timeout).                                         */
+/* 4. Outils de Routing : Fournit les fonctions 'findServer' et 'findLocation'*/
+/* utilisées par les Clients pour trouver leur configuration.                 */
+/* 																			  */
+/* ************************************************************************** */
 
 volatile bool sigPressed = true;
 
@@ -23,8 +36,12 @@ void WebServ::printLog(const std::string &msg, const std::string &color)
     std::cout << "[" << buffer << "] -> " << color << msg << RESET << std::endl;
 }
 
+std::vector<Server>& WebServ::getServers() 
+{
+    return _servers;
+}
 
-WebServ::WebServ(std::vector<Server> &serv)
+WebServ::WebServ(std::vector<Server> &serv) : _servers(serv)
 {
     std::vector<SocketInfo> socket_open;
 
@@ -198,6 +215,64 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 	return true;
 }
 
+Server* WebServ::findServer(std::vector<Server>& serv, std::string& host_listen, int port_listen)
+{
+    Server* defaultServ = NULL;
+
+    std::string hostClean = host_listen;
+    size_t pos = hostClean.find(':');
+    if (pos != std::string::npos)
+        hostClean = hostClean.substr(0, pos);
+
+    for (size_t i = 0; i < serv.size(); i++)
+    {
+        for (size_t j = 0; j < serv[i].getListen().size(); j++)
+        {
+            if (serv[i].getListen()[j].port == port_listen)
+            {
+                if (defaultServ == NULL)
+                    defaultServ = &serv[i];
+                
+                // CORRECTION : On parcourt le vecteur des noms du serveur
+                std::vector<std::string> names = serv[i].getServerName();
+                for (size_t k = 0; k < names.size(); k++)
+                {
+                    if (names[k] == hostClean)
+                        return &serv[i];
+                }
+            }
+        }
+    }
+    return defaultServ;
+}
+
+
+const Location* WebServ::findLocation(Server* server, const std::string& uri)
+{
+    const Location* match = NULL;
+    size_t maxLen = 0;
+
+    const std::vector<Location>& locs = server->getLocation();
+
+    for (size_t i = 0; i < locs.size(); i++)
+    {
+        const std::string& locName = locs[i].getName();
+        
+        if (uri.find(locName) == 0)
+        {
+            if (uri.length() == locName.length() || uri[locName.length()] == '/')
+            {
+                if (locName.length() > maxLen)
+                {
+                    match = &locs[i];
+                    maxLen = locName.length();
+                }
+            }
+        }
+    }
+    return match;
+}
+
 void WebServ::servInit(std::string ip, int port)
 {
 	int socketServer = socket(AF_INET, SOCK_STREAM, 0);
@@ -291,7 +366,7 @@ void WebServ::setupServ()
 						continue;
 					}
 
-					Client *newClient = new Client(clientSocket);
+					Client *newClient = new Client(clientSocket, this);
 					_clients[clientSocket] = newClient;
 
 					struct pollfd clientFD;

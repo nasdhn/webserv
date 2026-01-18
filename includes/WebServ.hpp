@@ -18,6 +18,7 @@
 #include <cerrno>
 #include "Server.hpp"
 
+class Client;
 class Server;
 
 struct SocketInfo {
@@ -44,12 +45,17 @@ class WebServ {
 		void printLog(const std::string &msg, const std::string &color);
 		std::string intToStr(int n);
 
+		Server* findServer(std::vector<Server>& serv, std::string& host_listen, int port_listen);
+		const Location* findLocation(Server* server, const std::string& uri);
+
+		std::vector<Server>& getServers();
 
 	private :
 		std::vector<struct pollfd> _fd;
 		std::map<int, Client*> _clients;
 		std::vector<int> _serverSockets;
 		bool _readyToSend;
+		std::vector<Server> _servers;
 };
 
 void signalHandler(int sig);

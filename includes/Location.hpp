@@ -43,7 +43,8 @@ class Location
 		void setCGI(cgi c);
 		void setRoot(std::string s);
 
-		std::vector<std::string> getMethods();
+		std::vector<std::string> getMethods() const;
+		std::string getName() const;
 		std::vector<cgi> getCgi();
 		int getAutoIndex();
 		std::string getUploadPath();

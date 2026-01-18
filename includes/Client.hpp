@@ -5,11 +5,16 @@
 #include <iostream>
 #include <sstream>
 #include "Request.hpp"
+#include "WebServ.hpp"
+#include "Location.hpp"
+
+class WebServ;
+class Server;
 
 class Client {
 
     public :
-        Client(int fd);
+        Client(int fd, WebServ* webServ);
         Client(const Client& other);
         Client& operator=(const Client &other);
         ~Client();
@@ -37,6 +42,9 @@ class Client {
         time_t _lastTime;
 
         Request _request;
+        Server* _server;
+        const Location* _location;
+        WebServ* _webServ;
 };
 
 

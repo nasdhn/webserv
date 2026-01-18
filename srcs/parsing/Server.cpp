@@ -16,6 +16,11 @@ void Server::setMaxSize(unsigned long long size)
 	this->_maxSize = size;
 }
 
+std::vector<Location>& Server::getLocation()
+{
+	return (this->_location);
+}
+
 void Server::setListen(listenUrl s)
 {
 	
