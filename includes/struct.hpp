@@ -3,10 +3,8 @@
 
 # include "header.hpp"
 
-struct listenUrl
-{
-	std::string host;
-	int port;
-};
+struct listenUrl;
+struct cgi;
+struct redir;
 
 #endif
