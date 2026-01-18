@@ -232,8 +232,6 @@ Server* WebServ::findServer(std::vector<Server>& serv, std::string& host_listen,
             {
                 if (defaultServ == NULL)
                     defaultServ = &serv[i];
-                
-                // CORRECTION : On parcourt le vecteur des noms du serveur
                 std::vector<std::string> names = serv[i].getServerName();
                 for (size_t k = 0; k < names.size(); k++)
                 {
