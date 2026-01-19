@@ -8,11 +8,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "../../includes/Response.hpp"
+#include "../../includes/Request.hpp"
 
 #include <fstream>
 #include <sstream>
 
-std::string getErrorPageContent(int code, FakeRequest req) {
+std::string getErrorPageContent(int code, Request req)
+{
     if (req.error_pages.count(code) > 0) {
         std::string path = req.error_pages[code];
         std::ifstream file(path.c_str());
@@ -45,7 +47,7 @@ std::string getExtention(std::string path)
 	return ext;
 }
 
-int execCGI(FakeRequest req, pid_t &pid)
+int execCGI(Request req, pid_t &pid)
 {
 	int fd_out[2];
 	int fd_in[2];
@@ -69,7 +71,7 @@ int execCGI(FakeRequest req, pid_t &pid)
 		close (fd_in[1]);
 		dup2(fd_out[0], STDOUT_FILENO);
 		close(fd_out[1]);
-		std::string ext = getExtention(req.path);
+		std::string ext = getExtention(req.getPath());
 		char *arg[3];
 		std::string bin;
 		if (ext == ".py")
@@ -85,12 +87,12 @@ int execCGI(FakeRequest req, pid_t &pid)
 			exit (0);
 		}
 		arg[0] = (char *)bin.c_str();
-		arg[1] = (char *)req.path.c_str();
+		arg[1] = (char *)req.getPath().c_str();
 		arg[2] = NULL;
 		std::vector<std::string> envs;
-    	envs.push_back("REQUEST_METHOD=" + req.method);
-    	envs.push_back("QUERY_STRING=" + req.query);
-    	envs.push_back("PATH_INFO=" + req.path);
+    	envs.push_back("REQUEST_METHOD=" + req.getMethod());
+    	envs.push_back("QUERY_STRING=" + req.getQuery());
+    	envs.push_back("PATH_INFO=" + req.getPath());
 		char **envp = new char*[envs.size() + 1];
     	for (size_t i = 0; i < envs.size(); i++) {
         	envp[i] = (char*)envs[i].c_str();
@@ -106,24 +108,24 @@ int execCGI(FakeRequest req, pid_t &pid)
 		//process parent
 		close(fd_out[1]);
 		close(fd_in[0]);
-		if (req.method == "POST" && !req.body.empty()) {
-            write(fd_in[1], req.body.c_str(), req.body.size());
+		if (req.getMethod() == "POST" && !req.getBody().empty()) {
+            write(fd_in[1], req.getBody().c_str(), req.getBody().size());
         }
 		close(fd_in[1]);
 		return (fd_out[0]);
 	}
 }
 
-Response ft_delete(Response res, FakeRequest req)
+Response ft_delete(Response res, Request req)
 {
 	struct stat info;
-	if (stat(req.path.c_str(), &info) != 0)
+	if (stat(req.getPath().c_str(), &info) != 0)
 	{
 		res.setStatus(404);
 		res.setBody("<h1>404 Not Found</h1>");
 		return res;
 	}
-	if (unlink(req.path.c_str()) == 0)
+	if (unlink(req.getPath().c_str()) == 0)
 	{
 		res.setStatus(204);
 		res.setBody("<h1>204 No Content</h1>");
@@ -132,16 +134,16 @@ Response ft_delete(Response res, FakeRequest req)
 	return (res.setStatus(403), res);
 }
 
-Response BuildResponse(FakeRequest req)
+Response BuildResponse(Request req)
 {
 	Response res;
 	std::string body;
 	struct stat info;
-	if (req.method == "DELETE")
+	if (req.getMethod() == "DELETE")
 	{
 		return ft_delete(res, req);
 	}
-	if (stat(req.path.c_str(), &info) != 0)
+	if (stat(req.getPath().c_str(), &info) != 0)
 	{
 		res.setStatus(404);
 		res.setBody("<h1>404 Not Found</h1>");
@@ -153,7 +155,7 @@ Response BuildResponse(FakeRequest req)
 		res.setBody("<h1>It is a folder</h1>");
 		return res;
 	}
-	std::string ext = getExtention(req.path);
+	std::string ext = getExtention(req.getPath());
 	int content;
 	if (ext == ".py" || ext == ".php" || ext == ".cgi")
 	{
@@ -169,9 +171,9 @@ Response BuildResponse(FakeRequest req)
 		res.setpid(pid);
 		return res;
 	}
-	if (req.method == "GET")
+	if (req.getMethod() == "GET")
 	{
-		int fd = open(req.path.c_str(), O_RDONLY);
+		int fd = open(req.getPath().c_str(), O_RDONLY);
 		if (fd == -1)
 		{
 			res.setStatus(403);
