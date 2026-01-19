@@ -1,7 +1,7 @@
 #include "../../includes/Response.hpp"
 #include <unistd.h>
 
-Response::Response() : _status(200), _body("") {
+Response::Response() : _fd_body(-1), _status(200), _body("") {
     _headers["Server"] = "Webserv/1.0";
 }
 

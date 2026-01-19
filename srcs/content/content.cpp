@@ -9,12 +9,31 @@
 #include <fcntl.h>
 #include "../../includes/Response.hpp"
 
-struct FakeRequest {
-    std::string method;
-    std::string path;
-    std::string query;
-    std::string body;
-};
+#include <fstream>
+#include <sstream>
+
+std::string getErrorPageContent(int code, FakeRequest req) {
+    if (req.error_pages.count(code) > 0) {
+        std::string path = req.error_pages[code];
+        std::ifstream file(path.c_str());
+        if (file.is_open()) {
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            return buffer.str();
+        }
+    }
+    std::stringstream ss;
+    ss << "<html><head><title>Error</title></head>";
+    ss << "<body><center><h1>" << code << "</h1></center>";
+    
+    if (code == 404) ss << "<center>Not Found</center>";
+    else if (code == 403) ss << "<center>Forbidden</center>";
+    else if (code == 405) ss << "<center>Method Not Allowed</center>";
+    else if (code == 500) ss << "<center>Internal Server Error</center>";
+    
+    ss << "</body></html>";
+    return ss.str();
+}
 
 std::string getExtention(std::string path)
 {
