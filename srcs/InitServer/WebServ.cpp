@@ -73,7 +73,8 @@ WebServ::WebServ(std::vector<Server> &serv) : _servers(serv)
                     socket_open.push_back(info);
 
                     // DEBUG
-					printLog("PORT " + intToStr(tmp_port) + " OPEN", GREEN);
+					// L
+					printLog("Listening on " + tmp_ip + ":" + intToStr(tmp_port), GREEN);
 					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
