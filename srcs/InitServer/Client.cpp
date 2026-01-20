@@ -24,7 +24,7 @@ Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
 	_lastTime = time(NULL);
 
 	// provisoire ce que je met dedans
-	_response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 50\n\n<h1>bonjour ok voila</h1>";
+	_response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 50000\n\n";
 }
 
 Client::Client(const Client& other)
@@ -57,6 +57,34 @@ Request& Client::getRequest()
 Client::~Client()
 {
 	_readyToSend = false;
+}
+
+std::string readHtml(std::string path)
+{
+	std::ifstream file;
+	std::string s;
+	std::string msg;
+
+	std::cout << path << std::endl;
+	file.open(path.c_str());
+	while (std::getline(file, s))
+	{
+		msg += s + "\n";
+	}
+	return msg;
+}
+
+std::string createPath(std::string root, std::string location, std::string file)
+{
+	std::string path = root;
+	std::cout << path[path.length() - 1] << std::endl;
+	if (location[0] != '/')
+		path += "/";
+	path += location;
+	if (path[path.length()] != '/')
+		path += "/";
+	path += file;
+	return (path);
 }
 
 void Client::processRequest(const char *buffer, int size)
@@ -129,7 +157,7 @@ void Client::processRequest(const char *buffer, int size)
             _readyToSend = true;
             return;
         }
-
+		_response += readHtml(createPath(_server->getRoot(), _location->getName(), "index.html"));
         // SUCCÈS
         std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << " | Loc: " << _location->getName() << std::endl;
         
