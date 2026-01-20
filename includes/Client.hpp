@@ -7,6 +7,7 @@
 #include "Request.hpp"
 #include "WebServ.hpp"
 #include "Location.hpp"
+#include "Response.hpp"
 
 class WebServ;
 class Server;
@@ -20,7 +21,7 @@ class Client {
         ~Client();
     
         int getID() const;
-        std::string& getResponse();
+        Response& getResponse();
         bool& getReadyToSend();
         unsigned long& getByteSend();
         time_t& getLastTime();
@@ -36,7 +37,7 @@ class Client {
 
     private :
         int _id;
-        std::string _response;
+        Response _response;
         bool _readyToSend;
         unsigned long _byteSend;
         time_t _lastTime;
@@ -45,6 +46,9 @@ class Client {
         Server* _server;
         const Location* _location;
         WebServ* _webServ;
+
+        std::string _headerBuffer;
+        bool        _headersSent;
 };
 
 
