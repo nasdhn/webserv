@@ -5,13 +5,29 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-Response::Response() : _is_fd(false), _status(200), _fd_body(-1), _cgi_pid(-1), _body(""), _req(NULL), _server(NULL), _location(NULL)
+Response::Response() 
+    : _req(NULL), 
+      _server(NULL), 
+      _location(NULL), 
+      _is_fd(false), 
+      _status(200), 
+      _fd_body(-1), 
+      _cgi_pid(-1), 
+      _body("")
 {
     _headers["Server"] = "Webserv/1.0";
     _headers["Connection"] = "keep-alive";
 }
 
-Response::Response(Request& req, Server* server, Location* location) : _is_fd(false), _status(200), _fd_body(-1), _cgi_pid(-1), _body(""), _req(&req), _server(server), _location(location)
+Response::Response(Request& req, Server* server, Location* location) 
+    : _req(&req),
+      _server(server),
+      _location(location),
+      _is_fd(false), 
+      _status(200), 
+      _fd_body(-1), 
+      _cgi_pid(-1), 
+      _body("")
 {
     _headers["Server"] = "Webserv/1.0";
     _headers["Connection"] = "keep-alive";
