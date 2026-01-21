@@ -3,7 +3,7 @@
 std::string delWhiteSpace(std::string s)
 {
 	int i = 0;
-	while (std::isspace(s[i]))
+	while (i < (int)s.length() && std::isspace(s[i]))
 		i++;
 	s.erase(0, i);
 	return s;

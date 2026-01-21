@@ -7,6 +7,7 @@
 #include "Request.hpp"
 #include "WebServ.hpp"
 #include "Location.hpp"
+#include "Response.hpp"
 
 class WebServ;
 class Server;
@@ -27,8 +28,11 @@ class Client {
         void setLastTime(time_t time);
         void processRequest(const char* buffer, int size);
 
+        void setFileFD(int n);
+        void closeFile();
 
         Request& getRequest();
+        int& getFileFD();
 
 
 
@@ -36,7 +40,9 @@ class Client {
 
     private :
         int _id;
-        std::string _response;
+        Response _response;
+        std::string _responseStr; // contientdra header + body
+        int _fileFD;
         bool _readyToSend;
         unsigned long _byteSend;
         time_t _lastTime;
@@ -45,6 +51,9 @@ class Client {
         Server* _server;
         const Location* _location;
         WebServ* _webServ;
+
+        std::string _headerBuffer;
+        bool        _headersSent;
 };
 
 

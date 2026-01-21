@@ -35,6 +35,7 @@ class Server
 		unsigned long long getMaxSize();
 		std::vector<listenUrl> getListen();
 		std::vector<Location>& getLocation();
+		std::map<unsigned int, std::string> getErrorPage();
 
 		void printErrorPage();
 		void printServerName();
