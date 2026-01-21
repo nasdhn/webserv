@@ -4,7 +4,7 @@ int getContent(std::string s)
 {
 	int i = 0;
 
-	while (!std::isspace(s[i]))
+	while (i < (int)s.length() && !std::isspace(s[i]))
 		i++;
 	return (i);
 }
@@ -14,7 +14,8 @@ void delComment(std::string &s)
 	size_t pos = s.find('#');
 	if (pos != std::string::npos)
 		s.erase(pos);
-	if (s[s.length() - 1] == ' ')
+	
+	if (!s.empty() && s[s.length() - 1] == ' ')
 		s.erase(s.length() - 1);
 }
 

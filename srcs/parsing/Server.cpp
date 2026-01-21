@@ -73,6 +73,11 @@ void Server::printErrorPage()
 	}
 }
 
+std::map<unsigned int, std::string> Server::getErrorPage()
+{
+	return _errorPage;
+}
+
 void Server::printServerName()
 {
 	std::cout << "server name : " << std::endl;

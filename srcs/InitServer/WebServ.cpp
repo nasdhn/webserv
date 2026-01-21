@@ -73,7 +73,8 @@ WebServ::WebServ(std::vector<Server> &serv) : _servers(serv)
                     socket_open.push_back(info);
 
                     // DEBUG
-					printLog("PORT " + intToStr(tmp_port) + " OPEN", GREEN);
+					// L
+					printLog("Listening on " + tmp_ip + ":" + intToStr(tmp_port), GREEN);
 					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
@@ -180,39 +181,90 @@ void WebServ::cleanAll()
 	_fd.clear();
 }
 
+
+/* ************************************************************************** */
+/* Cette fonction est appelée en boucle par poll() tant que le client est     */
+/* prêt à recevoir des données (POLLOUT).                                     */
+/* Fonctionnement en 3 Étapes (Le "Robinet") :                                */
+/* ÉTAPE 1 : La String (Headers + Petit Body)                                 */
+/* - On envoie d'abord ce qui est stocké dans la mémoire RAM (_responseStr).  */
+/* - C'est ici que partent les en-têtes (HTTP 200 OK...) et les erreurs.      */
+/* - Si le tuyau sature, on coupe la string et on reviendra envoyer le reste. */
+/* ÉTAPE 2 : Le Fichier (Gros Body)                                           */
+/* - Une fois la String vide, on regarde si un fichier est ouvert (_fileFD).  */
+/* - On ne charge JAMAIS tout le fichier. On lit juste un petit morceau (4ko).*/
+/* - On envoie ce morceau immédiatement.                                      */
+/* - On répète cette étape des centaines de fois jusqu'à la fin du fichier.   */
+/* ÉTAPE 3 : Reset                                                            */
+/* - Quand la String est vide ET que le Fichier est fini                      */
+/* - On remet le client à zéro pour qu'il puisse envoyer une nouvelle requête.*/
+/* Retourne :                                                                 */
+/* - TRUE  : Tout va bien, on garde la connexion ouverte.                     */
+/* - FALSE : Erreur critique (client déconnecté), il faut supprimer le Client.*/
+/* |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  */
+/* V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  */
+/* ************************************************************************** */
+
 bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 {
-	std::string &msg = client->getResponse();
-	unsigned long total_size = client->getResponse().size();
-	unsigned long sent = client->getByteSend();
+    if (!client->getResponse().empty())
+    {
+        std::string& msg = client->getResponse();
+        int ret = send(pfd.fd, msg.c_str(), msg.size(), 0);
 
-	int ret = send(pfd.fd, msg.c_str() + sent, total_size - sent, 0);
+        if (ret > 0)
+            msg.erase(0, ret);
+        else
+            return false;
 
-	if (ret > 0)
-	{
-		client->getByteSend() += ret;
-		std::cout << ret << " octets envoyés..." << std::endl;
+        if (!msg.empty())
+            return true;
+    }
+    if (client->getResponse().empty() && client->getFileFD() != -1)
+    {
+        char buffer[4096];
+        int retRead = read(client->getFileFD(), buffer, 4096);
 
-		if (client->getByteSend() >= total_size)
-		{
-			client->setLastTime(time(NULL));
-			std::cout << "Envoi terminé pour le client " << pfd.fd << std::endl;
-			client->getReadyToSend() = false;
-			client->getByteSend() = 0;
-			// client->getRequest().clear();
-			// client->getResponse().clear();
+        if (retRead > 0)
+        {
+            int retSend = send(pfd.fd, buffer, retRead, 0);
 
-			pfd.events = POLLIN;
-		}
-		return true;
-	}
-	if (ret == -1)
-	{
-		std::cout << "Envoi echoué.. a retnter" << std::endl;
-		// tout close si ca echoue
-		return false;
-	}
-	return true;
+            if (retSend > 0)
+            {
+                if (retSend < retRead)
+                    client->getResponse().append(buffer + retSend, retRead - retSend);
+
+                client->getByteSend() += retSend;
+                return true;
+            }
+            else
+            {
+                close(client->getFileFD());
+                client->setFileFD(-1);
+                return false;
+            }
+        }
+        else if (retRead == 0)
+        {
+            close(client->getFileFD());
+            client->setFileFD(-1);
+        }
+        else
+        {
+            close(client->getFileFD());
+            client->setFileFD(-1);
+            return false;
+        }
+    }
+    if (client->getResponse().empty() && client->getFileFD() == -1)
+    {
+        client->getReadyToSend() = false;
+        client->getByteSend() = 0;
+        pfd.events = POLLIN;
+        client->reset();
+    }
+
+    return true;
 }
 
 Server* WebServ::findServer(std::vector<Server>& serv, std::string& host_listen, int port_listen)
@@ -337,7 +389,7 @@ void WebServ::setupServ()
 		int pollret = poll(&_fd[0], _fd.size(), 1000);
 		if (pollret == -1)
 		{
-			if (errno == EINTR)
+			if (errno == EINTR) // j ai le droit car pas ecriture ni lecture c juste check d intialisation
 				break;
 			throw std::runtime_error("Error : Poll's initialisation failed !");
 		}
@@ -396,7 +448,7 @@ void WebServ::setupServ()
 					}
 					if (ret > 0)
 					{
-						client->processRequest(buffer, ret); // gere la requete et lecture du body coder en dure pour l isntant a modifier
+						client->processRequest(buffer, ret);
 
 						if (client->getReadyToSend() == true)
 							_fd[i].events = POLLOUT | POLLIN;

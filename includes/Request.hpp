@@ -39,8 +39,12 @@ class Request {
         std::string getQuery() const;
 
         void setErrorCode(int code);
-        
 
+        bool headerParsed() const;
+        size_t getCurrentBodySize() const;
+        size_t getMaxBodySize() const;
+        
+        void clear();
 
 
         void setMaxBodySize(size_t size);
@@ -69,12 +73,7 @@ class Request {
         bool parseHeaders();
         bool parseBody();
         bool parseChunkBody();
-        void parseUri();
-        
-
-
-        // ajouter plus tard le pars chunked jspquoi
-        
+        void parseUri();     
 };
 
 #endif

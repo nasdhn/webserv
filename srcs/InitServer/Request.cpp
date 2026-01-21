@@ -25,7 +25,7 @@ Request::Request()
 	_body = "";
 	_tempBuffer = "";
 	_contentLength = 0;
-	_maxBodySize = 2147483648; // valeur temporaire avant de mettre le truc de cyril
+	_maxBodySize = 2147483648;
 	_state = REQ_START_LINE;
 	_errorCode = 0;
 	_isChunked = false;
@@ -70,6 +70,25 @@ Request& Request::operator=(const Request& other)
 Request::~Request()
 {
 
+}
+
+// Dans Request.cpp
+void Request::clear()
+{
+    _method = "";
+    _uri = "";
+    _path = "";
+    _query = "";
+    _httpVersion = "";
+    _body = "";
+    _headers.clear();
+    _state = REQ_START_LINE;
+    _errorCode = 0;
+    _tempBuffer = ""; 
+    _isChunked = false;
+    _chunkSize = 0;
+    _contentLength = 0;
+    _maxBodySize = 2147483648;
 }
 
 void Request::setErrorCode(int code)
@@ -120,6 +139,21 @@ bool Request::isComplete() const
 int Request::getErrorCode() const
 {
     return _errorCode;
+}
+
+bool Request::headerParsed() const
+{
+	return (_state > REQ_HEADERS);
+}
+
+size_t Request::getCurrentBodySize() const
+{
+	return _body.size();
+}
+
+size_t Request::getMaxBodySize() const
+{
+    return _maxBodySize;
 }
 
 std::string Request::getHeader(const std::string& key) const
@@ -357,6 +391,12 @@ bool Request::parseChunkBody()
 
 	while (true)
 	{
+        if (_body.size() > _maxBodySize) 
+		{
+        	_errorCode = 413;
+        	_state = REQ_ERROR;
+        	return false;
+        }
 		if (_chunkSize == 0)
 		{
 			size_t pos = _tempBuffer.find("\r\n");

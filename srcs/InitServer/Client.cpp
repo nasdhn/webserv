@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "../../includes/Response.hpp"
 
 /* ************************************************************************** */
 /* Représente un client connecté. C'est le chef d'orchestre qui gère le       */
@@ -22,18 +23,18 @@ Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
 	_readyToSend = false;
 	_byteSend = 0;
 	_lastTime = time(NULL);
-
-	// provisoire ce que je met dedans
-	_response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 50000\n\n";
+	_headersSent = false;
+    _headerBuffer = "";
+    _fileFD = -1; 
+    _responseStr = "";
+    _server = NULL;
+    _location = NULL;
+    _routingDone = false;
 }
 
 Client::Client(const Client& other)
 {
-	_id = other._id;
-	_request = other._request;
-	_response = other._response;
-	_readyToSend = other._readyToSend;
-	_byteSend = other._byteSend;
+	*this = other;
 }
 
 Client& Client::operator=(const Client& other)
@@ -45,6 +46,15 @@ Client& Client::operator=(const Client& other)
 		_response = other._response;
 		_readyToSend = other._readyToSend;
 		_byteSend = other._byteSend;
+
+        _headersSent = other._headersSent;
+        _headerBuffer = other._headerBuffer;
+        _server = other._server;
+        _location = other._location;
+        _lastTime = other._lastTime;
+        _fileFD = other._fileFD; 
+        _responseStr = other._responseStr;
+        _routingDone = other._routingDone;
 	}
 	return (*this);
 }
@@ -54,11 +64,26 @@ Request& Client::getRequest()
 	return _request;
 }
 
-Client::~Client()
+bool& Client::getRoutingDone()
 {
-	_readyToSend = false;
+    return _routingDone;
 }
 
+void Client::reset()
+{
+    _routingDone = false;
+    _headersSent = false;
+    _server = NULL;
+    _location = NULL;
+    _request.clear();
+}
+
+Client::~Client()
+{
+    closeFile();
+	_readyToSend = false;
+}
+/*
 std::string readHtml(std::string path)
 {
 	std::ifstream file;
@@ -85,6 +110,15 @@ std::string createPath(std::string root, std::string location, std::string file)
 		path += "/";
 	path += file;
 	return (path);
+}*/
+void Client::closeFile() 
+{ 
+    if (_fileFD != -1) close(_fileFD); _fileFD = -1; 
+}
+
+void Client::setFileFD(int n)
+{
+    _fileFD = n;
 }
 
 void Client::processRequest(const char *buffer, int size)
@@ -96,73 +130,94 @@ void Client::processRequest(const char *buffer, int size)
     if (success == false)
     {
         std::cout << "Parsing error : " << _request.getErrorCode() << std::endl;
-        _request.setErrorCode(400);
+        _response.setStatus(400);
+        _response.setBody("<html><body><h1>400 Bad Request</h1></body></html>");
+        _headerBuffer = _response.get_header() + "\r\n";
+        _headersSent = false;
         _readyToSend = true;
         return ;
     }
-    if (_request.isComplete())
+    if (_routingDone == false && _request.getHeader("host").empty() == false)
     {
-        // DEBUG
-        std::cout << "Requete complete recu !" << std::endl;
-        std::cout << "Methode : " << _request.getMethod() << std::endl;
-        // DEBUG
-
         std::string host = _request.getHeader("host");
-
         struct sockaddr_in sin;
         socklen_t len = sizeof(sin);
         int port = 80;
 
         if (getsockname(_id, (struct sockaddr *)&sin, &len) != -1)
             port = ntohs(sin.sin_port);
+        
         _server = _webServ->findServer(_webServ->getServers(), host, port);
+        
         if (_server == NULL) 
         {
-            std::cout << "Erreur 500 : Aucun serveur trouvé pour ce port/host !" << std::endl;
-            _request.setErrorCode(500);
-            _readyToSend = true;
-            return;
-        }
-        std::string uri = _request.getPath();
-        _location = _webServ->findLocation(_server, uri);
-        if (_location == NULL) 
-        {
-            std::cout << "Erreur 404 : Route non trouvée pour " << uri << std::endl;
-            _request.setErrorCode(404);
-            _readyToSend = true;
-            return;
-        }
-        if (_server->getMaxSize() > 0 && _request.getBody().size() > (size_t)_server->getMaxSize())
-        {
-            std::cout << "Erreur 413 : Payload Too Large" << std::endl;
-            _request.setErrorCode(413);
+            _response.setStatus(500);
+            _response.setBody("<html><body><h1>500 Internal Server Error</h1></body></html>");
+            _headerBuffer = _response.get_header() + "\r\n";
+            _headersSent = false;
             _readyToSend = true;
             return;
         }
 
-        std::vector<std::string> methods = _location->getMethods();
-        bool methodAllowed = false;
-        for (size_t i = 0; i < methods.size(); ++i) 
+        std::string uri = _request.getPath();
+        _location = _webServ->findLocation(_server, uri);
+
+        size_t limit = _server->getMaxSize(); 
+        if (_location)
+             limit = _server->getMaxSize();
+
+        _request.setMaxBodySize(limit);
+
+        std::string cl = _request.getHeader("content-length");
+        if (cl.empty() == false)
         {
-            if (methods[i] == _request.getMethod()) 
+            size_t len = std::atoll(cl.c_str());
+            if (len > limit)
             {
-                methodAllowed = true;
-                break;
+                std::cout << "Erreur 413 : Content-Length (" << len << ") > Limit (" << limit << ")" << std::endl;
+                _request.setErrorCode(413);
             }
         }
-        if (!methodAllowed)
+        
+        _routingDone = true;
+    }
+
+    if (_routingDone == true && _request.getBody().size() > _request.getMaxBodySize())
+    {
+        _request.setErrorCode(413);
+    }
+    if (_request.getErrorCode() == 413)
+    {
+        _response.setStatus(413);
+        _response.setBody("<html><body><h1>413 Request Entity Too Large</h1></body></html>");
+        _response.setHeader("Connection", "close");
+        _headerBuffer = _response.get_header() + "\r\n";
+        _headersSent = false;
+        _readyToSend = true;
+        return;
+    }
+    if (_request.isComplete())
+    {
+        std::cout << "Requete complete recu !" << std::endl;
+        std::cout << "Methode : " << _request.getMethod() << std::endl;
+        std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
+        
+        _response = Response(_request, _server, (Location*)_location);
+        _headerBuffer = _response.get_header() + "\r\n";
+        _headersSent = false;
+        _readyToSend = true;
+
+        _responseStr = _response.get_header();
+
+        if (_response.is_fd())
         {
-            std::cout << "Erreur 405 : Method Not Allowed" << std::endl;
-            _request.setErrorCode(405);
-            _readyToSend = true;
-            return;
+            _fileFD = _response.get_body_fd();
         }
-		_response += readHtml(createPath(_server->getRoot(), _location->getName(), "index.html"));
-        // SUCCÈS
-        std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << " | Loc: " << _location->getName() << std::endl;
-        
-        // appeler ici la fonction de yan pour la reponse ou dans la boucle
-        
+        else
+        {
+            _responseStr += _response.get_body_string();
+            _fileFD = -1;
+        }
         _readyToSend = true;
     }
     else
@@ -171,10 +226,14 @@ void Client::processRequest(const char *buffer, int size)
     }
 }
 
-
 void Client::setLastTime(time_t time)
 {
 	_lastTime = time;
+}
+
+int& Client::getFileFD()
+{
+    return _fileFD;
 }
 
 int Client::getID() const
@@ -185,7 +244,7 @@ int Client::getID() const
 
 std::string& Client::getResponse()
 {
-	return _response;
+	return _responseStr;
 }
 
 bool& Client::getReadyToSend()
