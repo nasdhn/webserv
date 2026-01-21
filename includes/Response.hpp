@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <signal.h>
+#include <sys/wait.h>
 
 class Response {
     public:
@@ -22,6 +24,7 @@ class Response {
         std::string get_header() const;
         int get_body_fd();
         std::string get_body_string();
+        
 
     private:
         bool _is_fd;
