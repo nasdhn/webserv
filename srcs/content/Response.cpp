@@ -334,7 +334,7 @@ void Response::_build()
 
     if (S_ISDIR(info.st_mode))
     {
-        if (_location && _location->getAutoIndex())
+        if (_location && _location->getAutoIndex() == 1)
         {
              setStatus(200);
              setBody("<h1>Index of " + _req->getPath() + "</h1>");
