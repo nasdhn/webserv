@@ -29,6 +29,7 @@ Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
     _responseStr = "";
     _server = NULL;
     _location = NULL;
+    _routingDone = false;
 
 }
 
@@ -54,6 +55,7 @@ Client& Client::operator=(const Client& other)
         _lastTime = other._lastTime;
         _fileFD = other._fileFD; 
         _responseStr = other._responseStr;
+        _routingDone = other._routingDone;
 	}
 	return (*this);
 }
@@ -61,6 +63,20 @@ Client& Client::operator=(const Client& other)
 Request& Client::getRequest()
 {
 	return _request;
+}
+
+bool& Client::getRoutingDone()
+{
+    return _routingDone;
+}
+
+void Client::reset()
+{
+    _routingDone = false;
+    _headersSent = false;
+    _server = NULL;
+    _location = NULL;
+    _request.clear();
 }
 
 Client::~Client()
@@ -95,25 +111,20 @@ void Client::processRequest(const char *buffer, int size)
         _readyToSend = true;
         return ;
     }
-    if (_request.isComplete())
+    if (_routingDone == false && _request.getHeader("host").empty() == false)
     {
-        // DEBUG
-        std::cout << "Requete complete recu !" << std::endl;
-        std::cout << "Methode : " << _request.getMethod() << std::endl;
-        // DEBUG
-
         std::string host = _request.getHeader("host");
-
         struct sockaddr_in sin;
         socklen_t len = sizeof(sin);
         int port = 80;
 
         if (getsockname(_id, (struct sockaddr *)&sin, &len) != -1)
             port = ntohs(sin.sin_port);
+        
         _server = _webServ->findServer(_webServ->getServers(), host, port);
+        
         if (_server == NULL) 
         {
-            std::cout << "Erreur 500 : Aucun serveur trouvé pour ce port/host !" << std::endl;
             _response.setStatus(500);
             _response.setBody("<html><body><h1>500 Internal Server Error</h1></body></html>");
             _headerBuffer = _response.get_header() + "\r\n";
@@ -121,10 +132,51 @@ void Client::processRequest(const char *buffer, int size)
             _readyToSend = true;
             return;
         }
+
         std::string uri = _request.getPath();
         _location = _webServ->findLocation(_server, uri);
-        // SUCCÈS
+
+        size_t limit = _server->getClientMaxBodySize(); 
+        if (_location)
+             limit = _location->getClientMaxBodySize();
+
+        _request.setMaxBodySize(limit);
+
+        std::string cl = _request.getHeader("content-length");
+        if (cl.empty() == false)
+        {
+            size_t len = std::atoll(cl.c_str());
+            if (len > limit)
+            {
+                std::cout << "Erreur 413 : Content-Length (" << len << ") > Limit (" << limit << ")" << std::endl;
+                _request.setErrorCode(413);
+            }
+        }
+        
+        _routingDone = true;
+        std::cout << "Routing Early Done -> Limit set to: " << limit << std::endl;
+    }
+
+    if (_routingDone == true && _request.getBody().size() > _request.getMaxBodySize())
+    {
+        _request.setErrorCode(413);
+    }
+    if (_request.getErrorCode() == 413)
+    {
+        _response.setStatus(413);
+        _response.setBody("<html><body><h1>413 Request Entity Too Large</h1></body></html>");
+        _response.setHeader("Connection", "close");
+        _headerBuffer = _response.get_header() + "\r\n";
+        _headersSent = false;
+        _readyToSend = true;
+        return;
+    }
+    if (_request.isComplete())
+    {
+        std::cout << "Requete complete recu !" << std::endl;
+        std::cout << "Methode : " << _request.getMethod() << std::endl;
         std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
+        
         _response = Response(_request, _server, (Location*)_location);
         _headerBuffer = _response.get_header() + "\r\n";
         _headersSent = false;

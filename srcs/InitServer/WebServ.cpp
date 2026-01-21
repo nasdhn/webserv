@@ -257,6 +257,7 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
         client->getByteSend() = 0;
         
         pfd.events = POLLIN;
+		client->reset();
     }
 
     return true;
@@ -384,7 +385,7 @@ void WebServ::setupServ()
 		int pollret = poll(&_fd[0], _fd.size(), 1000);
 		if (pollret == -1)
 		{
-			if (errno == EINTR)
+			if (errno == EINTR) // j ai le droit car pas ecriture ni lecture c juste check d intialisation
 				break;
 			throw std::runtime_error("Error : Poll's initialisation failed !");
 		}
@@ -443,7 +444,7 @@ void WebServ::setupServ()
 					}
 					if (ret > 0)
 					{
-						client->processRequest(buffer, ret); // gere la requete et lecture du body coder en dure pour l isntant a modifier
+						client->processRequest(buffer, ret);
 
 						if (client->getReadyToSend() == true)
 							_fd[i].events = POLLOUT | POLLIN;

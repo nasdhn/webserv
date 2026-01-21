@@ -39,8 +39,11 @@ class Request {
         std::string getQuery() const;
 
         void setErrorCode(int code);
-        
 
+        bool headerParsed() const;
+        size_t getCurrentBodySize() const;
+        
+        void clear();
 
 
         void setMaxBodySize(size_t size);

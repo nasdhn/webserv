@@ -30,6 +30,8 @@ class Client {
 
         void setFileFD(int n);
         void closeFile();
+        bool& getRoutingDone();
+        void reset();
 
         Request& getRequest();
         int& getFileFD();
@@ -46,6 +48,7 @@ class Client {
         bool _readyToSend;
         unsigned long _byteSend;
         time_t _lastTime;
+        bool _routingDone;
 
         Request _request;
         Server* _server;
@@ -54,6 +57,7 @@ class Client {
 
         std::string _headerBuffer;
         bool        _headersSent;
+
 };
 
 
