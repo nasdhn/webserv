@@ -113,7 +113,11 @@ std::string createPath(std::string root, std::string location, std::string file)
 }*/
 void Client::closeFile() 
 { 
-    if (_fileFD != -1) close(_fileFD); _fileFD = -1; 
+    if (_fileFD != -1) 
+	{
+		close(_fileFD);
+		_fileFD = -1; 
+	}
 }
 
 void Client::setFileFD(int n)
