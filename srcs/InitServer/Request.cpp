@@ -151,6 +151,11 @@ size_t Request::getCurrentBodySize() const
 	return _body.size();
 }
 
+size_t Request::getMaxBodySize() const
+{
+    return _maxBodySize;
+}
+
 std::string Request::getHeader(const std::string& key) const
 {
 	std::map<std::string, std::string>::const_iterator it;

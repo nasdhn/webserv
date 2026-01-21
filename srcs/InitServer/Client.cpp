@@ -136,9 +136,9 @@ void Client::processRequest(const char *buffer, int size)
         std::string uri = _request.getPath();
         _location = _webServ->findLocation(_server, uri);
 
-        size_t limit = _server->getClientMaxBodySize(); 
+        size_t limit = _server->getMaxSize(); 
         if (_location)
-             limit = _location->getClientMaxBodySize();
+             limit = _server->getMaxSize();
 
         _request.setMaxBodySize(limit);
 
@@ -154,7 +154,6 @@ void Client::processRequest(const char *buffer, int size)
         }
         
         _routingDone = true;
-        std::cout << "Routing Early Done -> Limit set to: " << limit << std::endl;
     }
 
     if (_routingDone == true && _request.getBody().size() > _request.getMaxBodySize())

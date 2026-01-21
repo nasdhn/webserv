@@ -42,6 +42,7 @@ class Request {
 
         bool headerParsed() const;
         size_t getCurrentBodySize() const;
+        size_t getMaxBodySize() const;
         
         void clear();
 
@@ -72,12 +73,7 @@ class Request {
         bool parseHeaders();
         bool parseBody();
         bool parseChunkBody();
-        void parseUri();
-        
-
-
-        // ajouter plus tard le pars chunked jspquoi
-        
+        void parseUri();     
 };
 
 #endif

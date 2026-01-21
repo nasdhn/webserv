@@ -207,57 +207,61 @@ void WebServ::cleanAll()
 
 bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 {
-	if (!client->getResponse().empty())
-	{
-		std::string& msg = client->getResponse();
-		int ret = send(pfd.fd, msg.c_str(), msg.size(), 0);
-
-		if (ret > 0)
-			msg.erase(0, ret);
-		else
-		{
-			std::cerr << "Erreur send sur le header Déconnexion" << std::endl;
-			return false;
-		}
-		if (!msg.empty())
-            return true;
-	}
-	if (client->getResponse().empty() && client->getFileFD() != -1)
-	{
-		char buffer[4096];
-		int retRead = read(client->getFileFD(), buffer, 4096);
-		if (retRead > 0)
-		{
-			int retSend = send(pfd.fd, buffer, retRead, 0);
-
-			if (retSend > 0)
-				if (retSend < retRead)
-					client->getResponse().append(buffer + retSend, retRead - retSend);
-
-			client->getByteSend() += retSend;
-			return true;
-		}
-		else
-		{
-			std::cerr << "Erreur send sur le header Déconnexion" << std::endl;
-			return false;
-		}
-	}
-	else
-	{
-		close(client->getFileFD());
-		client->setFileFD(-1);
-	}
-
-	if (client->getResponse().empty() && client->getFileFD() == -1)
+    if (!client->getResponse().empty())
     {
-        std::cout << "Réponse terminée pour le client " << pfd.fd << std::endl;
-        
+        std::string& msg = client->getResponse();
+        int ret = send(pfd.fd, msg.c_str(), msg.size(), 0);
+
+        if (ret > 0)
+            msg.erase(0, ret);
+        else
+            return false;
+
+        if (!msg.empty())
+            return true;
+    }
+    if (client->getResponse().empty() && client->getFileFD() != -1)
+    {
+        char buffer[4096];
+        int retRead = read(client->getFileFD(), buffer, 4096);
+
+        if (retRead > 0)
+        {
+            int retSend = send(pfd.fd, buffer, retRead, 0);
+
+            if (retSend > 0)
+            {
+                if (retSend < retRead)
+                    client->getResponse().append(buffer + retSend, retRead - retSend);
+
+                client->getByteSend() += retSend;
+                return true;
+            }
+            else
+            {
+                close(client->getFileFD());
+                client->setFileFD(-1);
+                return false;
+            }
+        }
+        else if (retRead == 0)
+        {
+            close(client->getFileFD());
+            client->setFileFD(-1);
+        }
+        else
+        {
+            close(client->getFileFD());
+            client->setFileFD(-1);
+            return false;
+        }
+    }
+    if (client->getResponse().empty() && client->getFileFD() == -1)
+    {
         client->getReadyToSend() = false;
         client->getByteSend() = 0;
-        
         pfd.events = POLLIN;
-		client->reset();
+        client->reset();
     }
 
     return true;
