@@ -157,7 +157,7 @@ void Client::processRequest(const char *buffer, int size)
         std::cout << "Routing Early Done -> Limit set to: " << limit << std::endl;
     }
 
-    if (_routingDone == true && _request.getBody().size() > _request.getMaxSize())
+    if (_routingDone == true && _request.getBody().size() > _request.getMaxBodySize())
     {
         _request.setErrorCode(413);
     }

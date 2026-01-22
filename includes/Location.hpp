@@ -29,6 +29,7 @@ class Location
 		redir _redirection;
 		std::vector<cgi> _cgi;
 		std::string _root;
+		unsigned long long _maxBodySize;
 
 	public:
 		Location();
@@ -42,6 +43,7 @@ class Location
 		void setRedirection(redir r);
 		void setCGI(cgi c);
 		void setRoot(std::string s);
+		void setMaxBodySize(unsigned long long size);
 
 		std::vector<std::string> getMethods() const;
 		std::string getName() const;
@@ -51,6 +53,7 @@ class Location
 		std::string getUploadPath();
 		redir getRedir();
 		std::string getRoot();
+		unsigned long long getMaxBodySize() const;
 		// Dans Location.hpp
 
 		void printMethods();

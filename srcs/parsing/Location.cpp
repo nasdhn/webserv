@@ -14,6 +14,10 @@ Location::~Location()
 
 }
 
+void Location::setMaxBodySize(unsigned long long size)
+{
+    _maxBodySize = size;
+}
 
 void Location::setName(std::string n)
 {
@@ -88,6 +92,11 @@ std::string Location::getUploadPath()
 redir Location::getRedir()
 {
 	return (this->_redirection);
+}
+
+unsigned long long Location::getMaxBodySize() const
+{
+	return(_maxBodySize);
 }
 
 void Location::printMethods()

@@ -37,6 +37,7 @@ class Request {
         std::string getURI() const;
         std::string getPath() const;
         std::string getQuery() const;
+        size_t getMaxBodySize() const;
 
         void setErrorCode(int code);
 
