@@ -32,7 +32,6 @@ void WebServ::printLog(const std::string &msg, const std::string &color)
 
     char buffer[80];
     strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", ltm);
-
     std::cout << "[" << buffer << "] -> " << color << msg << RESET << std::endl;
 }
 
@@ -71,11 +70,8 @@ WebServ::WebServ(std::vector<Server> &serv) : _servers(serv)
                     info.ip = tmp_ip;
                     info.port = tmp_port;
                     socket_open.push_back(info);
-
                     // DEBUG
-					// L
 					printLog("Listening on " + tmp_ip + ":" + intToStr(tmp_port), GREEN);
-					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
                 catch (std::exception &e) 
@@ -343,7 +339,6 @@ void WebServ::servInit(std::string ip, int port)
     	throw std::runtime_error("Error : Invalid IP !");
 	}	
 	// address.sin_zero[(sizeof(address))];
-
 	if (fcntl(socketServer, F_SETFL, O_NONBLOCK) == -1)
 	{
 		close(socketServer);
@@ -354,13 +349,11 @@ void WebServ::servInit(std::string ip, int port)
 		close(socketServer);
 		throw std::runtime_error("Error : Bind failed !");
 	}
-	// std::cout << "Bind" << std::endl;
 	if (listen(socketServer, 10) == -1)
 	{
 		close(socketServer);
 		throw std::runtime_error("Error : Listen failed !");
 	}
-	// std::cout << "Mode ecoute" << std::endl;
 
 	// integration de poll
 	struct pollfd sfd;
@@ -386,17 +379,15 @@ void WebServ::setupServ()
 	{
 		checkTimeOut();
 		// integration de poll
-
 		int pollret = poll(&_fd[0], _fd.size(), 1000);
 		if (pollret == -1)
 		{
-			if (errno == EINTR) // j ai le droit car pas ecriture ni lecture c juste check d intialisation
+			if (errno == EINTR)
 				break;
 			throw std::runtime_error("Error : Poll's initialisation failed !");
 		}
 		if (pollret == 0)
 			continue;
-
 		for (unsigned int i = 0; i < _fd.size(); i++)
 		{
 			if (_fd[i].revents & POLLIN)
@@ -416,7 +407,6 @@ void WebServ::setupServ()
 						std::cerr << "Error fcntl : Client closed.." << std::endl;
 						continue;
 					}
-
 					Client *newClient = new Client(clientSocket, this);
 					_clients[clientSocket] = newClient;
 
@@ -425,7 +415,6 @@ void WebServ::setupServ()
 					clientFD.events = POLLIN;
 					clientFD.revents = 0;
 					_fd.push_back(clientFD);
-
 					// DEBUG
 					printLog("Nouveau client connecté [" + intToStr(clientSocket) + ']', BOLD);
 				}
@@ -436,9 +425,6 @@ void WebServ::setupServ()
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
-						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout / a voir si je met ca ou pas
-						// si 0 on close
-						// normalement je laisse comme ca sans check errno car pas le droit
 						printLog("\033[1mDéconnexion du client numéro " + intToStr(_fd[i].fd), RED);
 						close(_fd[i].fd);
 						_clients.erase(_fd[i].fd);
@@ -453,19 +439,8 @@ void WebServ::setupServ()
 
 						if (client->getReadyToSend() == true)
 							_fd[i].events = POLLOUT | POLLIN;
-
-						// DEBUG
-						// std::cout << "Header : " << client->getHeader() << std::endl;
-						// std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
-
-						// std::cout << "Requete complete" << std::endl;
-						// DEBUG
 					}
 				}
-
-				// DEBUG
-				std::cout << "client parle.." << std::endl;
-				std::cout << _fd.size() << " FD dans la liste" << std::endl;
 			}
 
 			if (_fd[i].revents & POLLOUT)
