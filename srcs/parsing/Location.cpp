@@ -7,11 +7,22 @@ Location::Location()
 	this->_autoIndex = 2;
 	this->_uploadPath = "";
 	this->_root = "";
+	_maxBodySize = 0;
 }
 
 Location::~Location()
 {
 
+}
+
+void Location::setMaxBodySize(unsigned long long size)
+{
+    _maxBodySize = size;
+}
+
+unsigned long long Location::getMaxBodySize() const
+{
+    return _maxBodySize;
 }
 
 

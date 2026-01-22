@@ -153,6 +153,7 @@ void WebServ::checkTimeOut()
 			_clients.erase(fd_kill);
 		}
 		close(fd_kill);
+		printLog("\033[1mTimeout du client numéro [" + intToStr(fd_kill) + ']', RED);
 
 		for (unsigned int j = 0; j < _fd.size(); j++)
 		{
@@ -167,7 +168,7 @@ void WebServ::checkTimeOut()
 
 void WebServ::cleanAll()
 {
-	printLog("SERVER SHUTDOWN", MAGENTA);
+	printLog("\033[0;35mSERVER SHUTDOWN", BOLD);
 
 	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		delete it->second;
@@ -222,8 +223,8 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
     }
     if (client->getResponse().empty() && client->getFileFD() != -1)
     {
-        char buffer[4096];
-        int retRead = read(client->getFileFD(), buffer, 4096);
+        char buffer[BUFFERSIZE];
+        int retRead = read(client->getFileFD(), buffer, BUFFERSIZE);
 
         if (retRead > 0)
         {
@@ -426,19 +427,19 @@ void WebServ::setupServ()
 					_fd.push_back(clientFD);
 
 					// DEBUG
-					std::cout << "Nouveau client connecté sur le FD " << clientSocket << std::endl;
+					printLog("Nouveau client connecté [" + intToStr(clientSocket) + ']', BOLD);
 				}
 				else
 				{
 					Client *client = _clients[_fd[i].fd];
-					char buffer[4096] = {0};
+					char buffer[BUFFERSIZE] = {0};
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
 						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout / a voir si je met ca ou pas
 						// si 0 on close
 						// normalement je laisse comme ca sans check errno car pas le droit
-						std::cout << "Déconnexion.." << std::endl;
+						printLog("\033[1mDéconnexion du client numéro " + intToStr(_fd[i].fd), RED);
 						close(_fd[i].fd);
 						_clients.erase(_fd[i].fd);
 						delete client;
