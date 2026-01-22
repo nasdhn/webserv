@@ -17,66 +17,66 @@
 		<h2 class="subtitle">Mandatory</h2>
 		<div class="buttons">
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./html/long_file.html';">GET...</button>
 				<p>a page > 100kb</p>
+				<button class="linkButton" onclick="window.location.href='./html/long_file.html';">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./html/image.html';">GET...</button>
 				<p>a page with an image</p>
+				<button class="linkButton" onclick="window.location.href='./html/image.html';">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./redir';">GO...</button>
 				<p>to a 301 redir</p>
+				<button class="linkButton" onclick="window.location.href='./redir';">GO...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./moved_permanently';">GO...</button>
 				<p>to a 308 redir</p>
+				<button class="linkButton" onclick="window.location.href='./moved_permanently';">GO...</button>
 			</div>
 			<div class="card item-mandatory">
+				<p>a file to our server</p>
 				<input type="file" id="fileInput" style="display: none;" accept="*/*">
 				<button class="linkButton" onclick="selectFile('upload')">POST...</button>
-				<p>a file to our server</p>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="deleteFile()">DELETE...</button>
 				<p>a file from our server</p>
+				<button class="linkButton" onclick="deleteFile()">DELETE...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="deleteForbidden('/upload/folder')">DELETE...</button>
 				<p>a directory</p>
+				<button class="linkButton" onclick="deleteForbidden('/upload/folder')">DELETE...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./upload';">GET...</button>
 				<p>an autoindex</p>
+				<button class="linkButton" onclick="window.location.href='./upload';">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="sendBadRequest()">GET...</button>
 				<p>a 400 error</p>
+				<button class="linkButton" onclick="sendBadRequest()">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="deleteForbidden('/upload/default_upload_test_0.txt')">GET...</button>
 				<p>a 403 error</p>
+				<button class="linkButton" onclick="deleteForbidden('/upload/default_upload_test_0.txt')">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./nonexisting.html';">GET...</button>
  				<p>a 404 error</p>
+				<button class="linkButton" onclick="window.location.href='./nonexisting.html';">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="sendPut()">GET...</button>
 				<p>a 405 error</p>
+				<button class="linkButton" onclick="sendPut()">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="deleteForbidden('/upload')">GET...</button>
 				<p>a 409 error</p>
+				<button class="linkButton" onclick="deleteForbidden('/upload')">GET...</button>
 			</div>
 			<div class="card item-mandatory">
-				<button class="linkButton" onclick="window.location.href='./loop';">GET...</button>
 				<p>a 508 error</p>
+				<button class="linkButton" onclick="window.location.href='./loop';">GET...</button>
 			</div>
 			<div class="card item-mandatory">
+				<p>a file via python CGI</p>
 				<input type="file" id="fileInputCgi" style="display: none;" accept="*/*">
 				<button class="linkButton" onclick="selectFile('cgi', 'py')">POST...</button>
-				<p>a file via python CGI</p>
 			</div>
 		</div>
 	</div>

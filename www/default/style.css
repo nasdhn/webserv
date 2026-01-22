@@ -19,7 +19,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .about .linkButton {
-	background: linear-gradient(135deg, #b8824a 0%, #e67e22 100%);
+	background: linear-gradient(135deg, #00a2b4 0%, #00c9df 100%);
 	color: #fff5e6;
 	box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
 	font-size: 1.3vw;
@@ -32,7 +32,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .about .linkButton:hover {
-	background: linear-gradient(135deg, #e67e22 0%, #ff9f40 100%);
+	background: linear-gradient(135deg, #00c9df 0%, #00e5ff 100%);
 	box-shadow: 0 6px 20px rgba(255, 159, 64, 0.6);
 	transform: translateY(-3px) scale(1.02);
 	color: #ffffff;
@@ -48,19 +48,6 @@ h1, h2, h3, h4, h5, h6 {
 .about .card:hover {
 	box-shadow: 0 4px 20px rgba(255, 179, 102, 0.4);
 	transform: translateY(-2px);
-}
-
-.ascii {
-	white-space: pre;
-	font-family: monospace;
-	font-weight: bold;
-	color: #ffb366;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100%;
-	min-height: 50vh;
-	font-size: 1vw;
 }
 
 .bonus {
@@ -98,7 +85,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .footer {
-	color: #b8956d;
+	color: #00c9df;
 	font-size: 0.7vw;
 	text-align: center;
 	margin-top: auto;
@@ -106,21 +93,21 @@ h1, h2, h3, h4, h5, h6 {
 
 .item-bonus {
 	background-color: #3d2f26;
-	color: #ffcc80;
+	color: #00c9df;
 }
 
 .item-mandatory {
 	background-color: #2d3748;
-	color: #ffb366;
+	color: #00c9df;
 }
 
 .link {
-	color: #ffb366;
+	color: #00c9df;
 	font-size: 1.2vw;
 }
 
 .link:hover {
-	color: #ff9f40;
+	color: #00e5ff;
 }
 
 .linkButton {
@@ -129,7 +116,7 @@ h1, h2, h3, h4, h5, h6 {
 	font-family: 'Noto Sans', sans-serif;
 	font-weight: 1000;
 	color: #242830;
-	background-color: #cc6f2e;
+	background-color: #00c9df;
 	border: none;
 	padding: 0.5vw 1vw;
 	cursor: pointer;
@@ -137,7 +124,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .linkButton:hover {
-	background-color: #ff9f40;
+	background-color: #00e5ff;
 	color: #242830;
 	transform: translateY(-2px);
 }
@@ -160,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .regular {
 	font-size: 1vw;
-	color: #b8956d;
+	color: #008392;
 }
 
 .section {
@@ -178,12 +165,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .subtitle {
 	font-size: 2vw;
-	color: #e6823a;
+	color: #00c9df;
 }
 
 .title {
 	font-size: 3vw;
-	color: #ff9f40;
+	color: #00c9df;
 }
 
 .titleImage {
@@ -193,19 +180,20 @@ h1, h2, h3, h4, h5, h6 {
 
 .titleText {
 	font-size: 1.5vw;
-	color: #cc6f2e;
+	color: #00c9df;
 }
 
-
-/* Additional accent colors you can use */
-.accent-light {
-	color: #ffd699; /* Very light orange - for highlights */
+.titleError {
+	font-size: 6vw;
+	text-align: center;
+	color: #00c9df;
 }
 
-.accent-muted {
-	color: #8a6b47; /* Muted brown-orange - for secondary text */
-}
+.subtitleError {
+	font-size: 5vw;
+	text-align: center;
+	color: #008392;
+	margin-top: 10%;
+	margin-bottom: 10%;
 
-.accent-neutral {
-	color: #9ca3af; /* Cool gray - for neutral elements */
 }
