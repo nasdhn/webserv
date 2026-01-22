@@ -84,6 +84,12 @@ redir Location::getRedir()
 	return (this->_redirection);
 }
 
+std::string Location::getIndex()
+{
+	std::vector<std::string>::iterator it = this->_index.begin();
+	return (*it);
+}
+
 void Location::printMethods()
 {
 	std::cout << "methods : " << std::endl;

@@ -50,6 +50,7 @@ class Location
 		std::string getUploadPath();
 		redir getRedir();
 		std::string getRoot();
+		std::string getIndex();
 		// Dans Location.hpp
 
 		void printMethods();
