@@ -230,7 +230,7 @@ int Response::_execCGI(std::string fullPath)
             write(fd_in[1], _req->getBody().c_str(), _req->getBody().size());
         }
         close(fd_in[1]);
-        _setNonBlocking(fd_out[0]);
+        // _setNonBlocking(fd_out[0]);
 
         return (fd_out[0]);
     }
@@ -373,16 +373,29 @@ void Response::_build()
     std::string ext = _getExtension(fullPath);
     if (ext == ".py" || ext == ".php" || ext == ".cgi")
     {
-        int content = _execCGI(fullPath);
-        
-        if (content == -1)
+        int fd_cgi = _execCGI(fullPath);
+        if (fd_cgi == -1)
         {
             setStatus(500);
             setBody(_getErrorPageContent(500));
             return;
         }
+        char buffer[4096];
+        std::string bodyContent;
+        int bytesRead;
+
+        while ((bytesRead = read(fd_cgi, buffer, 4095)) > 0)
+        {
+            buffer[bytesRead] = '\0';
+            bodyContent += buffer;
+        }
+        close(fd_cgi);
         setStatus(200);
-        setBodyfd(content);
+        setBody(bodyContent);
+        std::stringstream ss;
+        ss << bodyContent.size();
+        setHeader("Content-Length", ss.str());
+        
         return;
     }
 
