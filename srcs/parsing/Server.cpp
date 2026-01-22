@@ -4,6 +4,7 @@
 Server::Server()
 {
 	this->_maxSize = 0;
+	_index.push_back("index.html");
 }
 
 void Server::setErrorPage(int ep, std::string path)
@@ -42,6 +43,11 @@ void Server::setRoot(std::string s)
 	this->_root = s;
 }
 
+void Server::setIndex(std::string s)
+{
+	_index.push_back(s);
+}
+
 std::string Server::getRoot()
 {
 	return (this->_root);
@@ -60,6 +66,11 @@ unsigned long long Server::getMaxSize()
 std::vector<listenUrl> Server::getListen()
 {
 	return (this->_listen);
+}
+
+std::vector<std::string> Server::getIndex()
+{
+	return (_index);
 }
 
 void Server::printErrorPage()
@@ -124,4 +135,9 @@ void Server::printData()
 	this->printErrorPage();
 	this->printMaxSize();
 	this->printLocation();
+}
+
+void Server::clearIndex()
+{
+	_index.clear();
 }

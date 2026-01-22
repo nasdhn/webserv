@@ -47,6 +47,7 @@ class Location
 		std::string getName() const;
 		std::vector<cgi> getCgi();
 		int getAutoIndex();
+		std::vector<std::string> getIndex();
 		std::string getUploadPath();
 		redir getRedir();
 		std::string getRoot();

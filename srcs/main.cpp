@@ -401,6 +401,34 @@ int parseConfig(Server *serv, std::string s)
 		}
 		serv->setRoot(s);
 	}
+	else if (title == "index")
+    {
+        if (s.empty())
+        {
+            std::cout << RED << "Error: index path empty";
+            return (1);
+        }
+        serv->clearIndex();
+        std::string filename;
+        std::string del = " ";
+        
+        while (!s.empty())
+        {
+            size_t pos = s.find(del);
+            if (pos != std::string::npos)
+            {
+                filename = s.substr(0, pos);
+                s.erase(0, pos + 1);
+            }
+            else
+            {
+                filename = s;
+                s.clear();
+            }
+            if (!filename.empty())
+                serv->setIndex(filename);
+        }
+    }
 	else
 	{
 		std::cout << RED << "Error: This directive '" << title << "' does not exist in the server configuration";

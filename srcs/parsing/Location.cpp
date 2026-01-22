@@ -74,6 +74,12 @@ int Location::getAutoIndex()
 {
 	return (this->_autoIndex);
 }
+
+std::vector<std::string> Location::getIndex()
+{
+	return _index;
+}
+
 std::string Location::getUploadPath()
 {
 	return (this->_uploadPath);
