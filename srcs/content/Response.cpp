@@ -281,6 +281,36 @@ std::string Response::_getErrorPageContent(int code)
     return ss.str();
 }
 
+std::string readHtml(std::string path)
+{
+	std::ifstream file;
+	std::string s;
+	std::string msg;
+
+	std::cout << path << std::endl;
+	file.open(path.c_str());
+	while (std::getline(file, s))
+	{
+		msg += s + "\n";
+	}
+	return msg;
+}
+
+std::string createPath(std::string root, std::string location, std::string file)
+{
+	std::string path = root;
+	std::cout << path[path.length() - 1] << std::endl;
+	if (path[path.length()] == '/')
+		path.erase(path.length() - 1);
+	if (location[0] != '/')
+		path += "/";
+	path += location;
+	if (path[path.length()] != '/')
+		path += "/";
+	path += file;
+	return (path);
+}
+
 void Response::_build()
 {
     struct stat info;
@@ -340,6 +370,20 @@ void Response::_build()
              setBody("<h1>Index of " + _req->getPath() + "</h1>");
              return;
         }
+		if (!_location->getIndex().empty())
+		{
+			std::string filepath = createPath(_server->getRoot(), _location->getName(), _location->getIndex());
+			std::ifstream f(filepath.c_str());
+			if (!f.good())
+			{
+				setStatus(404);
+				setBody(_getErrorPageContent(404));
+				return;
+			}
+			setStatus(200);
+			setBody(readHtml(filepath));
+			return ;
+		}
         setStatus(403);
         setBody(_getErrorPageContent(403));
         return;

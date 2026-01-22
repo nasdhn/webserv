@@ -83,34 +83,7 @@ Client::~Client()
     closeFile();
 	_readyToSend = false;
 }
-/*
-std::string readHtml(std::string path)
-{
-	std::ifstream file;
-	std::string s;
-	std::string msg;
 
-	std::cout << path << std::endl;
-	file.open(path.c_str());
-	while (std::getline(file, s))
-	{
-		msg += s + "\n";
-	}
-	return msg;
-}
-
-std::string createPath(std::string root, std::string location, std::string file)
-{
-	std::string path = root;
-	std::cout << path[path.length() - 1] << std::endl;
-	if (location[0] != '/')
-		path += "/";
-	path += location;
-	if (path[path.length()] != '/')
-		path += "/";
-	path += file;
-	return (path);
-}*/
 void Client::closeFile() 
 { 
     if (_fileFD != -1) 
@@ -202,7 +175,7 @@ void Client::processRequest(const char *buffer, int size)
     }
     if (_request.isComplete())
     {
-        std::cout << "Requete complete recu !" << std::endl;
+		std::cout << "Requete complete recu !" << std::endl;
         std::cout << "Methode : " << _request.getMethod() << std::endl;
         std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
         
