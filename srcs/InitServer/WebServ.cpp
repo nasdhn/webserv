@@ -32,7 +32,6 @@ void WebServ::printLog(const std::string &msg, const std::string &color)
 
     char buffer[80];
     strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", ltm);
-
     std::cout << "[" << buffer << "] -> " << color << msg << RESET << std::endl;
 }
 
@@ -71,11 +70,8 @@ WebServ::WebServ(std::vector<Server> &serv) : _servers(serv)
                     info.ip = tmp_ip;
                     info.port = tmp_port;
                     socket_open.push_back(info);
-
                     // DEBUG
-					// L
 					printLog("Listening on " + tmp_ip + ":" + intToStr(tmp_port), GREEN);
-					// std::cout << "PORT : " << tmp_port << " ouvert !" << std::endl;
 					// DEBUG
                 }
                 catch (std::exception &e) 
@@ -153,6 +149,7 @@ void WebServ::checkTimeOut()
 			_clients.erase(fd_kill);
 		}
 		close(fd_kill);
+		printLog("\033[1mTimeout du client numéro [" + intToStr(fd_kill) + ']', RED);
 
 		for (unsigned int j = 0; j < _fd.size(); j++)
 		{
@@ -167,7 +164,7 @@ void WebServ::checkTimeOut()
 
 void WebServ::cleanAll()
 {
-	printLog("SERVER SHUTDOWN", MAGENTA);
+	printLog("\033[0;35mSERVER SHUTDOWN", BOLD);
 
 	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		delete it->second;
@@ -207,57 +204,61 @@ void WebServ::cleanAll()
 
 bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 {
-	if (!client->getResponse().empty())
-	{
-		std::string& msg = client->getResponse();
-		int ret = send(pfd.fd, msg.c_str(), msg.size(), 0);
-
-		if (ret > 0)
-			msg.erase(0, ret);
-		else
-		{
-			std::cerr << "Erreur send sur le header Déconnexion" << std::endl;
-			return false;
-		}
-		if (!msg.empty())
-            return true;
-	}
-	if (client->getResponse().empty() && client->getFileFD() != -1)
-	{
-		char buffer[4096];
-		int retRead = read(client->getFileFD(), buffer, 4096);
-		if (retRead > 0)
-		{
-			int retSend = send(pfd.fd, buffer, retRead, 0);
-
-			if (retSend > 0)
-				if (retSend < retRead)
-					client->getResponse().append(buffer + retSend, retRead - retSend);
-
-			client->getByteSend() += retSend;
-			return true;
-		}
-		else
-		{
-			std::cerr << "Erreur send sur le header Déconnexion" << std::endl;
-			return false;
-		}
-	}
-	else
-	{
-		close(client->getFileFD());
-		client->setFileFD(-1);
-	}
-
-	if (client->getResponse().empty() && client->getFileFD() == -1)
+    if (!client->getResponse().empty())
     {
-        std::cout << "Réponse terminée pour le client " << pfd.fd << std::endl;
-        
+        std::string& msg = client->getResponse();
+        int ret = send(pfd.fd, msg.c_str(), msg.size(), 0);
+
+        if (ret > 0)
+            msg.erase(0, ret);
+        else
+            return false;
+
+        if (!msg.empty())
+            return true;
+    }
+    if (client->getResponse().empty() && client->getFileFD() != -1)
+    {
+        char buffer[BUFFERSIZE];
+        int retRead = read(client->getFileFD(), buffer, BUFFERSIZE);
+
+        if (retRead > 0)
+        {
+            int retSend = send(pfd.fd, buffer, retRead, 0);
+
+            if (retSend > 0)
+            {
+                if (retSend < retRead)
+                    client->getResponse().append(buffer + retSend, retRead - retSend);
+
+                client->getByteSend() += retSend;
+                return true;
+            }
+            else
+            {
+                close(client->getFileFD());
+                client->setFileFD(-1);
+                return false;
+            }
+        }
+        else if (retRead == 0)
+        {
+            close(client->getFileFD());
+            client->setFileFD(-1);
+        }
+        else
+        {
+            close(client->getFileFD());
+            client->setFileFD(-1);
+            return false;
+        }
+    }
+    if (client->getResponse().empty() && client->getFileFD() == -1)
+    {
         client->getReadyToSend() = false;
         client->getByteSend() = 0;
-        
         pfd.events = POLLIN;
-		client->reset();
+        client->reset();
     }
 
     return true;
@@ -338,7 +339,6 @@ void WebServ::servInit(std::string ip, int port)
     	throw std::runtime_error("Error : Invalid IP !");
 	}	
 	// address.sin_zero[(sizeof(address))];
-
 	if (fcntl(socketServer, F_SETFL, O_NONBLOCK) == -1)
 	{
 		close(socketServer);
@@ -349,13 +349,11 @@ void WebServ::servInit(std::string ip, int port)
 		close(socketServer);
 		throw std::runtime_error("Error : Bind failed !");
 	}
-	// std::cout << "Bind" << std::endl;
 	if (listen(socketServer, 10) == -1)
 	{
 		close(socketServer);
 		throw std::runtime_error("Error : Listen failed !");
 	}
-	// std::cout << "Mode ecoute" << std::endl;
 
 	// integration de poll
 	struct pollfd sfd;
@@ -381,17 +379,15 @@ void WebServ::setupServ()
 	{
 		checkTimeOut();
 		// integration de poll
-
 		int pollret = poll(&_fd[0], _fd.size(), 1000);
 		if (pollret == -1)
 		{
-			if (errno == EINTR) // j ai le droit car pas ecriture ni lecture c juste check d intialisation
+			if (errno == EINTR)
 				break;
 			throw std::runtime_error("Error : Poll's initialisation failed !");
 		}
 		if (pollret == 0)
 			continue;
-
 		for (unsigned int i = 0; i < _fd.size(); i++)
 		{
 			if (_fd[i].revents & POLLIN)
@@ -411,7 +407,6 @@ void WebServ::setupServ()
 						std::cerr << "Error fcntl : Client closed.." << std::endl;
 						continue;
 					}
-
 					Client *newClient = new Client(clientSocket, this);
 					_clients[clientSocket] = newClient;
 
@@ -420,21 +415,17 @@ void WebServ::setupServ()
 					clientFD.events = POLLIN;
 					clientFD.revents = 0;
 					_fd.push_back(clientFD);
-
 					// DEBUG
-					std::cout << "Nouveau client connecté sur le FD " << clientSocket << std::endl;
+					printLog("Nouveau client connecté [" + intToStr(clientSocket) + ']', BOLD);
 				}
 				else
 				{
 					Client *client = _clients[_fd[i].fd];
-					char buffer[4096] = {0};
+					char buffer[BUFFERSIZE] = {0};
 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
 					if (ret <= 0)
 					{
-						// si -1 check errno seulement ici si buffer vide pas grave si pas errno on coupe tout / a voir si je met ca ou pas
-						// si 0 on close
-						// normalement je laisse comme ca sans check errno car pas le droit
-						std::cout << "Déconnexion.." << std::endl;
+						printLog("\033[1mDéconnexion du client numéro " + intToStr(_fd[i].fd), RED);
 						close(_fd[i].fd);
 						_clients.erase(_fd[i].fd);
 						delete client;
@@ -448,19 +439,8 @@ void WebServ::setupServ()
 
 						if (client->getReadyToSend() == true)
 							_fd[i].events = POLLOUT | POLLIN;
-
-						// DEBUG
-						// std::cout << "Header : " << client->getHeader() << std::endl;
-						// std::cout << "Request apres le transfert : " << client->getRequest() << std::endl;
-
-						// std::cout << "Requete complete" << std::endl;
-						// DEBUG
 					}
 				}
-
-				// DEBUG
-				std::cout << "client parle.." << std::endl;
-				std::cout << _fd.size() << " FD dans la liste" << std::endl;
 			}
 
 			if (_fd[i].revents & POLLOUT)

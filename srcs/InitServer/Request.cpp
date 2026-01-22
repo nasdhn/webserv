@@ -260,7 +260,6 @@ bool Request::parseHeaders()
 
 		if (pos == std::string::npos)
 			return true;
-
 		if (pos == 0)
 		{	
 			_tempBuffer.erase(0, 2);
@@ -317,9 +316,7 @@ bool Request::parseBody()
 		_state = REQ_ERROR;
 		return false;
 	}
-
 	size_t needed = _contentLength - _body.size();
-
 	if (_tempBuffer.length() >= needed)
 	{
 		_body.append(_tempBuffer, 0, needed);

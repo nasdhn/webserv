@@ -132,13 +132,12 @@ void Client::processRequest(const char *buffer, int size)
             _readyToSend = true;
             return;
         }
-
         std::string uri = _request.getPath();
         _location = _webServ->findLocation(_server, uri);
 
         size_t limit = _server->getMaxSize(); 
         if (_location)
-             limit = _location->getMaxSize();
+             limit = _location->getMaxBodySize();
 
         _request.setMaxBodySize(limit);
 
@@ -152,11 +151,8 @@ void Client::processRequest(const char *buffer, int size)
                 _request.setErrorCode(413);
             }
         }
-        
         _routingDone = true;
-        std::cout << "Routing Early Done -> Limit set to: " << limit << std::endl;
     }
-
     if (_routingDone == true && _request.getBody().size() > _request.getMaxBodySize())
     {
         _request.setErrorCode(413);
@@ -173,15 +169,15 @@ void Client::processRequest(const char *buffer, int size)
     }
     if (_request.isComplete())
     {
+        // DEBUG
         std::cout << "Requete complete recu !" << std::endl;
         std::cout << "Methode : " << _request.getMethod() << std::endl;
         std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
-        
+        // DEBUG
         _response = Response(_request, _server, (Location*)_location);
         _headerBuffer = _response.get_header() + "\r\n";
         _headersSent = false;
         _readyToSend = true;
-
         _responseStr = _response.get_header();
 
         if (_response.is_fd())

@@ -18,6 +18,8 @@
 #include <cerrno>
 #include "Server.hpp"
 
+#define BUFFERSIZE 32768
+
 class Client;
 class Server;
 

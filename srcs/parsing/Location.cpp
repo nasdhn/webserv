@@ -7,6 +7,7 @@ Location::Location()
 	this->_autoIndex = 2;
 	this->_uploadPath = "";
 	this->_root = "";
+	_maxBodySize = 0;
 }
 
 Location::~Location()
