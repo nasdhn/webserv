@@ -54,10 +54,6 @@ class Client {
         Server* _server;
         const Location* _location;
         WebServ* _webServ;
-
-        std::string _headerBuffer;
-        bool        _headersSent;
-
 };
 
 

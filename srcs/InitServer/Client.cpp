@@ -23,8 +23,6 @@ Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
 	_readyToSend = false;
 	_byteSend = 0;
 	_lastTime = time(NULL);
-	_headersSent = false;
-    _headerBuffer = "";
     _fileFD = -1; 
     _responseStr = "";
     _server = NULL;
@@ -47,9 +45,6 @@ Client& Client::operator=(const Client& other)
 		_response = other._response;
 		_readyToSend = other._readyToSend;
 		_byteSend = other._byteSend;
-
-        _headersSent = other._headersSent;
-        _headerBuffer = other._headerBuffer;
         _server = other._server;
         _location = other._location;
         _lastTime = other._lastTime;
@@ -73,7 +68,6 @@ bool& Client::getRoutingDone()
 void Client::reset()
 {
     _routingDone = false;
-    _headersSent = false;
     _server = NULL;
     _location = NULL;
     _request.clear();
@@ -106,8 +100,7 @@ void Client::processRequest(const char *buffer, int size)
         std::cout << "Parsing error : " << _request.getErrorCode() << std::endl;
         _response.setStatus(400);
         _response.setBody("<html><body><h1>400 Bad Request</h1></body></html>");
-        _headerBuffer = _response.get_header() + "\r\n";
-        _headersSent = false;
+        _responseStr = _response.get_header() + _response.get_body_string();
         _readyToSend = true;
         return ;
     }
@@ -127,8 +120,7 @@ void Client::processRequest(const char *buffer, int size)
         {
             _response.setStatus(500);
             _response.setBody("<html><body><h1>500 Internal Server Error</h1></body></html>");
-            _headerBuffer = _response.get_header() + "\r\n";
-            _headersSent = false;
+            _responseStr = _response.get_header() + _response.get_body_string();
             _readyToSend = true;
             return;
         }
@@ -162,8 +154,7 @@ void Client::processRequest(const char *buffer, int size)
         _response.setStatus(413);
         _response.setBody("<html><body><h1>413 Request Entity Too Large</h1></body></html>");
         _response.setHeader("Connection", "close");
-        _headerBuffer = _response.get_header() + "\r\n";
-        _headersSent = false;
+        _responseStr = _response.get_header() + _response.get_body_string();
         _readyToSend = true;
         return;
     }
@@ -175,9 +166,6 @@ void Client::processRequest(const char *buffer, int size)
         std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
         // DEBUG
         _response = Response(_request, _server, (Location*)_location);
-        _headerBuffer = _response.get_header() + "\r\n";
-        _headersSent = false;
-        _readyToSend = true;
         _responseStr = _response.get_header();
 
         if (_response.is_fd())
