@@ -209,6 +209,8 @@ int Response::_execCGI(std::string fullPath)
              ss << _req->getBody().size();
              envs.push_back("CONTENT_LENGTH=" + ss.str());
         }
+        if (!_req->getHeader("Content-Type").empty())
+            envs.push_back("CONTENT_TYPE=" + _req->getHeader("Content-Type"));
 
         char **envp = new char*[envs.size() + 1];
         for (size_t i = 0; i < envs.size(); i++) {
@@ -230,7 +232,7 @@ int Response::_execCGI(std::string fullPath)
             write(fd_in[1], _req->getBody().c_str(), _req->getBody().size());
         }
         close(fd_in[1]);
-        // _setNonBlocking(fd_out[0]);
+        _setNonBlocking(fd_out[0]);
 
         return (fd_out[0]);
     }
@@ -374,28 +376,16 @@ void Response::_build()
     if (ext == ".py" || ext == ".php" || ext == ".cgi")
     {
         int fd_cgi = _execCGI(fullPath);
+        
         if (fd_cgi == -1)
         {
             setStatus(500);
             setBody(_getErrorPageContent(500));
             return;
         }
-        char buffer[4096];
-        std::string bodyContent;
-        int bytesRead;
-
-        while ((bytesRead = read(fd_cgi, buffer, 4095)) > 0)
-        {
-            buffer[bytesRead] = '\0';
-            bodyContent += buffer;
-        }
-        close(fd_cgi);
         setStatus(200);
-        setBody(bodyContent);
-        std::stringstream ss;
-        ss << bodyContent.size();
-        setHeader("Content-Length", ss.str());
-        
+        setBodyfd(fd_cgi);
+        setHeader("Connection", "close");
         return;
     }
 
