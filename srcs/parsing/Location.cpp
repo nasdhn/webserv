@@ -70,6 +70,11 @@ std::string Location::getRoot()
 	return (this->_root);
 }
 
+void Location::setRoot(std::string s)
+{
+    this->_root = s;
+}
+
 std::vector<cgi> Location::getCgi()
 {
 	return (this->_cgi);

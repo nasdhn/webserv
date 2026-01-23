@@ -313,12 +313,21 @@ void Response::_build()
         }
     }
 
-    if (_location)
-        fullPath = _location->getRoot() + _req->getPath();
-    else if (_server)
-        fullPath = _server->getRoot() + _req->getPath();
+    // if (_location)
+    //     fullPath = _location->getRoot() + _req->getPath();
+    // else if (_server)
+    //     fullPath = _server->getRoot() + _req->getPath();
+    // else
+    //     fullPath = "./www" + _req->getPath();
+
+    std::string root;
+    if (_location && !_location->getRoot().empty())
+        root = _location->getRoot();
+    else if (_server && !_server->getRoot().empty())
+        root = _server->getRoot();
     else
-        fullPath = "./www" + _req->getPath();
+        root = "./www";
+    fullPath = root + _req->getPath();
 
     if (_req->getMethod() == "DELETE")
     {
