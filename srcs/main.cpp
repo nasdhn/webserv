@@ -257,7 +257,7 @@ int parseConfig(Server *serv, std::string s)
 			}
 			if (!isDigits(token))
 			{
-				token.erase(token.length() - 1, token.length());
+				//token.erase(token.length() - 1, token.length());
 				path = token;
 				isLink = true;
 			}
