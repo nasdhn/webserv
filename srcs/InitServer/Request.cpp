@@ -131,6 +131,11 @@ std::string Request::getBody() const
 	return _body;
 }
 
+size_t Request::getMaxBodySize() const
+{
+	return(_maxBodySize);
+}
+
 bool Request::isComplete() const
 {
     return (_state == REQ_COMPLETE);
@@ -149,11 +154,6 @@ bool Request::headerParsed() const
 size_t Request::getCurrentBodySize() const
 {
 	return _body.size();
-}
-
-size_t Request::getMaxBodySize() const
-{
-    return _maxBodySize;
 }
 
 std::string Request::getHeader(const std::string& key) const

@@ -128,7 +128,7 @@ void Client::processRequest(const char *buffer, int size)
         _location = _webServ->findLocation(_server, uri);
 
         size_t limit = _server->getMaxSize(); 
-        if (_location && _location->getMaxBodySize() > 0)
+        if (_location)
              limit = _location->getMaxBodySize();
 
         _request.setMaxBodySize(limit);

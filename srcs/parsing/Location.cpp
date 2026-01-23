@@ -20,12 +20,6 @@ void Location::setMaxBodySize(unsigned long long size)
     _maxBodySize = size;
 }
 
-unsigned long long Location::getMaxBodySize() const
-{
-    return _maxBodySize;
-}
-
-
 void Location::setName(std::string n)
 {
 	this->_name = n;
@@ -85,6 +79,12 @@ int Location::getAutoIndex()
 {
 	return (this->_autoIndex);
 }
+
+std::vector<std::string> Location::getIndex()
+{
+	return _index;
+}
+
 std::string Location::getUploadPath()
 {
 	return (this->_uploadPath);
@@ -93,6 +93,11 @@ std::string Location::getUploadPath()
 redir Location::getRedir()
 {
 	return (this->_redirection);
+}
+
+unsigned long long Location::getMaxBodySize() const
+{
+	return(_maxBodySize);
 }
 
 void Location::printMethods()

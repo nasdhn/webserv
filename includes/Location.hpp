@@ -43,16 +43,18 @@ class Location
 		void setRedirection(redir r);
 		void setCGI(cgi c);
 		void setRoot(std::string s);
+		void setMaxBodySize(unsigned long long size);
 
 		std::vector<std::string> getMethods() const;
 		std::string getName() const;
 		std::vector<cgi> getCgi();
 		int getAutoIndex();
+		std::vector<std::string> getIndex();
 		std::string getUploadPath();
 		redir getRedir();
 		std::string getRoot();
-		void setMaxBodySize(unsigned long long size);
-        unsigned long long getMaxBodySize() const;
+		unsigned long long getMaxBodySize() const;
+		// Dans Location.hpp
 
 		void printMethods();
 		void printListDirectory();

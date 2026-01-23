@@ -164,11 +164,6 @@ int Response::_execCGI(std::string fullPath)
         std::cerr << "Error: pipe" << std::endl;
         return (-1);
     }
-    //non bloquant sur les fd
-    _setNonBlocking(fd_out[0]);
-    _setNonBlocking(fd_out[1]);
-    _setNonBlocking(fd_in[0]);
-    _setNonBlocking(fd_in[1]);
 
     setpid(fork());
     if (get_pid() < 0)
@@ -206,12 +201,16 @@ int Response::_execCGI(std::string fullPath)
         envs.push_back("REQUEST_METHOD=" + _req->getMethod());
         envs.push_back("QUERY_STRING=" + _req->getQuery());
         envs.push_back("PATH_INFO=" + _req->getPath());
+        envs.push_back("SCRIPT_FILENAME=" + fullPath);
+        envs.push_back("REDIRECT_STATUS=200");
         
         if (!_req->getBody().empty()) {
              std::stringstream ss;
              ss << _req->getBody().size();
              envs.push_back("CONTENT_LENGTH=" + ss.str());
         }
+        if (!_req->getHeader("Content-Type").empty())
+            envs.push_back("CONTENT_TYPE=" + _req->getHeader("Content-Type"));
 
         char **envp = new char*[envs.size() + 1];
         for (size_t i = 0; i < envs.size(); i++) {
@@ -233,6 +232,7 @@ int Response::_execCGI(std::string fullPath)
             write(fd_in[1], _req->getBody().c_str(), _req->getBody().size());
         }
         close(fd_in[1]);
+        _setNonBlocking(fd_out[0]);
 
         return (fd_out[0]);
     }
@@ -334,30 +334,58 @@ void Response::_build()
 
     if (S_ISDIR(info.st_mode))
     {
-        if (_location && _location->getAutoIndex())
+        std::vector<std::string> indexes;
+        if (_location && !_location->getIndex().empty()) 
+            indexes = _location->getIndex();
+        else if (_server)
+            indexes = _server->getIndex();
+        bool indexFound = false;
+        for (size_t i = 0; i < indexes.size(); i++)
         {
-             setStatus(200);
-             setBody("<h1>Index of " + _req->getPath() + "</h1>");
-             return;
-        }
-        setStatus(403);
-        setBody(_getErrorPageContent(403));
-        return;
-    }
+            std::string tmpPath = fullPath;
+            if (tmpPath[tmpPath.size() - 1] != '/')
+                tmpPath += "/";
+            tmpPath += indexes[i];
 
+            struct stat tmpInfo;
+            if (stat(tmpPath.c_str(), &tmpInfo) == 0)
+            {
+                if (!S_ISDIR(tmpInfo.st_mode))
+                {
+                    fullPath = tmpPath; 
+                    info = tmpInfo;     
+                    indexFound = true;
+                    break; 
+                }
+            }
+        }
+        if (!indexFound)
+        {
+            if (_location && _location->getAutoIndex()) 
+            {
+                 setStatus(200);
+                 setBody("<html><body><h1>Index of " + _req->getPath() + "</h1></body></html>");
+                 return;
+            }
+            setStatus(403);
+            setBody(_getErrorPageContent(403));
+            return;
+        }
+    }
     std::string ext = _getExtension(fullPath);
     if (ext == ".py" || ext == ".php" || ext == ".cgi")
     {
-        int content = _execCGI(fullPath);
+        int fd_cgi = _execCGI(fullPath);
         
-        if (content == -1)
+        if (fd_cgi == -1)
         {
             setStatus(500);
             setBody(_getErrorPageContent(500));
             return;
         }
         setStatus(200);
-        setBodyfd(content);
+        setBodyfd(fd_cgi);
+        setHeader("Connection", "close");
         return;
     }
 

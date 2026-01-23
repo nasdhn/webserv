@@ -19,6 +19,7 @@ class Server
 		std::map<unsigned int, std::string> _errorPage;
 		std::vector<listenUrl> _listen;
 		std::vector<Location> _location;
+		std::vector<std::string> _index;
 
 	public:
 		Server();
@@ -29,6 +30,7 @@ class Server
 		void setLocation(Location s);
 		void setServerName(std::string name);
 		void setRoot(std::string s);
+		void setIndex(std::string s);
 
 		std::vector<std::string> getServerName();
 		std::string getRoot();
@@ -36,7 +38,9 @@ class Server
 		std::vector<listenUrl> getListen();
 		std::vector<Location>& getLocation();
 		std::map<unsigned int, std::string> getErrorPage();
+		std::vector<std::string> getIndex();
 
+		void clearIndex();
 		void printErrorPage();
 		void printServerName();
 		void printListen();
