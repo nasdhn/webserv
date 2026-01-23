@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+# include <algorithm>
+
 Response::Response() 
     : _req(NULL), 
       _server(NULL), 
@@ -259,27 +261,6 @@ void Response::_ft_delete(std::string fullPath)
     return;
 }
 
-std::string Response::_getErrorPageContent(int code)
-{
-    if (_server)
-    {
-        std::map<unsigned int, std::string> errorPages = _server->getErrorPage();
-        if (errorPages.count(code) > 0)
-        {
-            std::string path = errorPages[code];
-            std::ifstream file(path.c_str());
-            if (file.is_open())
-            {
-                std::stringstream buffer;
-                buffer << file.rdbuf();
-                return buffer.str();
-            }
-        }
-    }
-    std::stringstream ss;
-    ss << "<html><head><title>Error</title></head><body><center><h1>" << code << "</h1></center></body></html>";
-    return ss.str();
-}
 
 std::string readHtml(std::string path)
 {
@@ -293,6 +274,7 @@ std::string readHtml(std::string path)
 	{
 		msg += s + "\n";
 	}
+	file.close();
 	return msg;
 }
 
@@ -309,6 +291,31 @@ std::string createPath(std::string root, std::string location, std::string file)
 		path += "/";
 	path += file;
 	return (path);
+}
+
+std::string Response::_getErrorPageContent(int code)
+{
+    if (_server)
+    {
+        std::map<unsigned int, std::string> errorPages = _server->getErrorPage();
+        if (errorPages.count(code) > 0)
+        {
+            std::string path = errorPages[code];
+            std::ifstream file(path.c_str());
+            if (file.is_open() && file.good())
+            {
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                return buffer.str();
+            }
+        }
+    }
+	std::string s = "./www/default/html/error/";
+	std::stringstream p;
+	p << s;
+	p << code;
+	p << ".html";
+    return readHtml(p.str());
 }
 
 void Response::_build()
