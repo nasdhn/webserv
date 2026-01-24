@@ -298,16 +298,14 @@ const Location* WebServ::findLocation(Server* server, const std::string& uri)
 {
     const Location* match = NULL;
     size_t maxLen = 0;
-
     const std::vector<Location>& locs = server->getLocation();
-
+	
     for (size_t i = 0; i < locs.size(); i++)
     {
         const std::string& locName = locs[i].getName();
-        
         if (uri.find(locName) == 0)
         {
-            if (uri.length() == locName.length() || uri[locName.length()] == '/')
+            if (locName == "/" || uri.length() == locName.length() || uri[locName.length()] == '/')
             {
                 if (locName.length() > maxLen)
                 {
