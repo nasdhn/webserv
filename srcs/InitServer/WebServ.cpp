@@ -299,7 +299,7 @@ const Location* WebServ::findLocation(Server* server, const std::string& uri)
     const Location* match = NULL;
     size_t maxLen = 0;
     const std::vector<Location>& locs = server->getLocation();
-	
+
     for (size_t i = 0; i < locs.size(); i++)
     {
         const std::string& locName = locs[i].getName();
@@ -347,7 +347,7 @@ void WebServ::servInit(std::string ip, int port)
 		close(socketServer);
 		throw std::runtime_error("Error : Bind failed !");
 	}
-	if (listen(socketServer, 10) == -1)
+	if (listen(socketServer, 1024) == -1)
 	{
 		close(socketServer);
 		throw std::runtime_error("Error : Listen failed !");
