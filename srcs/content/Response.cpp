@@ -281,7 +281,6 @@ std::string readHtml(std::string path)
 std::string createPath(std::string root, std::string location, std::string file)
 {
 	std::string path = root;
-	std::cout << path[path.length() - 1] << std::endl;
 	if (path[path.length()] == '/')
 		path.erase(path.length() - 1);
 	if (location[0] != '/')
@@ -289,6 +288,8 @@ std::string createPath(std::string root, std::string location, std::string file)
 	path += location;
 	if (path[path.length()] != '/')
 		path += "/";
+	if (path[path.length() - 1] == '/' && path[path.length() - 2] == '/')
+		path.erase(path.length() - 1);
 	path += file;
 	return (path);
 }
