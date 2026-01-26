@@ -21,13 +21,15 @@ class Client {
         ~Client();
     
         int getID() const;
-        std::string& getResponse();
+        Response& getResponse();
+        std::string& getResponseString();
         bool& getReadyToSend();
         unsigned long& getByteSend();
         time_t& getLastTime();
         void setLastTime(time_t time);
         void processRequest(const char* buffer, int size);
 
+        void sendContent();
         void setFileFD(int n);
         void closeFile();
         bool& getRoutingDone();
@@ -43,13 +45,15 @@ class Client {
     private :
         int _id;
         Response _response;
-        std::string _responseStr; // contientdra header + body
+        std::string _responseStr;
         int _fileFD;
         bool _readyToSend;
         unsigned long _byteSend;
         time_t _lastTime;
         bool _routingDone;
 
+        bool _headersSent;
+        std::string _headerBuffer;
         Request _request;
         Server* _server;
         const Location* _location;

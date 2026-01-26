@@ -65,39 +65,39 @@ std::string Location::getName() const
 	return (this->_name);
 }
 
-std::string Location::getRoot()
+std::string Location::getRoot() const
 {
 	return (this->_root);
 }
 
-std::vector<cgi> Location::getCgi()
+std::vector<cgi> Location::getCgi() const
 {
 	return (this->_cgi);
 }
 
-int Location::getAutoIndex()
+int Location::getAutoIndex() const
 {
 	return (this->_autoIndex);
 }
 
-std::vector<std::string> Location::getIndex()
-{
-	return _index;
-}
-
-std::string Location::getUploadPath()
+std::string Location::getUploadPath() const
 {
 	return (this->_uploadPath);
 }
 
-redir Location::getRedir()
+redir Location::getRedir() const
 {
 	return (this->_redirection);
 }
 
-unsigned long long Location::getMaxBodySize() const
+std::vector<std::string> Location::getIndex() const
 {
-	return(_maxBodySize);
+	return (_index);
+}
+
+size_t Location::getMaxBodySize() const
+{
+	return _maxBodySize;
 }
 
 void Location::printMethods()

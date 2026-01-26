@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+# include <algorithm>
+
 Response::Response() 
     : _req(NULL), 
       _server(NULL), 
@@ -16,10 +18,10 @@ Response::Response()
       _body("")
 {
     _headers["Server"] = "Webserv/1.0";
-    _headers["Connection"] = "keep-alive";
+    _headers["Connection"] = "close";
 }
 
-Response::Response(Request& req, Server* server, Location* location) 
+Response::Response(Request& req, Server* server, const Location* location) 
     : _req(&req),
       _server(server),
       _location(location),
@@ -30,20 +32,20 @@ Response::Response(Request& req, Server* server, Location* location)
       _body("")
 {
     _headers["Server"] = "Webserv/1.0";
-    _headers["Connection"] = "keep-alive";
+    _headers["Connection"] = "close";
     _build();
 }
 
 Response::~Response()
 {
-    if (_cgi_pid != -1) {
-        int status;
-        int result = waitpid(_cgi_pid, &status, WNOHANG);
-        if (result == 0) {
-            kill(_cgi_pid, SIGKILL);
-            waitpid(_cgi_pid, &status, 0);
-        }
-    }
+    // if (_cgi_pid != -1) {
+    //     int status;
+    //     int result = waitpid(_cgi_pid, &status, WNOHANG);
+    //     if (result == 0) {
+    //         kill(_cgi_pid, SIGKILL);
+    //         waitpid(_cgi_pid, &status, 0);
+    //     }
+    // }
 }
 
 Response::Response(const Response &other)
@@ -135,23 +137,39 @@ int Response::getStatus() const
     return _status;
 }
 
-std::string Response::get_header() const 
+std::string Response::getHeader(const std::string& key) const
+{
+    std::map<std::string, std::string>::const_iterator it = _headers.find(key);
+    if (it != _headers.end())
+        return it->second;
+    return "";
+}
+
+std::string Response::get_header() 
 {
     std::stringstream res;
     res << "HTTP/1.1 " << _status << " " << _getStatusMessage(_status) << "\r\n";
-    
     std::map<std::string, std::string>::const_iterator it;
     for (it = _headers.begin(); it != _headers.end(); ++it) {
         res << it->first << ": " << it->second << "\r\n";
     }
-
     res << "\r\n";
     return res.str();
 }
 
-std::string Response::getHeaderString() const
+std::string Response::_getMimeType(std::string fullPath)
 {
-    return get_header();
+    std::string ext = _getExtension(fullPath);
+    
+    if (ext == ".html") return "text/html";
+    if (ext == ".css") return "text/css";
+    if (ext == ".js") return "application/javascript";
+    if (ext == ".png") return "image/png";
+    if (ext == ".jpg" || ext == ".jpeg") return "image/jpeg";
+    if (ext == ".ico") return "image/x-icon";
+    if (ext == ".txt") return "text/plain";
+    
+    return "text/plain";
 }
 
 int Response::_execCGI(std::string fullPath)
@@ -176,6 +194,7 @@ int Response::_execCGI(std::string fullPath)
     {
         close(fd_out[0]);
         dup2(fd_out[1], STDOUT_FILENO);
+        dup2(fd_out[1], STDERR_FILENO);
         close(fd_out[1]);
 
         close(fd_in[1]);
@@ -186,16 +205,25 @@ int Response::_execCGI(std::string fullPath)
         std::string bin;
         
         if (ext == ".py")
-            bin = "/usr/bin/python3";
+            bin = "/opt/homebrew/bin/python3";
         else if (ext == ".cgi" || ext == ".php")
             bin = "/usr/bin/php-cgi";
         else
             exit(1);
 
-        char *arg[3];
+        char *arg[4]; 
         arg[0] = (char *)bin.c_str();
-        arg[1] = (char *)fullPath.c_str();
-        arg[2] = NULL;
+
+        if (ext == ".py") {
+            arg[1] = (char *)"-u";
+            arg[2] = (char *)fullPath.c_str();
+            arg[3] = NULL;
+        } 
+        else {
+            arg[1] = (char *)fullPath.c_str();
+            arg[2] = NULL;
+            arg[3] = NULL;
+        }
 
         std::vector<std::string> envs;
         envs.push_back("REQUEST_METHOD=" + _req->getMethod());
@@ -259,6 +287,39 @@ void Response::_ft_delete(std::string fullPath)
     return;
 }
 
+std::string readHtml(std::string path)
+{
+    std::ifstream file;
+    std::string s;
+    std::string msg;
+
+    file.open(path.c_str());
+    if (file.is_open())
+    {
+        while (std::getline(file, s))
+            msg += s + "\n";
+        file.close();
+    }
+    return msg;
+}
+
+std::string createPath(std::string root, std::string location, std::string file)
+{
+    std::string path = root;
+    if (!path.empty() && path[path.length() - 1] == '/')
+        path.erase(path.length() - 1);
+        
+    if (!location.empty() && location[0] != '/')
+        path += "/";
+    path += location;
+    
+    if (!path.empty() && path[path.length() - 1] != '/')
+        path += "/";
+        
+    path += file;
+    return (path);
+}
+
 std::string Response::_getErrorPageContent(int code)
 {
     if (_server)
@@ -268,7 +329,7 @@ std::string Response::_getErrorPageContent(int code)
         {
             std::string path = errorPages[code];
             std::ifstream file(path.c_str());
-            if (file.is_open())
+            if (file.is_open() && file.good())
             {
                 std::stringstream buffer;
                 buffer << file.rdbuf();
@@ -276,23 +337,25 @@ std::string Response::_getErrorPageContent(int code)
             }
         }
     }
-    std::stringstream ss;
-    ss << "<html><head><title>Error</title></head><body><center><h1>" << code << "</h1></center></body></html>";
-    return ss.str();
+	std::string s = "./www/default/html/error/";
+	std::stringstream p;
+	p << s;
+	p << code;
+	p << ".html";
+    return readHtml(p.str());
 }
 
 void Response::_build()
 {
     struct stat info;
     std::string fullPath;
-
+    std::string root;
     if (_server && _req->getBody().size() > _server->getMaxSize())
     {
         setStatus(413);
         setBody(_getErrorPageContent(413));
         return;
     }
-
     if (_location)
     {
         std::vector<std::string> methods = _location->getMethods();
@@ -312,67 +375,86 @@ void Response::_build()
             return ;
         }
     }
-
-    if (_location)
-        fullPath = _location->getRoot() + _req->getPath();
-    else if (_server)
-        fullPath = _server->getRoot() + _req->getPath();
+    if (_location && !_location->getRoot().empty())
+        root = _location->getRoot();
+    else if (_server && !_server->getRoot().empty())
+        root = _server->getRoot();
     else
-        fullPath = "./www" + _req->getPath();
+        root = "./www";
 
+    fullPath = root + _req->getPath();
+    std::string ext = _getExtension(fullPath);
     if (_req->getMethod() == "DELETE")
     {
         return _ft_delete(fullPath);
     }
+    if (_req->getMethod() == "POST" && ext != ".py" && ext != ".php" && ext != ".cgi")
+    {
+        std::ofstream file(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 
+        if (file.is_open())
+        {
+            file.write(_req->getBody().c_str(), _req->getBody().size());
+            file.close();
+            setStatus(201);
+            setBody("<html><body><h1>201 Created</h1><p>File created successfully.</p></body></html>");
+            setHeader("Location", _req->getPath());
+            setHeader("Connection", "close");
+        }
+        else
+        {
+            setStatus(403);
+            setBody(_getErrorPageContent(403));
+            setHeader("Connection", "close");
+        }
+        return;
+    }
     if (stat(fullPath.c_str(), &info) != 0)
     {
         setStatus(404);
         setBody(_getErrorPageContent(404));
         return;
     }
-
     if (S_ISDIR(info.st_mode))
     {
-        std::vector<std::string> indexes;
-        if (_location && !_location->getIndex().empty()) 
-            indexes = _location->getIndex();
-        else if (_server)
-            indexes = _server->getIndex();
-        bool indexFound = false;
-        for (size_t i = 0; i < indexes.size(); i++)
+        if (_location && _location->getAutoIndex() == 1)
         {
-            std::string tmpPath = fullPath;
-            if (tmpPath[tmpPath.size() - 1] != '/')
-                tmpPath += "/";
-            tmpPath += indexes[i];
+             setStatus(200);
+             setBody("<html><body><h1>Index of " + _req->getPath() + "</h1></body></html>");
+             return;
+        }
 
-            struct stat tmpInfo;
-            if (stat(tmpPath.c_str(), &tmpInfo) == 0)
-            {
-                if (!S_ISDIR(tmpInfo.st_mode))
-                {
-                    fullPath = tmpPath; 
-                    info = tmpInfo;     
-                    indexFound = true;
-                    break; 
-                }
-            }
-        }
-        if (!indexFound)
+        std::vector<std::string> indexes;
+        if (_location && !_location->getIndex().empty())
+            indexes = _location->getIndex();
+        else if (_server && !_server->getIndex().empty())
+            indexes = _server->getIndex();
+
+        if (!indexes.empty())
         {
-            if (_location && _location->getAutoIndex()) 
+            for (size_t i = 0; i < indexes.size(); ++i)
             {
-                 setStatus(200);
-                 setBody("<html><body><h1>Index of " + _req->getPath() + "</h1></body></html>");
-                 return;
+                std::string indexPath = fullPath;
+                if (indexPath[indexPath.length() - 1] != '/')
+                    indexPath += "/";
+                indexPath += indexes[i];
+
+                std::ifstream f(indexPath.c_str());
+                if (f.good())
+                {
+                    setStatus(200);
+                    setBody(readHtml(indexPath));
+                    f.close();
+                    return;
+                }
+                f.close();
             }
-            setStatus(403);
-            setBody(_getErrorPageContent(403));
-            return;
         }
+        
+        setStatus(403);
+        setBody(_getErrorPageContent(403));
+        return;
     }
-    std::string ext = _getExtension(fullPath);
     if (ext == ".py" || ext == ".php" || ext == ".cgi")
     {
         int fd_cgi = _execCGI(fullPath);
@@ -388,7 +470,6 @@ void Response::_build()
         setHeader("Connection", "close");
         return;
     }
-
     if (_req->getMethod() == "GET")
     {
         int fd = open(fullPath.c_str(), O_RDONLY);
@@ -398,7 +479,6 @@ void Response::_build()
             setBody(_getErrorPageContent(403));
             return;
         }
-        //non bloquant sur le fichier
         _setNonBlocking(fd);
 
         setStatus(200);
@@ -407,11 +487,13 @@ void Response::_build()
         std::stringstream ss;
         ss << info.st_size;
         setHeader("Content-Length", ss.str());
+        setHeader("Content-Type", _getMimeType(fullPath));
     }
     else
     {
         setStatus(405);
         setBody(_getErrorPageContent(405));
+        setHeader("Connection", "close");
     }
     return;
 }

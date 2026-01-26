@@ -22,7 +22,7 @@ class Location;
 class Response {
     public:
         Response();
-        Response(Request& req, Server* server, Location* location);
+        Response(Request& req, Server* server, const Location* location);
         ~Response();
         Response(const Response &other);
         Response &operator=(const Response &other);
@@ -37,14 +37,15 @@ class Response {
         int get_body_fd() const;
         pid_t get_pid() const;
         std::string get_body_string() const;
-        std::string get_header() const;
+        std::string getHeader(const std::string& key) const;
         std::string getHeaderString() const;
         int getStatus() const;
+        std::string get_header();
 
     private:
         Request* _req;
         Server* _server;
-        Location* _location;
+        const Location* _location;
         bool _is_fd;
         int _status;
         int _fd_body;
@@ -60,6 +61,7 @@ class Response {
         std::string _getErrorPageContent(int code);
         std::string _getExtension(std::string path);
         void        _setNonBlocking(int fd);
+        std::string _getMimeType(std::string fullPath);
 };
 
 #endif

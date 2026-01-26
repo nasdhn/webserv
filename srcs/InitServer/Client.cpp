@@ -28,7 +28,8 @@ Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
     _server = NULL;
     _location = NULL;
     _routingDone = false;
-
+    _headersSent = false;
+    _headerBuffer = "";
 }
 
 Client::Client(const Client& other)
@@ -71,6 +72,8 @@ void Client::reset()
     _server = NULL;
     _location = NULL;
     _request.clear();
+    _headersSent = false;
+    _headerBuffer = "";
 }
 
 Client::~Client()
@@ -81,7 +84,11 @@ Client::~Client()
 
 void Client::closeFile() 
 { 
-    if (_fileFD != -1) close(_fileFD); _fileFD = -1; 
+    if (_fileFD != -1) 
+	{
+		close(_fileFD);
+		_fileFD = -1; 
+	}
 }
 
 void Client::setFileFD(int n)
@@ -128,8 +135,8 @@ void Client::processRequest(const char *buffer, int size)
         _location = _webServ->findLocation(_server, uri);
 
         size_t limit = _server->getMaxSize(); 
-        if (_location)
-             limit = _location->getMaxBodySize();
+        if (_location && _location->getMaxBodySize() > 0)
+            limit = _location->getMaxBodySize();
 
         _request.setMaxBodySize(limit);
 
@@ -160,28 +167,88 @@ void Client::processRequest(const char *buffer, int size)
     }
     if (_request.isComplete())
     {
-        // DEBUG
-        std::cout << "Requete complete recu !" << std::endl;
+		std::cout << "Requete complete recu !" << std::endl;
         std::cout << "Methode : " << _request.getMethod() << std::endl;
         std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
-        // DEBUG
-        _response = Response(_request, _server, (Location*)_location);
-        _responseStr = _response.get_header();
-
+        _response = Response(_request, _server, _location);
         if (_response.is_fd())
         {
-            _fileFD = _response.get_body_fd();
+            _headerBuffer = _response.get_header(); 
+            _headersSent = false; 
         }
         else
         {
-            _responseStr += _response.get_body_string();
-            _fileFD = -1;
+            _responseStr = _response.get_header() + _response.get_body_string();
         }
         _readyToSend = true;
+        _routingDone = true;
     }
     else
     {
         std::cout << "Requete en cours de chargement..." << std::endl;
+    }
+}
+
+void Client::sendContent()
+{
+    if (!_headersSent)
+    {
+        if (_response.is_fd())
+        {
+            if (!_headerBuffer.empty())
+            {
+                int ret = send(_id, _headerBuffer.c_str(), _headerBuffer.size(), 0);
+                if (ret > 0)
+                {
+                    _byteSend += ret;
+                    _headerBuffer.erase(0, ret);
+                }
+            }
+            if (_headerBuffer.empty())
+                _headersSent = true;
+        }
+        else
+        {
+            if (!_responseStr.empty())
+            {
+                int ret = send(_id, _responseStr.c_str(), _responseStr.size(), 0);
+                if (ret > 0)
+                {
+                    _byteSend += ret;
+                    _responseStr.erase(0, ret);
+                }
+            }
+            if (_responseStr.empty())
+            {
+                _headersSent = true;
+                _readyToSend = false;
+            }
+        }
+    }
+    if (_headersSent && _response.is_fd())
+    {
+        char buffer[4096];
+        int fd = _response.get_body_fd();
+        int bytesRead = read(fd, buffer, 4096);
+
+        if (bytesRead > 0)
+        {
+            int ret = send(_id, buffer, bytesRead, 0);
+            if (ret > 0)
+                _byteSend += ret;
+        }
+        else if (bytesRead == 0)
+        {
+            close(fd);
+            _readyToSend = false; 
+        }
+        else 
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                return;
+            close(fd);
+            _readyToSend = false;
+        }
     }
 }
 
@@ -200,10 +267,14 @@ int Client::getID() const
 	return _id;
 }
 
-
-std::string& Client::getResponse()
+Response& Client::getResponse()
 {
-	return _responseStr;
+    return _response;
+}
+
+std::string& Client::getResponseString()
+{
+    return _responseStr;
 }
 
 bool& Client::getReadyToSend()

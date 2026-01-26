@@ -47,13 +47,13 @@ class Location
 
 		std::vector<std::string> getMethods() const;
 		std::string getName() const;
-		std::vector<cgi> getCgi();
-		int getAutoIndex();
-		std::vector<std::string> getIndex();
-		std::string getUploadPath();
-		redir getRedir();
-		std::string getRoot();
-		unsigned long long getMaxBodySize() const;
+		std::vector<cgi> getCgi() const;
+		int getAutoIndex() const;
+		std::string getUploadPath() const;
+		redir getRedir() const;
+		std::string getRoot() const;
+		std::vector<std::string> getIndex() const;
+		size_t getMaxBodySize() const;
 		// Dans Location.hpp
 
 		void printMethods();
