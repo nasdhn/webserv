@@ -60,6 +60,7 @@ class Response {
         std::string _getErrorPageContent(int code);
         std::string _getExtension(std::string path);
         void        _setNonBlocking(int fd);
+        std::string _getMimeType(std::string fullPath);
 };
 
 #endif

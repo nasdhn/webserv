@@ -4,6 +4,7 @@
 #include "Server.hpp"
 #include <unistd.h>
 #include <fcntl.h>
+#include <algorithm> 
 
 Response::Response() 
     : _req(NULL), 
@@ -144,7 +145,6 @@ std::string Response::get_header() const
     for (it = _headers.begin(); it != _headers.end(); ++it) {
         res << it->first << ": " << it->second << "\r\n";
     }
-
     res << "\r\n";
     return res.str();
 }
@@ -152,6 +152,19 @@ std::string Response::get_header() const
 std::string Response::getHeaderString() const
 {
     return get_header();
+}
+
+std::string Response::_getMimeType(std::string fullPath)
+{
+    std::string ext = _getExtension(fullPath);
+    if (ext == ".html") return "text/html";
+    if (ext == ".css") return "text/css";
+    if (ext == ".js") return "application/javascript";
+    if (ext == ".png") return "image/png";
+    if (ext == ".jpg" || ext == ".jpeg") return "image/jpeg";
+    if (ext == ".ico") return "image/x-icon";
+    if (ext == ".txt") return "text/plain";
+    return "text/plain";
 }
 
 int Response::_execCGI(std::string fullPath)
@@ -281,6 +294,15 @@ std::string Response::_getErrorPageContent(int code)
     return ss.str();
 }
 
+std::string readHtml(std::string path)
+{
+    std::ifstream file(path.c_str());
+    if (file.is_open()) {
+        std::stringstream buffer; buffer << file.rdbuf(); return buffer.str();
+    }
+    return "";
+}
+
 void Response::_build()
 {
     struct stat info;
@@ -313,13 +335,6 @@ void Response::_build()
         }
     }
 
-    // if (_location)
-    //     fullPath = _location->getRoot() + _req->getPath();
-    // else if (_server)
-    //     fullPath = _server->getRoot() + _req->getPath();
-    // else
-    //     fullPath = "./www" + _req->getPath();
-
     std::string root;
     if (_location && !_location->getRoot().empty())
         root = _location->getRoot();
@@ -332,6 +347,41 @@ void Response::_build()
     if (_req->getMethod() == "DELETE")
     {
         return _ft_delete(fullPath);
+    }
+
+    std::string ext = _getExtension(fullPath);
+    bool isCGI = (ext == ".py" || ext == ".php" || ext == ".cgi");
+
+    if (_req->getMethod() == "POST" && !isCGI && _location && !_location->getUploadPath().empty())
+    {
+        std::string filename = "";
+        size_t lastSlash = _req->getPath().find_last_of("/");
+        
+        if (lastSlash != std::string::npos && lastSlash < _req->getPath().length() - 1)
+            filename = _req->getPath().substr(lastSlash + 1);
+        else {
+            std::stringstream ss; ss << "upload_" << time(NULL) << ".dat"; filename = ss.str();
+        }
+
+        std::string uploadDir = _location->getUploadPath();
+        std::string finalPath;
+        if (uploadDir[0] == '/') finalPath = "." + uploadDir; 
+        else finalPath = root + "/" + uploadDir;
+
+        if (finalPath[finalPath.length() - 1] != '/') finalPath += "/";
+        finalPath += filename;
+
+        std::ofstream outfile(finalPath.c_str(), std::ios::out | std::ios::binary);
+        if (outfile.is_open()) {
+            outfile << _req->getBody();
+            outfile.close();
+            setStatus(201);
+            setBody("<html><body><h1>File Uploaded Successfully</h1></body></html>");
+            setHeader("Location", _req->getPath());
+            return;
+        } else {
+            setStatus(500); setBody(_getErrorPageContent(500)); return;
+        }
     }
 
     if (stat(fullPath.c_str(), &info) != 0)
@@ -348,6 +398,7 @@ void Response::_build()
             indexes = _location->getIndex();
         else if (_server)
             indexes = _server->getIndex();
+        
         bool indexFound = false;
         for (size_t i = 0; i < indexes.size(); i++)
         {
@@ -364,6 +415,7 @@ void Response::_build()
                     fullPath = tmpPath; 
                     info = tmpInfo;     
                     indexFound = true;
+                    ext = _getExtension(fullPath);
                     break; 
                 }
             }
@@ -381,7 +433,7 @@ void Response::_build()
             return;
         }
     }
-    std::string ext = _getExtension(fullPath);
+
     if (ext == ".py" || ext == ".php" || ext == ".cgi")
     {
         int fd_cgi = _execCGI(fullPath);
@@ -407,7 +459,6 @@ void Response::_build()
             setBody(_getErrorPageContent(403));
             return;
         }
-        //non bloquant sur le fichier
         _setNonBlocking(fd);
 
         setStatus(200);
@@ -416,6 +467,7 @@ void Response::_build()
         std::stringstream ss;
         ss << info.st_size;
         setHeader("Content-Length", ss.str());
+        setHeader("Content-Type", _getMimeType(fullPath));
     }
     else
     {
