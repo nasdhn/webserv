@@ -307,14 +307,13 @@ void Response::_build()
 {
     struct stat info;
     std::string fullPath;
-
+    std::string root;
     if (_server && _req->getBody().size() > _server->getMaxSize())
     {
         setStatus(413);
         setBody(_getErrorPageContent(413));
         return;
     }
-
     if (_location)
     {
         std::vector<std::string> methods = _location->getMethods();
@@ -334,106 +333,86 @@ void Response::_build()
             return ;
         }
     }
-
-    std::string root;
     if (_location && !_location->getRoot().empty())
         root = _location->getRoot();
     else if (_server && !_server->getRoot().empty())
         root = _server->getRoot();
     else
         root = "./www";
-    fullPath = root + _req->getPath();
 
+    fullPath = root + _req->getPath();
+    std::string ext = _getExtension(fullPath);
     if (_req->getMethod() == "DELETE")
     {
         return _ft_delete(fullPath);
     }
-
-    std::string ext = _getExtension(fullPath);
-    bool isCGI = (ext == ".py" || ext == ".php" || ext == ".cgi");
-
-    if (_req->getMethod() == "POST" && !isCGI && _location && !_location->getUploadPath().empty())
+    if (_req->getMethod() == "POST" && ext != ".py" && ext != ".php" && ext != ".cgi")
     {
-        std::string filename = "";
-        size_t lastSlash = _req->getPath().find_last_of("/");
-        
-        if (lastSlash != std::string::npos && lastSlash < _req->getPath().length() - 1)
-            filename = _req->getPath().substr(lastSlash + 1);
-        else {
-            std::stringstream ss; ss << "upload_" << time(NULL) << ".dat"; filename = ss.str();
-        }
+        std::ofstream file(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 
-        std::string uploadDir = _location->getUploadPath();
-        std::string finalPath;
-        if (uploadDir[0] == '/') finalPath = "." + uploadDir; 
-        else finalPath = root + "/" + uploadDir;
-
-        if (finalPath[finalPath.length() - 1] != '/') finalPath += "/";
-        finalPath += filename;
-
-        std::ofstream outfile(finalPath.c_str(), std::ios::out | std::ios::binary);
-        if (outfile.is_open()) {
-            outfile << _req->getBody();
-            outfile.close();
+        if (file.is_open())
+        {
+            file.write(_req->getBody().c_str(), _req->getBody().size());
+            file.close();
             setStatus(201);
-            setBody("<html><body><h1>File Uploaded Successfully</h1></body></html>");
+            setBody("<html><body><h1>201 Created</h1><p>File created successfully.</p></body></html>");
             setHeader("Location", _req->getPath());
-            return;
-        } else {
-            setStatus(500); setBody(_getErrorPageContent(500)); return;
+            setHeader("Connection", "keep-alive");
         }
+        else
+        {
+            setStatus(403);
+            setBody(_getErrorPageContent(403));
+            setHeader("Connection", "keep-alive");
+        }
+        return;
     }
-
     if (stat(fullPath.c_str(), &info) != 0)
     {
         setStatus(404);
         setBody(_getErrorPageContent(404));
         return;
     }
-
     if (S_ISDIR(info.st_mode))
     {
+        if (_location && _location->getAutoIndex() == 1)
+        {
+             setStatus(200);
+             setBody("<html><body><h1>Index of " + _req->getPath() + "</h1></body></html>");
+             return;
+        }
+
         std::vector<std::string> indexes;
-        if (_location && !_location->getIndex().empty()) 
+        if (_location && !_location->getIndex().empty())
             indexes = _location->getIndex();
-        else if (_server)
+        else if (_server && !_server->getIndex().empty())
             indexes = _server->getIndex();
-        
-        bool indexFound = false;
-        for (size_t i = 0; i < indexes.size(); i++)
-        {
-            std::string tmpPath = fullPath;
-            if (tmpPath[tmpPath.size() - 1] != '/')
-                tmpPath += "/";
-            tmpPath += indexes[i];
 
-            struct stat tmpInfo;
-            if (stat(tmpPath.c_str(), &tmpInfo) == 0)
+        if (!indexes.empty())
+        {
+            for (size_t i = 0; i < indexes.size(); ++i)
             {
-                if (!S_ISDIR(tmpInfo.st_mode))
+                std::string indexPath = fullPath;
+                if (indexPath[indexPath.length() - 1] != '/')
+                    indexPath += "/";
+                indexPath += indexes[i];
+
+                std::ifstream f(indexPath.c_str());
+                if (f.good())
                 {
-                    fullPath = tmpPath; 
-                    info = tmpInfo;     
-                    indexFound = true;
-                    ext = _getExtension(fullPath);
-                    break; 
+                    setStatus(200);
+                    setBody(readHtml(indexPath));
+                    f.close();
+                    return;
                 }
+                f.close();
             }
         }
-        if (!indexFound)
-        {
-            if (_location && _location->getAutoIndex()) 
-            {
-                 setStatus(200);
-                 setBody("<html><body><h1>Index of " + _req->getPath() + "</h1></body></html>");
-                 return;
-            }
-            setStatus(403);
-            setBody(_getErrorPageContent(403));
-            return;
-        }
+        
+        setStatus(403);
+        setBody(_getErrorPageContent(403));
+        return;
     }
-
     if (ext == ".py" || ext == ".php" || ext == ".cgi")
     {
         int fd_cgi = _execCGI(fullPath);
@@ -449,7 +428,6 @@ void Response::_build()
         setHeader("Connection", "close");
         return;
     }
-
     if (_req->getMethod() == "GET")
     {
         int fd = open(fullPath.c_str(), O_RDONLY);
@@ -473,6 +451,7 @@ void Response::_build()
     {
         setStatus(405);
         setBody(_getErrorPageContent(405));
+        setHeader("Connection", "close");
     }
     return;
 }
