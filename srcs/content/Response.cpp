@@ -303,6 +303,42 @@ std::string readHtml(std::string path)
     return "";
 }
 
+std::string Response::_generateAutoIndex(const std::string& fullPath, const std::string& uri)
+{
+    std::string html = "<html><body><h1>Index of " + uri + "</h1></body></html>";
+    html += "<h1>Index of " + uri + "</h1><hr><ul>";
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir(fullPath.c_str())) != NULL)
+    {
+        while((ent = readdir(dir)) != NULL)
+        {
+            std::string file_name = ent->d_name;
+            if (file_name == ".")
+            {
+                continue;
+            }
+            std::string link = file_name;
+            if (ent->d_type == DT_DIR)
+                file_name += "/";
+            std::string href = uri;
+            if (href[href.size() - 1] != '/')
+                href += "/";
+            href += link;
+
+            html += "<li><a href=\"" + link + "\">" + file_name + "</a></li>";
+        }
+        closedir(dir);
+    } 
+    else 
+    {
+        return "<html><body><h1>Error</h1><p>Could not open directory.</p></body></html>";
+    }
+
+    html += "</ul><hr></body></html>";
+    return html;
+}
+
 void Response::_build()
 {
     struct stat info;
@@ -316,6 +352,16 @@ void Response::_build()
     }
     if (_location)
     {
+        int redirCode = _location->getRedir().code; 
+        std::string redirUrl = _location->getRedir().link;
+        if (redirCode != 0 && !redirUrl.empty())
+        {
+            setStatus(redirCode);
+            setHeader("Location", redirUrl);
+            setHeader("Connection", "close");
+            setBody("<html><body><h1>Moved</h1><p>The document has moved <a href=\"" + redirUrl + "\">here</a>.</p></body></html>");
+            return;
+        }
         std::vector<std::string> methods = _location->getMethods();
         bool allowed = false;
         if (methods.empty()) allowed = true;
@@ -377,9 +423,9 @@ void Response::_build()
     {
         if (_location && _location->getAutoIndex() == 1)
         {
-             setStatus(200);
-             setBody("<html><body><h1>Index of " + _req->getPath() + "</h1></body></html>");
-             return;
+            setStatus(200);
+            setBody(_generateAutoIndex(fullPath, _req->getPath()));
+            return;
         }
 
         std::vector<std::string> indexes;

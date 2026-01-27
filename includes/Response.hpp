@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
+#include <dirent.h>
 
 class Request;
 class Server;
@@ -61,6 +62,7 @@ class Response {
         std::string _getExtension(std::string path);
         void        _setNonBlocking(int fd);
         std::string _getMimeType(std::string fullPath);
+        std::string _generateAutoIndex(const std::string& fullPath, const std::string& uri);
 };
 
 #endif
