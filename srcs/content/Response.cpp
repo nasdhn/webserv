@@ -189,6 +189,7 @@ int Response::_execCGI(std::string fullPath)
     {
         close(fd_out[0]);
         dup2(fd_out[1], STDOUT_FILENO);
+        dup2(fd_out[1], STDERR_FILENO);
         close(fd_out[1]);
 
         close(fd_in[1]);
@@ -197,18 +198,25 @@ int Response::_execCGI(std::string fullPath)
 
         std::string ext = _getExtension(fullPath);
         std::string bin;
-        
-        if (ext == ".py")
+        char *arg[4];
+
+        if (ext == ".py") {
             bin = "/usr/bin/python3";
-        else if (ext == ".cgi" || ext == ".php")
+            arg[0] = (char *)bin.c_str();
+            arg[1] = (char *)"-u";
+            arg[2] = (char *)fullPath.c_str();
+            arg[3] = NULL;
+        }
+        else if (ext == ".cgi" || ext == ".php") 
+        {
             bin = "/usr/bin/php-cgi";
+            arg[0] = (char *)bin.c_str();
+            arg[1] = (char *)fullPath.c_str();
+            arg[2] = NULL;
+            arg[3] = NULL;
+        }
         else
             exit(1);
-
-        char *arg[3];
-        arg[0] = (char *)bin.c_str();
-        arg[1] = (char *)fullPath.c_str();
-        arg[2] = NULL;
 
         std::vector<std::string> envs;
         envs.push_back("REQUEST_METHOD=" + _req->getMethod());
@@ -246,7 +254,6 @@ int Response::_execCGI(std::string fullPath)
         }
         close(fd_in[1]);
         _setNonBlocking(fd_out[0]);
-
         return (fd_out[0]);
     }
 }
@@ -358,7 +365,7 @@ void Response::_build()
         {
             setStatus(redirCode);
             setHeader("Location", redirUrl);
-            setHeader("Connection", "close");
+            setHeader("Connection", "keep-alive");
             setBody("<html><body><h1>Moved</h1><p>The document has moved <a href=\"" + redirUrl + "\">here</a>.</p></body></html>");
             return;
         }
