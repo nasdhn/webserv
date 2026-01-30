@@ -202,6 +202,70 @@ void WebServ::cleanAll()
 /* V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  V  */
 /* ************************************************************************** */
 
+// bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
+// {
+//     if (!client->getResponse().empty())
+//     {
+//         std::string& msg = client->getResponse();
+//         int ret = send(pfd.fd, msg.c_str(), msg.size(), 0);
+
+//         if (ret > 0)
+//             msg.erase(0, ret);
+//         else
+//             return false;
+
+//         if (!msg.empty())
+//             return true;
+//     }
+//     if (client->getResponse().empty() && client->getFileFD() != -1)
+//     {
+//         char buffer[BUFFERSIZE];
+//         int retRead = read(client->getFileFD(), buffer, BUFFERSIZE);
+
+//         if (retRead > 0)
+//         {
+//             int retSend = send(pfd.fd, buffer, retRead, 0);
+
+//             if (retSend > 0)
+//             {
+//                 if (retSend < retRead)
+//                     client->getResponse().append(buffer + retSend, retRead - retSend);
+
+//                 client->getByteSend() += retSend;
+//                 return true;
+//             }
+//             else
+//             {
+//                 close(client->getFileFD());
+//                 client->setFileFD(-1);
+//                 return false;
+//             }
+//         }
+//         else if (retRead == 0)
+//         {
+//             close(client->getFileFD());
+//             client->setFileFD(-1);
+//         }
+//         else
+//         {
+//             close(client->getFileFD());
+//             client->setFileFD(-1);
+//             return false;
+//         }
+//     }
+//     if (client->getResponse().empty() && client->getFileFD() == -1)
+//     {
+//         client->getReadyToSend() = false;
+//         client->getByteSend() = 0;
+//         pfd.events = POLLIN;
+//         client->reset();
+//     }
+
+//     return true;
+// }
+
+// Dans WebServ.cpp
+
 bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
 {
     if (!client->getResponse().empty())
@@ -213,54 +277,24 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
             msg.erase(0, ret);
         else
             return false;
-
         if (!msg.empty())
             return true;
     }
-    if (client->getResponse().empty() && client->getFileFD() != -1)
-    {
-        char buffer[BUFFERSIZE];
-        int retRead = read(client->getFileFD(), buffer, BUFFERSIZE);
-
-        if (retRead > 0)
-        {
-            int retSend = send(pfd.fd, buffer, retRead, 0);
-
-            if (retSend > 0)
-            {
-                if (retSend < retRead)
-                    client->getResponse().append(buffer + retSend, retRead - retSend);
-
-                client->getByteSend() += retSend;
-                return true;
-            }
-            else
-            {
-                close(client->getFileFD());
-                client->setFileFD(-1);
-                return false;
-            }
-        }
-        else if (retRead == 0)
-        {
-            close(client->getFileFD());
-            client->setFileFD(-1);
-        }
-        else
-        {
-            close(client->getFileFD());
-            client->setFileFD(-1);
-            return false;
-        }
-    }
-    if (client->getResponse().empty() && client->getFileFD() == -1)
+	if (client->getResponse().empty() && client->getFileFD() == -1)
     {
         client->getReadyToSend() = false;
         client->getByteSend() = 0;
-        pfd.events = POLLIN;
-        client->reset();
+    	for (size_t k = 0; k < _fd.size(); k++) {
+           	if (_fd[k].fd == pfd.fd) _fd[k].events = POLLIN;
+    	}
+    	std::string path = client->getRequest().getPath();
+    	bool isCgi = (path.find(".py") != std::string::npos || path.find(".php") != std::string::npos || path.find(".cgi") != std::string::npos); 
+    	if (isCgi) {
+          	return false; // Déclenche la fermeture
+    	}
+        
+    client->reset();
     }
-
     return true;
 }
 
@@ -362,101 +396,265 @@ void WebServ::servInit(std::string ip, int port)
 	_serverSockets.push_back(socketServer);
 }
 
+// void WebServ::setupServ()
+// {
+// 	struct sockaddr_in clientAddr = {};
+// 	clientAddr.sin_family = AF_INET;
+// 	clientAddr.sin_port = htons(0);
+// 	clientAddr.sin_addr.s_addr = INADDR_ANY;
+// 	// address.sin_zero[(sizeof(address))];
+// 	socklen_t sizeaddr = sizeof(clientAddr);
+
+// 	signal(SIGINT, signalHandler);
+
+// 	while (sigPressed)
+// 	{
+// 		checkTimeOut();
+// 		// integration de poll
+// 		int pollret = poll(&_fd[0], _fd.size(), 1000);
+// 		if (pollret == -1)
+// 		{
+// 			if (errno == EINTR)
+// 				break;
+// 			throw std::runtime_error("Error : Poll's initialisation failed !");
+// 		}
+// 		if (pollret == 0)
+// 			continue;
+// 		for (unsigned int i = 0; i < _fd.size(); i++)
+// 		{
+// 			if (_fd[i].revents & POLLIN)
+// 			{
+// 				// a chaque client on passe la dedans
+// 				if (isServerSocket(_fd[i].fd))
+// 				{
+// 					int clientSocket = accept(_fd[i].fd, (struct sockaddr *)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
+// 					if (clientSocket == -1)
+// 					{
+// 						std::cerr << "Error : Client's connexion failed.." << std::endl;
+// 						continue;
+// 					}
+// 					if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1)
+// 					{
+// 						close(clientSocket);
+// 						std::cerr << "Error fcntl : Client closed.." << std::endl;
+// 						continue;
+// 					}
+// 					Client *newClient = new Client(clientSocket, this);
+// 					_clients[clientSocket] = newClient;
+
+// 					struct pollfd clientFD;
+// 					clientFD.fd = clientSocket;
+// 					clientFD.events = POLLIN;
+// 					clientFD.revents = 0;
+// 					_fd.push_back(clientFD);
+// 					// DEBUG
+// 					printLog("Nouveau client connecté [" + intToStr(clientSocket) + ']', BOLD);
+// 				}
+// 				else
+// 				{
+// 					Client *client = _clients[_fd[i].fd];
+// 					char buffer[BUFFERSIZE] = {0};
+// 					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
+// 					if (ret <= 0)
+// 					{
+// 						printLog("\033[1mDéconnexion du client numéro " + intToStr(_fd[i].fd), RED);
+// 						close(_fd[i].fd);
+// 						_clients.erase(_fd[i].fd);
+// 						delete client;
+// 						_fd.erase(_fd.begin() + i);
+// 						i--;
+// 						continue;
+// 					}
+// 					if (ret > 0)
+// 					{
+// 						client->processRequest(buffer, ret);
+
+// 						if (client->getReadyToSend() == true)
+// 							_fd[i].events = POLLOUT | POLLIN;
+// 					}
+// 				}
+// 			}
+
+// 			if (_fd[i].revents & POLLOUT)
+// 			{
+// 				Client *client = _clients[_fd[i].fd];
+
+// 				if (client->getReadyToSend() == true)
+// 					if (sendResponse(client, _fd[i]) == false)
+// 					{
+// 						close(_fd[i].fd);
+// 						_clients.erase(_fd[i].fd);
+// 						delete client;
+// 						_fd.erase(_fd.begin() + i);
+// 						i--;
+// 						continue;
+// 					}
+// 			}
+// 		}
+// 	}
+// 	cleanAll();
+// }
+
+// Dans WebServ.cpp
+
 void WebServ::setupServ()
 {
-	struct sockaddr_in clientAddr = {};
-	clientAddr.sin_family = AF_INET;
-	clientAddr.sin_port = htons(0);
-	clientAddr.sin_addr.s_addr = INADDR_ANY;
-	// address.sin_zero[(sizeof(address))];
-	socklen_t sizeaddr = sizeof(clientAddr);
+    struct sockaddr_in clientAddr = {};
+    clientAddr.sin_family = AF_INET;
+    clientAddr.sin_port = htons(0);
+    clientAddr.sin_addr.s_addr = INADDR_ANY;
+    socklen_t sizeaddr = sizeof(clientAddr);
 
-	signal(SIGINT, signalHandler);
+    signal(SIGINT, signalHandler);
 
-	while (sigPressed)
-	{
-		checkTimeOut();
-		// integration de poll
-		int pollret = poll(&_fd[0], _fd.size(), 1000);
-		if (pollret == -1)
-		{
-			if (errno == EINTR)
-				break;
-			throw std::runtime_error("Error : Poll's initialisation failed !");
-		}
-		if (pollret == 0)
-			continue;
-		for (unsigned int i = 0; i < _fd.size(); i++)
-		{
-			if (_fd[i].revents & POLLIN)
-			{
-				// a chaque client on passe la dedans
-				if (isServerSocket(_fd[i].fd))
-				{
-					int clientSocket = accept(_fd[i].fd, (struct sockaddr *)&clientAddr, &sizeaddr); // a changer pour mettre le nom dune struct client avec info parsing
-					if (clientSocket == -1)
-					{
-						std::cerr << "Error : Client's connexion failed.." << std::endl;
-						continue;
-					}
-					if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1)
-					{
-						close(clientSocket);
-						std::cerr << "Error fcntl : Client closed.." << std::endl;
-						continue;
-					}
-					Client *newClient = new Client(clientSocket, this);
-					_clients[clientSocket] = newClient;
+    while (sigPressed)
+    {
+        checkTimeOut();
 
-					struct pollfd clientFD;
-					clientFD.fd = clientSocket;
-					clientFD.events = POLLIN;
-					clientFD.revents = 0;
-					_fd.push_back(clientFD);
-					// DEBUG
-					printLog("Nouveau client connecté [" + intToStr(clientSocket) + ']', BOLD);
-				}
-				else
-				{
-					Client *client = _clients[_fd[i].fd];
-					char buffer[BUFFERSIZE] = {0};
-					int ret = recv(_fd[i].fd, buffer, sizeof(buffer) - 1, 0);
-					if (ret <= 0)
-					{
-						printLog("\033[1mDéconnexion du client numéro " + intToStr(_fd[i].fd), RED);
-						close(_fd[i].fd);
-						_clients.erase(_fd[i].fd);
-						delete client;
-						_fd.erase(_fd.begin() + i);
-						i--;
-						continue;
-					}
-					if (ret > 0)
-					{
-						client->processRequest(buffer, ret);
+        // --- ETAPE 1 : Préparer le Poll sur TOUS les FDs (Sockets + Pipes) ---
+        // On copie les sockets existants (Serveurs + Clients)
+        std::vector<struct pollfd> poll_fds = _fd; 
 
-						if (client->getReadyToSend() == true)
-							_fd[i].events = POLLOUT | POLLIN;
-					}
-				}
+        // On ajoute temporairement les FDs des FICHIERS ou CGI ouverts par les clients
+        for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+        {
+            if (it->second->getFileFD() != -1) // Si le client attend sur un fichier/CGI
+            {
+                struct pollfd pfd_file;
+                pfd_file.fd = it->second->getFileFD();
+                pfd_file.events = POLLIN; // On veut savoir quand on peut LIRE
+                pfd_file.revents = 0;
+                poll_fds.push_back(pfd_file);
+            }
+        }
+
+        // --- ETAPE 2 : Appel Bloquant (ou presque) ---
+        int pollret = poll(&poll_fds[0], poll_fds.size(), 1000);
+
+        if (pollret == -1) {
+            if (errno == EINTR) break;
+            throw std::runtime_error("Error : Poll failed !");
+        }
+        if (pollret == 0) continue;
+
+        // --- ETAPE 3 : Traitement des Evénements ---
+        for (unsigned int i = 0; i < poll_fds.size(); i++)
+        {
+            // A. Evénement de LECTURE (POLLIN)
+            if (poll_fds[i].revents & POLLIN)
+            {
+                // CAS 1 : C'est un Socket Serveur (Nouvelle Connexion)
+                if (isServerSocket(poll_fds[i].fd))
+                {
+                    int clientSocket = accept(poll_fds[i].fd, (struct sockaddr *)&clientAddr, &sizeaddr);
+                    if (clientSocket != -1)
+                    {
+                        fcntl(clientSocket, F_SETFL, O_NONBLOCK);
+                        Client *newClient = new Client(clientSocket, this);
+                        _clients[clientSocket] = newClient;
+
+                        struct pollfd clientFD;
+                        clientFD.fd = clientSocket;
+                        clientFD.events = POLLIN;
+                        clientFD.revents = 0;
+                        _fd.push_back(clientFD); // Ajout permanent
+                        printLog("Nouveau client connecté [" + intToStr(clientSocket) + ']', BOLD);
+                    }
+                }
+                // CAS 2 : C'est un Socket Client (Le client envoie une requête)
+                else if (_clients.find(poll_fds[i].fd) != _clients.end())
+                {
+                    Client *client = _clients[poll_fds[i].fd];
+                    char buffer[BUFFERSIZE] = {0};
+                    int ret = recv(poll_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
+                    
+                    if (ret <= 0) // Déconnexion
+                    {
+                        printLog("\033[1mDéconnexion du client numéro " + intToStr(poll_fds[i].fd), RED);
+                        close(poll_fds[i].fd);
+                        delete client;
+                        _clients.erase(poll_fds[i].fd);
+                        // Retirer de _fd (vecteur permanent)
+                        for (size_t k = 0; k < _fd.size(); k++) {
+                            if (_fd[k].fd == poll_fds[i].fd) {
+                                _fd.erase(_fd.begin() + k);
+                                break;
+                            }
+                        }
+                    }
+                    else // Données reçues
+                    {
+                        client->processRequest(buffer, ret);
+                        // Note: On ne met pas POLLOUT tout de suite, on attend d'avoir la réponse prête
+                        if (client->getReadyToSend()) {
+                             for (size_t k = 0; k < _fd.size(); k++) {
+                                if (_fd[k].fd == poll_fds[i].fd) _fd[k].events = POLLIN | POLLOUT;
+                            }
+                        }
+                    }
+                }
+                // CAS 3 : C'est un Pipe CGI ou Fichier (Le script a écrit des données !)
+                else 
+                {
+                    // Retrouver à quel client appartient ce FD
+                    Client* owner = NULL;
+                    for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+                        if (it->second->getFileFD() == poll_fds[i].fd) {
+                            owner = it->second;
+                            break;
+                        }
+                    }
+
+                    if (owner)
+                    {
+                        char buffer[BUFFERSIZE];
+                        // ICI : On lit sans peur car poll a dit POLLIN ! Pas besoin de check errno.
+                        int ret = read(poll_fds[i].fd, buffer, BUFFERSIZE);
+
+                        if (ret > 0) {
+                            // On ajoute ce qu'on a lu dans le buffer de réponse du client
+                            owner->getResponse().append(buffer, ret);
+                        }
+                        else {
+                            // Fin du fichier/script (ret == 0) ou erreur (-1)
+                            close(poll_fds[i].fd);
+                            owner->setFileFD(-1); // On marque que la lecture est finie
+                            
+                            // Maintenant que la lecture est finie, on s'assure que le client est prêt à envoyer
+                            owner->getReadyToSend() = true; 
+                        }
+                    }
+                }
+            }
+
+            // B. Evénement d'ECRITURE (POLLOUT) -> Vers le Client
+            if (poll_fds[i].revents & POLLOUT)
+            {
+                if (_clients.find(poll_fds[i].fd) != _clients.end())
+                {
+                    Client *client = _clients[poll_fds[i].fd];
+                    // On envoie seulement si on a des données OU si on a fini de tout lire (fileFD == -1)
+                    if (!client->getResponse().empty() || client->getFileFD() == -1)
+                    {
+                        if (sendResponse(client, poll_fds[i]) == false)
+                        {
+                            close(poll_fds[i].fd);
+                            delete client;
+                            _clients.erase(poll_fds[i].fd);
+                            for (size_t k = 0; k < _fd.size(); k++) {
+                                if (_fd[k].fd == poll_fds[i].fd) {
+                                    _fd.erase(_fd.begin() + k);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+		int status;
+        while (waitpid(-1, &status, WNOHANG) > 0) {		
 			}
-
-			if (_fd[i].revents & POLLOUT)
-			{
-				Client *client = _clients[_fd[i].fd];
-
-				if (client->getReadyToSend() == true)
-					if (sendResponse(client, _fd[i]) == false)
-					{
-						close(_fd[i].fd);
-						_clients.erase(_fd[i].fd);
-						delete client;
-						_fd.erase(_fd.begin() + i);
-						i--;
-						continue;
-					}
-			}
-		}
-	}
-	cleanAll();
+    }
+    cleanAll();
 }
