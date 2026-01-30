@@ -1,22 +1,6 @@
 #include "Client.hpp"
 #include "../../includes/Response.hpp"
 
-/* ************************************************************************** */
-/* Représente un client connecté. C'est le chef d'orchestre qui gère le       */
-/* cycle de vie d'une connexion, de la requête à la réponse.                  */
-/* 																			  */
-/* Responsabilités clés :                                                     */
-/* 1. Réseau : Gère l'ID du socket et l'état de la connexion.                 */
-/* 2. Parsing : Déclenche la classe 'Request' pour lire les données brutes.   */
-/* 3. Routing (Le Cerveau) : Exécute 'processRequest' pour décider :          */
-/* - Quel Serveur répond (match par Host/Port).                            	  */
-/* - Quelle Location utiliser (match par préfixe le plus long).               */
-/* - Vérifier la sécurité (Méthodes autorisées, Taille max du body).          */
-/* 4. Passage de relais : Stocke les pointeurs _server et _location pour      */
-/* que le CGI ou le générateur de réponse puisse travailler ensuite.          */
-/* 																			  */
-/* ************************************************************************** */
-
 Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
 {
 	_id = fd;
@@ -24,6 +8,8 @@ Client::Client(int fd, WebServ* webServ) : _webServ(webServ)
 	_byteSend = 0;
 	_lastTime = time(NULL);
     _fileFD = -1; 
+    _cgiFdIn = -1;
+    _bytesWrittenToCgi = 0;
     _responseStr = "";
     _server = NULL;
     _location = NULL;
@@ -49,6 +35,8 @@ Client& Client::operator=(const Client& other)
         _location = other._location;
         _lastTime = other._lastTime;
         _fileFD = other._fileFD; 
+        _cgiFdIn = other._cgiFdIn;
+        _bytesWrittenToCgi = other._bytesWrittenToCgi;
         _responseStr = other._responseStr;
         _routingDone = other._routingDone;
 	}
@@ -71,11 +59,19 @@ void Client::reset()
     _server = NULL;
     _location = NULL;
     _request.clear();
+    _bytesWrittenToCgi = 0;
+    if (_cgiFdIn != -1) 
+    {
+        close(_cgiFdIn);
+        _cgiFdIn = -1;
+    }
 }
 
 Client::~Client()
 {
     closeFile();
+    if (_cgiFdIn != -1)
+        close(_cgiFdIn);
 	_readyToSend = false;
 }
 
@@ -179,6 +175,11 @@ void Client::processRequest(const char *buffer, int size)
             _responseStr += _response.get_body_string();
             _fileFD = -1;
         }
+        if (_response.getCgiInputFD() != -1)
+        {
+            _cgiFdIn = _response.getCgiInputFD();
+            _bytesWrittenToCgi = 0;
+        }
         _readyToSend = true;
     }
     else
@@ -195,6 +196,35 @@ void Client::setLastTime(time_t time)
 int& Client::getFileFD()
 {
     return _fileFD;
+}
+
+// --- AJOUT ---
+int Client::getCgiInputFD() const
+{
+    return _cgiFdIn;
+}
+
+void Client::handleCgiWrite()
+{
+    if (_cgiFdIn == -1) return;
+
+    std::string body = _request.getBody();
+    
+    if (_bytesWrittenToCgi >= body.size()) 
+    {
+        close(_cgiFdIn);
+        _cgiFdIn = -1;
+        return;
+    }
+    int ret = write(_cgiFdIn, body.c_str() + _bytesWrittenToCgi, body.size() - _bytesWrittenToCgi);
+    if (ret > 0) {
+        _bytesWrittenToCgi += ret;
+    }
+    if (ret == -1 || _bytesWrittenToCgi >= body.size()) 
+    {
+        close(_cgiFdIn);
+        _cgiFdIn = -1;
+    }
 }
 
 int Client::getID() const

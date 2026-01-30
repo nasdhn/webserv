@@ -14,9 +14,6 @@
 /* 																			  */
 /* ************************************************************************** */
 
-
-// A FAIRE : MAX SIZE DEPUIS LE PARSING A INCLURE
-
 Request::Request()
 {
 	_method = "";
@@ -30,7 +27,6 @@ Request::Request()
 	_errorCode = 0;
 	_isChunked = false;
 	_chunkSize = 0;
-
 }
 
 Request::Request(const Request& other)
@@ -72,7 +68,6 @@ Request::~Request()
 
 }
 
-// Dans Request.cpp
 void Request::clear()
 {
     _method = "";

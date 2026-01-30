@@ -35,16 +35,17 @@ class Client {
 
         Request& getRequest();
         int& getFileFD();
-
-
-
-
+        int  getCgiInputFD() const;
+        void handleCgiWrite();
 
     private :
         int _id;
         Response _response;
-        std::string _responseStr; // contientdra header + body
+        std::string _responseStr; 
         int _fileFD;
+        int _cgiFdIn;
+        size_t _bytesWrittenToCgi;
+
         bool _readyToSend;
         unsigned long _byteSend;
         time_t _lastTime;
@@ -55,6 +56,5 @@ class Client {
         const Location* _location;
         WebServ* _webServ;
 };
-
 
 #endif

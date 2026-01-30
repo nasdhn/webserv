@@ -13,7 +13,8 @@ Response::Response()
       _is_fd(false), 
       _status(200), 
       _fd_body(-1), 
-      _cgi_pid(-1), 
+      _cgi_pid(-1),
+      _cgi_input_fd(-1),
       _body("")
 {
     _headers["Server"] = "Webserv/1.0";
@@ -27,7 +28,8 @@ Response::Response(Request& req, Server* server, Location* location)
       _is_fd(false), 
       _status(200), 
       _fd_body(-1), 
-      _cgi_pid(-1), 
+      _cgi_pid(-1),
+      _cgi_input_fd(-1),
       _body("")
 {
     _headers["Server"] = "Webserv/1.0";
@@ -37,14 +39,6 @@ Response::Response(Request& req, Server* server, Location* location)
 
 Response::~Response()
 {
-    // if (_cgi_pid != -1) {
-    //     int status;
-    //     int result = waitpid(_cgi_pid, &status, WNOHANG);
-    //     if (result == 0) {
-    //         kill(_cgi_pid, SIGKILL);
-    //         waitpid(_cgi_pid, &status, 0);
-    //     }
-    // }
 }
 
 Response::Response(const Response &other)
@@ -59,6 +53,7 @@ Response &Response::operator=(const Response &other)
         _status = other._status;
         _fd_body = other._fd_body;
         _cgi_pid = other._cgi_pid;
+        _cgi_input_fd = other._cgi_input_fd;
         _body = other._body;
         _headers = other._headers;
     }
@@ -116,6 +111,11 @@ bool Response::is_fd() const
 int Response::get_body_fd() const
 {
     return _fd_body;
+}
+
+int Response::getCgiInputFD() const
+{
+    return _cgi_input_fd;
 }
 
 std::string Response::_getExtension(std::string path)
@@ -248,21 +248,17 @@ int Response::_execCGI(std::string fullPath)
     {
         close(fd_out[1]);
         close(fd_in[0]);
-
         if (_req->getMethod() == "POST" && !_req->getBody().empty()) 
         {
-            if (fcntl(fd_in[1], F_SETFL, O_NONBLOCK) == -1) 
-            {
-                std::cerr << "Error: fcntl on CGI input" << std::endl;
-            }
-            ssize_t ret = write(fd_in[1], _req->getBody().c_str(), _req->getBody().size());
-
-            if (ret < 0) 
-            {
-                std::cerr << "Error: Failed to write to CGI input" << std::endl;
-            }
+            _setNonBlocking(fd_in[1]);
+            _cgi_input_fd = fd_in[1];
         }
-        close(fd_in[1]);
+        else
+        {
+            close(fd_in[1]);
+            _cgi_input_fd = -1;
+        }
+
         _setNonBlocking(fd_out[0]);
         return (fd_out[0]);
     }
