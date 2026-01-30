@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: nadahman <nadahman@student.42.fr>          +#+  +:+       +#+         #
+#    By: cgoldens <cgoldens@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/12/10 14:18:55 by cgoldens          #+#    #+#              #
-#    Updated: 2026/01/13 10:07:15 by nadahman         ###   ########.fr        #
+#    Updated: 2026/01/30 11:59:26 by cgoldens         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -39,7 +39,7 @@ header:
 	@echo "| |/ |/ /  __/ /_/ (__  )  __/ /   | |/ / "
 	@echo "|__/|__/\\___/_.___/____/\\___/_/    |___/  "
 	@echo "                                          "
-	@echo "BY CGOLDENS"
+	@echo "BY CGOLDENS, NADAHMAN, YAOBERSO"
 	@echo "$(RESET)"
 
 ${OBJDIR}%.o: $(SRCDIR)%.cpp
