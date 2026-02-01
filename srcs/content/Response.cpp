@@ -319,7 +319,6 @@ std::string readHtml(std::string path)
 std::string Response::_generateAutoIndex(const std::string& fullPath, const std::string& uri)
 {
     std::string html = "<html><body><h1>Index of " + uri + "</h1></body></html>";
-    html += "<h1>Index of " + uri + "</h1><hr><ul>";
     DIR *dir;
     struct dirent *ent;
     if ((dir = opendir(fullPath.c_str())) != NULL)
@@ -407,30 +406,64 @@ void Response::_build()
     }
     if (_req->getMethod() == "POST" && ext != ".py" && ext != ".php" && ext != ".cgi")
     {
-        std::ofstream file(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+        std::string folderPath = fullPath.substr(0, fullPath.find_last_of("/"));
+        struct stat infoDir;
+        if (stat(folderPath.c_str(), &infoDir) != 0 || !S_ISDIR(infoDir.st_mode))
+        {
+            setStatus(500);
+            setBody("<html><body><h1>Error 500</h1><p>Upload directory missing.</p></body></html>");
+            setHeader("Connection", "close");
+            return;
+        }
 
+        std::string body = _req->getBody();
+        std::string contentToWrite = body;
+        std::string contentType = _req->getHeader("Content-Type");
+        if (contentType.empty())
+            contentType = _req->getHeader("content-type");
+
+        if (contentType.find("multipart/form-data") != std::string::npos)
+        {
+            size_t boundaryPos = contentType.find("boundary=");
+            if (boundaryPos != std::string::npos)
+            {
+                std::string boundary = contentType.substr(boundaryPos + 9);
+                size_t endPos = boundary.find_first_of(" ;\r\n");
+                if (endPos != std::string::npos)
+                    boundary = boundary.substr(0, endPos);
+
+                std::string finalBoundary = "--" + boundary;
+                size_t startPart = body.find(finalBoundary);
+                size_t startHeaderEnd = body.find("\r\n\r\n", startPart);
+
+                if (startPart != std::string::npos && startHeaderEnd != std::string::npos)
+                {
+                    size_t dataStart = startHeaderEnd + 4;
+                    size_t endPart = body.find(finalBoundary, dataStart);
+
+                    if (endPart != std::string::npos && endPart > dataStart + 2)
+                    {
+                        contentToWrite = body.substr(dataStart, (endPart - 2) - dataStart);
+                    }
+                }
+            }
+        }
+
+        std::ofstream file(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
         if (file.is_open())
         {
-            file.write(_req->getBody().c_str(), _req->getBody().size());
-            if (file.bad() || file.fail()) 
-            {
-                file.close();
-                setStatus(500);
-                setBody(_getErrorPageContent(500));
-                setHeader("Connection", "close");
-                return;
-            }
+            file.write(contentToWrite.c_str(), contentToWrite.size());
             file.close();
             setStatus(201);
-            setBody("<html><body><h1>201 Created</h1><p>File created successfully.</p></body></html>");
+            setBody("<html><body><h1>201 Created</h1></body></html>");
             setHeader("Location", _req->getPath());
-            setHeader("Connection", "keep-alive");
+            setHeader("Connection", "close");
         }
         else
         {
-            setStatus(403);
-            setBody(_getErrorPageContent(403));
-            setHeader("Connection", "keep-alive");
+            setStatus(500);
+            setBody(_getErrorPageContent(500));
+            setHeader("Connection", "close");
         }
         return;
     }
