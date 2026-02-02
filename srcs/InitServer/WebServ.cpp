@@ -381,9 +381,12 @@ void WebServ::setupServ()
                     else 
                     {
                         client->processRequest(buffer, ret);
-                        if (client->getReadyToSend()) {
-                             for (size_t k = 0; k < _fd.size(); k++) {
-                                if (_fd[k].fd == poll_fds[i].fd) _fd[k].events = POLLIN | POLLOUT;
+                        if (client->getReadyToSend()) 
+                        {
+                            for (size_t k = 0; k < _fd.size(); k++) 
+                            {
+                                if (_fd[k].fd == poll_fds[i].fd) 
+                                    _fd[k].events = POLLIN | POLLOUT;
                             }
                         }
                     }
