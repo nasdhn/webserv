@@ -338,7 +338,7 @@ std::string Response::_generateAutoIndex(const std::string& fullPath, const std:
                 href += "/";
             href += link;
 
-            html += "<li><a href=\"" + link + "\">" + file_name + "</a></li>";
+            html += "<li><a href=\"" + href + "\">" + file_name + "</a></li>";
         }
         closedir(dir);
     } 
