@@ -434,8 +434,10 @@ void WebServ::setupServ()
                             close(poll_fds[i].fd);
                             delete client;
                             _clients.erase(poll_fds[i].fd);
-                            for (size_t k = 0; k < _fd.size(); k++) {
-                                if (_fd[k].fd == poll_fds[i].fd) {
+                            for (size_t k = 0; k < _fd.size(); k++) 
+                            {
+                                if (_fd[k].fd == poll_fds[i].fd) 
+                                {
                                     _fd.erase(_fd.begin() + k);
                                     break;
                                 }
