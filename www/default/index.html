@@ -160,8 +160,7 @@
 			}
 			const originalText = button.textContent;
 			setButtonState(button, "Uploading...", true);
-
-			const endpoint = useCgi ? `/cgi-bin/postCgi.${cgiExtension}` : `/upload/${file.name}`;
+			const endpoint = useCgi ? `/cgi-bin/postCgi.${cgiExtension}` : `/upload`;
 			fetch(endpoint, {
 				method: 'POST',
 				body: formData

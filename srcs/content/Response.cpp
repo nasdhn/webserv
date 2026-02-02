@@ -351,6 +351,211 @@ std::string Response::_generateAutoIndex(const std::string& fullPath, const std:
     return html;
 }
 
+// void Response::_build()
+// {
+//     struct stat info;
+//     std::string fullPath;
+//     std::string root;
+//     if (_server && _req->getBody().size() > _server->getMaxSize())
+//     {
+//         setStatus(413);
+//         setBody(_getErrorPageContent(413));
+//         return;
+//     }
+//     if (_location)
+//     {
+//         int redirCode = _location->getRedir().code; 
+//         std::string redirUrl = _location->getRedir().link;
+//         if (redirCode != 0 && !redirUrl.empty())
+//         {
+//             setStatus(redirCode);
+//             setHeader("Location", redirUrl);
+//             setHeader("Connection", "keep-alive");
+//             setBody("<html><body><h1>Moved</h1><p>The document has moved <a href=\"" + redirUrl + "\">here</a>.</p></body></html>");
+//             return;
+//         }
+//         std::vector<std::string> methods = _location->getMethods();
+//         bool allowed = false;
+//         if (methods.empty()) allowed = true;
+//         else {
+//             for (size_t i = 0; i < methods.size(); i++) {
+//                 if (methods[i] == _req->getMethod()) {
+//                     allowed = true;
+//                     break;
+//                 }
+//             }
+//         }
+//         if (!allowed) {
+//             setStatus(405);
+//             setBody(_getErrorPageContent(405));
+//             return ;
+//         }
+//     }
+//     if (_location && !_location->getRoot().empty())
+//         root = _location->getRoot();
+//     else if (_server && !_server->getRoot().empty())
+//         root = _server->getRoot();
+//     else
+//         root = "./www";
+
+//     fullPath = root + _req->getPath();
+//     std::string ext = _getExtension(fullPath);
+//     if (_req->getMethod() == "DELETE")
+//     {
+//         return _ft_delete(fullPath);
+//     }
+//     if (_req->getMethod() == "POST" && ext != ".py" && ext != ".php" && ext != ".cgi")
+//     {
+//         std::string folderPath = fullPath.substr(0, fullPath.find_last_of("/"));
+//         struct stat infoDir;
+//         if (stat(folderPath.c_str(), &infoDir) != 0 || !S_ISDIR(infoDir.st_mode))
+//         {
+//             setStatus(500);
+//             setBody("<html><body><h1>Error 500</h1><p>Upload directory missing.</p></body></html>");
+//             setHeader("Connection", "close");
+//             return;
+//         }
+
+//         std::string body = _req->getBody();
+//         std::string contentToWrite = body;
+//         std::string contentType = _req->getHeader("Content-Type");
+//         if (contentType.empty())
+//             contentType = _req->getHeader("content-type");
+
+//         if (contentType.find("multipart/form-data") != std::string::npos)
+//         {
+//             size_t boundaryPos = contentType.find("boundary=");
+//             if (boundaryPos != std::string::npos)
+//             {
+//                 std::string boundary = contentType.substr(boundaryPos + 9);
+//                 size_t endPos = boundary.find_first_of(" ;\r\n");
+//                 if (endPos != std::string::npos)
+//                     boundary = boundary.substr(0, endPos);
+
+//                 std::string finalBoundary = "--" + boundary;
+//                 size_t startPart = body.find(finalBoundary);
+//                 size_t startHeaderEnd = body.find("\r\n\r\n", startPart);
+
+//                 if (startPart != std::string::npos && startHeaderEnd != std::string::npos)
+//                 {
+//                     size_t dataStart = startHeaderEnd + 4;
+//                     size_t endPart = body.find(finalBoundary, dataStart);
+
+//                     if (endPart != std::string::npos && endPart > dataStart + 2)
+//                     {
+//                         contentToWrite = body.substr(dataStart, (endPart - 2) - dataStart);
+//                     }
+//                 }
+//             }
+//         }
+
+//         std::ofstream file(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+//         if (file.is_open())
+//         {
+//             file.write(contentToWrite.c_str(), contentToWrite.size());
+//             file.close();
+//             setStatus(201);
+//             setBody("<html><body><h1>201 Created</h1></body></html>");
+//             setHeader("Location", _req->getPath());
+//             setHeader("Connection", "close");
+//         }
+//         else
+//         {
+//             setStatus(500);
+//             setBody(_getErrorPageContent(500));
+//             setHeader("Connection", "close");
+//         }
+//         return;
+//     }
+//     if (stat(fullPath.c_str(), &info) != 0)
+//     {
+//         setStatus(404);
+//         setBody(_getErrorPageContent(404));
+//         return;
+//     }
+//     if (S_ISDIR(info.st_mode))
+//     {
+//         if (_location && _location->getAutoIndex() == 1)
+//         {
+//             setStatus(200);
+//             setBody(_generateAutoIndex(fullPath, _req->getPath()));
+//             return;
+//         }
+
+//         std::vector<std::string> indexes;
+//         if (_location && !_location->getIndex().empty())
+//             indexes = _location->getIndex();
+//         else if (_server && !_server->getIndex().empty())
+//             indexes = _server->getIndex();
+
+//         if (!indexes.empty())
+//         {
+//             for (size_t i = 0; i < indexes.size(); ++i)
+//             {
+//                 std::string indexPath = fullPath;
+//                 if (indexPath[indexPath.length() - 1] != '/')
+//                     indexPath += "/";
+//                 indexPath += indexes[i];
+
+//                 std::ifstream f(indexPath.c_str());
+//                 if (f.good())
+//                 {
+//                     setStatus(200);
+//                     setBody(readHtml(indexPath));
+//                     f.close();
+//                     return;
+//                 }
+//                 f.close();
+//             }
+//         }
+        
+//         setStatus(403);
+//         setBody(_getErrorPageContent(403));
+//         return;
+//     }
+//     if (ext == ".py" || ext == ".php" || ext == ".cgi")
+//     {
+//         int fd_cgi = _execCGI(fullPath);
+        
+//         if (fd_cgi == -1)
+//         {
+//             setStatus(500);
+//             setBody(_getErrorPageContent(500));
+//             return;
+//         }
+//         setStatus(200);
+//         setBodyfd(fd_cgi);
+//         setHeader("Connection", "close");
+//         return;
+//     }
+//     if (_req->getMethod() == "GET")
+//     {
+//         int fd = open(fullPath.c_str(), O_RDONLY);
+//         if (fd == -1)
+//         {
+//             setStatus(403);
+//             setBody(_getErrorPageContent(403));
+//             return;
+//         }
+//         _setNonBlocking(fd);
+
+//         setStatus(200);
+//         setBodyfd(fd);
+        
+//         std::stringstream ss;
+//         ss << info.st_size;
+//         setHeader("Content-Length", ss.str());
+//         setHeader("Content-Type", _getMimeType(fullPath));
+//     }
+//     else
+//     {
+//         setStatus(405);
+//         setBody(_getErrorPageContent(405));
+//         setHeader("Connection", "close");
+//     }
+//     return;
+// }
+
 void Response::_build()
 {
     struct stat info;
@@ -404,8 +609,11 @@ void Response::_build()
     {
         return _ft_delete(fullPath);
     }
+
+    // --- LOGIQUE POST AVEC MULTIPART PARSING ---
     if (_req->getMethod() == "POST" && ext != ".py" && ext != ".php" && ext != ".cgi")
     {
+        // 1. Vérification que le dossier parent existe (Sécurité)
         std::string folderPath = fullPath.substr(0, fullPath.find_last_of("/"));
         struct stat infoDir;
         if (stat(folderPath.c_str(), &infoDir) != 0 || !S_ISDIR(infoDir.st_mode))
@@ -417,22 +625,43 @@ void Response::_build()
         }
 
         std::string body = _req->getBody();
-        std::string contentToWrite = body;
+        std::string contentToWrite = body; // Par défaut on écrit tout (cas raw)
         std::string contentType = _req->getHeader("Content-Type");
         if (contentType.empty())
             contentType = _req->getHeader("content-type");
 
+        // 2. Logique Multipart (pour gérer l'upload navigateur propre)
         if (contentType.find("multipart/form-data") != std::string::npos)
         {
             size_t boundaryPos = contentType.find("boundary=");
             if (boundaryPos != std::string::npos)
             {
                 std::string boundary = contentType.substr(boundaryPos + 9);
+                // Nettoyage de la boundary si elle contient des espaces ou point-virgules à la fin
                 size_t endPos = boundary.find_first_of(" ;\r\n");
                 if (endPos != std::string::npos)
                     boundary = boundary.substr(0, endPos);
 
                 std::string finalBoundary = "--" + boundary;
+
+                // A. Extraction du nom de fichier
+                size_t filenamePos = body.find("filename=\"");
+                if (filenamePos != std::string::npos)
+                {
+                    filenamePos += 10; // On saute filename="
+                    size_t quotePos = body.find("\"", filenamePos);
+                    if (quotePos != std::string::npos)
+                    {
+                        std::string filename = body.substr(filenamePos, quotePos - filenamePos);
+                        
+                        // On ajoute le nom du fichier au chemin du dossier
+                        if (fullPath[fullPath.length() - 1] != '/')
+                            fullPath += "/";
+                        fullPath += filename;
+                    }
+                }
+
+                // B. Extraction des données binaires (Nettoyage des headers multipart)
                 size_t startPart = body.find(finalBoundary);
                 size_t startHeaderEnd = body.find("\r\n\r\n", startPart);
 
@@ -443,30 +672,35 @@ void Response::_build()
 
                     if (endPart != std::string::npos && endPart > dataStart + 2)
                     {
+                        // On ne garde que les données entre les headers et la boundary de fin
                         contentToWrite = body.substr(dataStart, (endPart - 2) - dataStart);
                     }
                 }
             }
         }
 
+        // 3. Écriture finale du fichier
         std::ofstream file(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
         if (file.is_open())
         {
             file.write(contentToWrite.c_str(), contentToWrite.size());
             file.close();
+            
             setStatus(201);
-            setBody("<html><body><h1>201 Created</h1></body></html>");
-            setHeader("Location", _req->getPath());
-            setHeader("Connection", "close");
+            setBody("<html><body><h1>201 Created</h1><p>File created successfully.</p></body></html>");
+            setHeader("Location", _req->getPath()); 
+            setHeader("Connection", "keep-alive");
         }
         else
         {
+            // Si on ne peut toujours pas ouvrir le fichier (malgré le check dossier), c'est une 500
             setStatus(500);
             setBody(_getErrorPageContent(500));
             setHeader("Connection", "close");
         }
         return;
     }
+
     if (stat(fullPath.c_str(), &info) != 0)
     {
         setStatus(404);
