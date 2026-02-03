@@ -448,6 +448,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 	while (std::getline(file, s))
 	{
 		line++;
+		s = delWhiteSpace(s);
 		delComment(s);
 		if (s.find("server") < s.length() && !serverConf)
 		{
@@ -462,6 +463,7 @@ int parse(std::vector<Server> *serv, std::string filepath)
 			while (std::getline(file, s))
 			{
 				line++;
+				s = delWhiteSpace(s);
 				delComment(s);
 				if ((s.find("server") < s.length() && !(s.find("server_name") < s.length())) || !serverConf)
 				{
