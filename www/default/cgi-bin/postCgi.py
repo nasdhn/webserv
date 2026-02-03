@@ -1,45 +1,73 @@
 #!/usr/bin/python3
+import cgi
+import cgitb
 import os
 import sys
 
-# On envoie les headers tout de suite pour ne pas faire timeout le serveur
+cgitb.enable()
+
+# FICHIER DE DEBUG (On écrit dans /tmp pour être sûr que ça marche)
+LOG_FILE = "/tmp/debug_cgi.txt"
+
+def log(message):
+    with open(LOG_FILE, "a") as f:
+        f.write(message + "\n")
+
+# On vide le log au début
+with open(LOG_FILE, "w") as f:
+    f.write("--- DEBUT DU SCRIPT CGI ---\n")
+
 print("Content-Type: text/html\r\n\r\n")
+print("<html><body><h1>Debug</h1>")
 
-print("<!DOCTYPE html><html><body>")
-print("<h1>CGI DEBUG MODE</h1>")
-
-# 1. Vérifions les variables d'environnement cruciales
-print("<h2>Variables d'environnement reçues :</h2>")
-print("<ul>")
-relevant_keys = ["REQUEST_METHOD", "CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"]
-for key in relevant_keys:
-    val = os.environ.get(key, "NON DÉFINIE ❌")
-    icon = "✅" if val != "NON DÉFINIE ❌" else "❌"
-    print(f"<li><b>{key}</b> : {val} {icon}</li>")
-print("</ul>")
-
-# 2. Tentative de lecture brute (sans parsing)
-print("<h2>Lecture de STDIN :</h2>")
 try:
-    # On récupère la taille attendue
-    length = os.environ.get("CONTENT_LENGTH")
+    # 1. Où suis-je ?
+    cwd = os.getcwd()
+    log(f"1. Dossier courant (CWD) : {cwd}")
     
-    if length:
-        length = int(length)
-        print(f"<p>Le serveur dit qu'il y a {length} octets à lire.</p>")
-        
-        # On lit stdin
-        # ATTENTION : Si le serveur n'envoie rien, cette ligne va bloquer indéfiniment (Deadlock)
-        data = sys.stdin.read(length) 
-        
-        print(f"<p>J'ai réussi à lire : <b>{len(data)} octets</b>.</p>")
-        print("<h3>Début du contenu brut :</h3>")
-        print(f"<pre>{data[:200]}</pre>") # Affiche juste le début
+    # 2. Le dossier upload existe-t-il VU D'ICI ?
+    # Note: J'utilise un chemin ABSOLU basé sur le CWD pour être sûr
+    upload_target = os.path.join(cwd, "www/default/upload")
+    
+    if os.path.exists(upload_target):
+        log(f"2. Dossier upload TROUVÉ : {upload_target}")
     else:
-        print("<p style='color:red'>CONTENT_LENGTH est vide ! Je ne peux pas lire stdin sans risquer de bloquer.</p>")
+        log(f"2. Dossier upload INTROUVABLE à : {upload_target}")
+        # Tentative de secours : chercher juste "upload" ou "../upload"
+        log("   -> Tentative de lister le dossier courant : " + str(os.listdir(cwd)))
+
+    # 3. Réception des données
+    form = cgi.FieldStorage()
+    keys = list(form.keys())
+    log(f"3. Clés reçues dans le formulaire : {keys}")
+
+    if "file" in form:
+        fileitem = form["file"]
+        if fileitem.filename:
+            fn = os.path.basename(fileitem.filename)
+            # On force le chemin complet
+            filepath = os.path.join(upload_target, fn)
+            
+            log(f"4. Tentative d'écriture dans : {filepath}")
+            
+            with open(filepath, 'wb') as f:
+                f.write(fileitem.file.read())
+            
+            # CHMOD
+            try:
+                os.chmod(filepath, 0o755)
+                log("5. Chmod OK")
+            except Exception as e:
+                log(f"5. Erreur Chmod : {e}")
+                
+            print("Upload OK")
+        else:
+            log("Erreur: Pas de filename")
+    else:
+        log("Erreur: Pas de clé 'file'")
 
 except Exception as e:
-    print(f"<p style='color:red'>Erreur fatale pendant la lecture : {e}</p>")
+    log(f"CRASH FATAL : {e}")
+    print(e)
 
-print("<button onclick='window.location.href=\"/index.html\"'>Retour</button>")
 print("</body></html>")

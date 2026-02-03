@@ -230,6 +230,13 @@ int Response::_execCGI(std::string fullPath)
              ss << _req->getBody().size();
              envs.push_back("CONTENT_LENGTH=" + ss.str());
         }
+        std::string type = _req->getHeader("Content-Type");
+        if (type.empty()) 
+            type = _req->getHeader("content-type");
+        if (!type.empty() && type[type.size() - 1] == '\r')
+            type = type.substr(0, type.size() - 1);
+        if (!type.empty())
+            envs.push_back("CONTENT_TYPE=" + type);
         if (!_req->getHeader("Content-Type").empty())
             envs.push_back("CONTENT_TYPE=" + _req->getHeader("Content-Type"));
 
