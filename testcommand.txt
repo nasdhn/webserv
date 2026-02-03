@@ -1,0 +1,5 @@
+curl -v -X POST http://localhost:8080/
+
+curl -v -X DELETE http://localhost:8080/upload/fichier.txt
+
+curl GET http://localhost:8080/upload/index.html
