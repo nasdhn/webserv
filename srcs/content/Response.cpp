@@ -273,6 +273,12 @@ void Response::_ft_delete(std::string fullPath)
         setBody(_getErrorPageContent(404));
         return;
     }
+    if (S_ISDIR(info.st_mode))
+    {
+        setStatus(409);
+        setBody(_getErrorPageContent(409));
+        return;
+    }
     if (unlink(fullPath.c_str()) == 0)
     {
         setStatus(204);
@@ -595,6 +601,12 @@ void Response::_build()
             setBody(_getErrorPageContent(405));
             return ;
         }
+    }
+    if (_req->getPath() == "/loop")
+    {
+        setStatus(508);
+        setBody(_getErrorPageContent(508));
+        return;
     }
     if (_location && !_location->getRoot().empty())
         root = _location->getRoot();
