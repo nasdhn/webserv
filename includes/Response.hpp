@@ -40,6 +40,7 @@ class Response {
         void        setBodyfd(int fd);
         void        setpid(pid_t pid);
         std::string getHeaderString() const;
+        std::string _getErrorPageContent(int code);
 
     private:
         Request* _req;
@@ -60,7 +61,6 @@ class Response {
         int         _execCGI(std::string fullPath);
         std::string _getExtension(std::string path);
         std::string _getMimeType(std::string fullPath);
-        std::string _getErrorPageContent(int code);
         std::string _generateAutoIndex(const std::string& fullPath, const std::string& uri);
         std::string _getStatusMessage(int code) const;
         void        _setNonBlocking(int fd);

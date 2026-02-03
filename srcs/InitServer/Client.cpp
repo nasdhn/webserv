@@ -71,8 +71,10 @@ Client::~Client()
 {
     closeFile();
     if (_cgiFdIn != -1)
+	{
     {    
         close(_cgiFdIn);
+	}
     }
 	_readyToSend = false;
 }
@@ -99,7 +101,7 @@ void Client::processRequest(const char *buffer, int size)
     {
         std::cout << "Parsing error : " << _request.getErrorCode() << std::endl;
         _response.setStatus(400);
-        _response.setBody("<html><body><h1>400 Bad Request</h1></body></html>");
+        _response.setBody(_response._getErrorPageContent(400));
         _responseStr = _response.get_header() + _response.get_body_string();
         _readyToSend = true;
         return ;
@@ -119,7 +121,7 @@ void Client::processRequest(const char *buffer, int size)
         if (_server == NULL) 
         {
             _response.setStatus(500);
-            _response.setBody("<html><body><h1>500 Internal Server Error</h1></body></html>");
+            _response.setBody(_response._getErrorPageContent(500));
             _responseStr = _response.get_header() + _response.get_body_string();
             _readyToSend = true;
             return;
@@ -152,7 +154,7 @@ void Client::processRequest(const char *buffer, int size)
     if (_request.getErrorCode() == 413)
     {
         _response.setStatus(413);
-        _response.setBody("<html><body><h1>413 Request Entity Too Large</h1></body></html>");
+        _response.setBody(_response._getErrorPageContent(413));
         _response.setHeader("Connection", "close");
         _responseStr = _response.get_header() + _response.get_body_string();
         _readyToSend = true;

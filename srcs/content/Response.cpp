@@ -296,10 +296,11 @@ std::string Response::_getErrorPageContent(int code)
     if (_server)
     {
         std::map<unsigned int, std::string> errorPages = _server->getErrorPage();
-        if (errorPages.count(code) > 0)
+		if (errorPages.count(code) > 0)
         {
             std::string path = errorPages[code];
             std::ifstream file(path.c_str());
+			std::cout << RED << path << RESET << std::endl;
             if (file.is_open())
             {
                 std::stringstream buffer;
@@ -307,6 +308,21 @@ std::string Response::_getErrorPageContent(int code)
                 return buffer.str();
             }
         }
+		else if (checkHTTPCode(code))
+		{
+			std::string path = "www/default/html/error/";
+			path += code;
+			path += ".html";
+            std::ifstream file(path.c_str());
+			std::cout << RED << path << RESET << std::endl;
+			if (file.is_open())
+            {
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                return buffer.str();
+            }
+
+		}
     }
     std::stringstream ss;
     ss << "<html><head><title>Error</title></head><body><center><h1>" << code << "</h1></center></body></html>";
@@ -631,7 +647,7 @@ void Response::_build()
         if (stat(folderPath.c_str(), &infoDir) != 0 || !S_ISDIR(infoDir.st_mode))
         {
             setStatus(500);
-            setBody("<html><body><h1>Error 500</h1><p>Upload directory missing.</p></body></html>");
+            setBody(_getErrorPageContent(500));
             setHeader("Connection", "close");
             return;
         }
