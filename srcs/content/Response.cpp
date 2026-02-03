@@ -308,10 +308,14 @@ std::string Response::_getErrorPageContent(int code)
                 return buffer.str();
             }
         }
-		else if (checkHTTPCode(code))
+		else
 		{
-			std::string path = "www/default/html/error/";
-			path += code;
+			//get html for default error page
+			std::string path = _server->getRoot();
+			path += "/html/error/";
+			std::stringstream ss;
+			ss << code;
+			path += ss.str();
 			path += ".html";
             std::ifstream file(path.c_str());
 			std::cout << RED << path << RESET << std::endl;
