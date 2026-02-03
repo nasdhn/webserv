@@ -300,8 +300,7 @@ std::string Response::_getErrorPageContent(int code)
         {
             std::string path = errorPages[code];
             std::ifstream file(path.c_str());
-			std::cout << RED << path << RESET << std::endl;
-            if (file.is_open())
+			if (file.is_open())
             {
                 std::stringstream buffer;
                 buffer << file.rdbuf();
@@ -318,7 +317,6 @@ std::string Response::_getErrorPageContent(int code)
 			path += ss.str();
 			path += ".html";
             std::ifstream file(path.c_str());
-			std::cout << RED << path << RESET << std::endl;
 			if (file.is_open())
             {
                 std::stringstream buffer;
