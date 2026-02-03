@@ -644,11 +644,23 @@ void Response::_build()
     {
         return _ft_delete(fullPath);
     }
-
-    // --- LOGIQUE POST AVEC MULTIPART PARSING ---
     if (_req->getMethod() == "POST" && ext != ".py" && ext != ".php" && ext != ".cgi")
     {
-        // 1. Vérification que le dossier parent existe (Sécurité)
+        if (_req->getBody().empty())
+        {
+            setStatus(400);
+            setBody(_getErrorPageContent(400));
+            return;
+        }
+        std::string cType = _req->getHeader("Content-Type");
+        if (cType.empty())
+            cType = _req->getHeader("content-type");
+        if (cType.empty())
+        {
+            setStatus(400);
+            setBody(_getErrorPageContent(400));
+            return;
+        }
         std::string folderPath = fullPath.substr(0, fullPath.find_last_of("/"));
         struct stat infoDir;
         if (stat(folderPath.c_str(), &infoDir) != 0 || !S_ISDIR(infoDir.st_mode))
