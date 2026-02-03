@@ -179,8 +179,12 @@ bool WebServ::sendResponse(Client *client, struct pollfd &pfd)
     {
         client->getReadyToSend() = false;
         client->getByteSend() = 0;
-    	for (size_t k = 0; k < _fd.size(); k++) {
-           	if (_fd[k].fd == pfd.fd) _fd[k].events = POLLIN;
+    	for (size_t k = 0; k < _fd.size(); k++) 
+        {
+           	if (_fd[k].fd == pfd.fd) 
+            {    
+                _fd[k].events = POLLIN;
+            }
     	}
     	std::string path = client->getRequest().getPath();
     	bool isCgi = (path.find(".py") != std::string::npos || path.find(".php") != std::string::npos || path.find(".cgi") != std::string::npos); 
@@ -332,7 +336,8 @@ void WebServ::setupServ()
         int pollret = poll(&poll_fds[0], poll_fds.size(), 1000);
         if (pollret == -1) 
 		{
-            if (errno == EINTR) break;
+            if (errno == EINTR) 
+                break;
             throw std::runtime_error("Error : Poll failed !");
         }
         if (pollret == 0) 

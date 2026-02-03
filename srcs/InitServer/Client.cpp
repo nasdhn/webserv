@@ -71,7 +71,9 @@ Client::~Client()
 {
     closeFile();
     if (_cgiFdIn != -1)
+    {    
         close(_cgiFdIn);
+    }
 	_readyToSend = false;
 }
 
@@ -217,10 +219,11 @@ void Client::handleCgiWrite()
         return;
     }
     int ret = write(_cgiFdIn, body.c_str() + _bytesWrittenToCgi, body.size() - _bytesWrittenToCgi);
-    if (ret > 0) {
+    if (ret > 0) 
+    {
         _bytesWrittenToCgi += ret;
     }
-    if (ret == -1 || _bytesWrittenToCgi >= body.size()) 
+    if (ret <= 0 || _bytesWrittenToCgi >= body.size()) 
     {
         close(_cgiFdIn);
         _cgiFdIn = -1;
