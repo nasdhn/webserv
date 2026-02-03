@@ -161,9 +161,9 @@ void Client::processRequest(const char *buffer, int size)
     if (_request.isComplete())
     {
         // DEBUG
-        std::cout << "Requete complete recu !" << std::endl;
-        std::cout << "Methode : " << _request.getMethod() << std::endl;
-        std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
+        // std::cout << "Requete complete recu !" << std::endl;
+        // std::cout << "Methode : " << _request.getMethod() << std::endl;
+        // std::cout << "Routing SUCCES -> Srv: " << _server->getServerName()[0] << std::endl;
         // DEBUG
         _response = Response(_request, _server, (Location*)_location);
         _responseStr = _response.get_header();
