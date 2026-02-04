@@ -3,6 +3,7 @@
 This project has been created as part of the 42 curriculum by Cyril Goldenschue (cgoldens), Yann Oberson (yaoberso) and Nasim Dahman (nadahman).
 
 Description:
+
 Webserv is a fully functional HTTP/1.1 server written in C++98. The primary goal of this project is to understand the internal mechanisms of the HTTP protocol, network programming using sockets, and I/O multiplexing.
 Unlike a traditional blocking server, Webserv uses poll() to handle multiple client connections simultaneously without blocking the execution flow. It is built to be robust, compliant with strictly defined HTTP standards, and capable of handling static content as well as dynamic content via CGI.
 
