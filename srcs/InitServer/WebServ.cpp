@@ -396,34 +396,6 @@ void WebServ::setupServ()
                         }
                     }
                 }
-				// le cas ou c'est un pipe cgi ou fichier a lire
-                // else 
-                // {
-                //     Client* owner = NULL;
-                //     for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it) 
-				// 	{
-                //         if (it->second->getFileFD() == poll_fds[i].fd) 
-				// 		{
-                //             owner = it->second;
-                //             break;
-                //         }
-                //     }
-                //     if (owner)
-                //     {
-                //         char buffer[BUFFERSIZE];
-                //         int ret = read(poll_fds[i].fd, buffer, BUFFERSIZE);
-
-                //         if (ret > 0)
-                //             owner->getResponse().append(buffer, ret);
-                //         else 
-				// 		{
-                //             close(poll_fds[i].fd);
-                //             owner->setFileFD(-1); 
-                //             owner->getReadyToSend() = true; 
-                //         }
-                //     }
-                // }
-                // le cas ou c'est un pipe cgi ou fichier a lire
                 else 
                 {
                     Client* owner = NULL;
@@ -442,47 +414,27 @@ void WebServ::setupServ()
 
                         if (ret > 0)
                         {
-                            // --- DÉBUT MODIFICATION CGI PARSING ---
                             std::string chunk(buffer, ret);
-                            
-                            // On vérifie si c'est un CGI (basé sur l'extension ou un flag, ici on suppose que le path contient .py/.php)
-                            // Et on regarde si la réponse contient déjà des headers complets (la séquence \r\n\r\n)
-                            // Si la réponse du client ne contient que les headers du serveur, on doit injecter ceux du CGI.
-                            
                             std::string& currentResp = owner->getResponse();
-                            
-                            // On cherche la séparation Headers/Body du CGI dans le chunk qu'on vient de lire
                             size_t cgiHeaderEnd = chunk.find("\r\n\r\n");
-                            
-                            // Si on trouve "\r\n\r\n" dans ce qu'on vient de lire, c'est probablement le début du CGI
-                            // ET on vérifie qu'on n'a pas déjà écrit de body (pour ne pas le faire 2 fois si le chunk est coupé bizarrement)
-                            // Pour simplifier : on applique cette logique si le chunk contient "Content-Type:"
+      
                             if (cgiHeaderEnd != std::string::npos && chunk.find("Content-Type:") != std::string::npos)
                             {
-                                // 1. On sépare les headers du CGI et le body du CGI
                                 std::string cgiHeaders = chunk.substr(0, cgiHeaderEnd);
-                                std::string cgiBody = chunk.substr(cgiHeaderEnd + 4); // +4 pour sauter \r\n\r\n
-
-                                // 2. On injecte les headers du CGI dans les headers du Serveur
-                                // La réponse actuelle (currentResp) ressemble à : "HTTP/1.1 200 OK\r\nServer: Webserv\r\n\r\n"
-                                // On veut insérer nos cgiHeaders juste avant le dernier \r\n\r\n
+                                std::string cgiBody = chunk.substr(cgiHeaderEnd + 4);
                                 size_t serverHeaderEnd = currentResp.find("\r\n\r\n");
                                 
                                 if (serverHeaderEnd != std::string::npos)
                                 {
-                                    // On insère : "\r\n" + headers CGI
                                     currentResp.insert(serverHeaderEnd, "\r\n" + cgiHeaders);
                                 }
                                 
-                                // 3. On ajoute uniquement le body du CGI à la fin
                                 currentResp.append(cgiBody);
                             }
                             else
                             {
-                                // Cas normal (fichier simple ou suite du CGI sans headers)
                                 currentResp.append(chunk);
                             }
-                            // --- FIN MODIFICATION ---
                         }
                         else 
                         {
@@ -493,11 +445,8 @@ void WebServ::setupServ()
                     }
                 }
             }
-
-            // ici c est pour ecrire
             if (poll_fds[i].revents & POLLOUT)
             {
-                // si cest le client
                 if (_clients.find(poll_fds[i].fd) != _clients.end())
                 {
                     Client *client = _clients[poll_fds[i].fd];
@@ -519,7 +468,6 @@ void WebServ::setupServ()
                         }
                     }
                 }
-				// si c est un pipe cgi pour post
                 else 
                 {
                     Client* ownerCgiIn = NULL;

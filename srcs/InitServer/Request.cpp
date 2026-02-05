@@ -231,13 +231,13 @@ bool Request::parseStartLine()
 		_state = REQ_ERROR;
 		return false;
 	}
-	// DEBUG
-	// std::cout << "Methode : " << _method << std::endl;
-	// std::cout << "URI : " << _uri << std::endl;
-	// std::cout << "Path : " << _path << std::endl;
-	// std::cout << "Query : " << _query << std::endl;
-	// std::cout << "htpp Version : " << _httpVersion << std::endl;
-	// DEBUG
+	//DEBUG
+	std::cout << "Methode : " << _method << std::endl;
+	std::cout << "URI : " << _uri << std::endl;
+	std::cout << "Path : " << _path << std::endl;
+	std::cout << "Query : " << _query << std::endl;
+	std::cout << "htpp Version : " << _httpVersion << std::endl;
+	//DEBUG
 
 	_state = REQ_HEADERS;
 	return true;
