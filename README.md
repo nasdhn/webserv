@@ -1,64 +1,70 @@
-# webserv
+# 🌐 Webserv
 
-This project has been created as part of the 42 curriculum by Cyril Goldenschue (cgoldens), Yann Oberson (yaoberso) and Nasim Dahman (nadahman).
+Ce projet a été réalisé dans le cadre du cursus **42** par **Cyril Goldenschue** (cgoldens), **Yann Oberson** (yaoberso) et **Nasim Dahman** (nadahman).
 
-Description:
+---
 
-Webserv is a fully functional HTTP/1.1 server written in C++98. The primary goal of this project is to understand the internal mechanisms of the HTTP protocol, network programming using sockets, and I/O multiplexing.
-Unlike a traditional blocking server, Webserv uses poll() to handle multiple client connections simultaneously without blocking the execution flow. It is built to be robust, compliant with strictly defined HTTP standards, and capable of handling static content as well as dynamic content via CGI.
+## 📝 Description
 
+**Webserv** est un serveur HTTP/1.1 fonctionnel écrit en **C++98**. 
+Le but principal de ce projet est de comprendre les mécanismes internes du protocole HTTP, la programmation réseau via les sockets et le multiplexage d'E/S.
 
-Instructions:
+Contrairement à un serveur bloquant traditionnel, Webserv utilise `poll()` pour gérer simultanément plusieurs connexions clients sans bloquer le flux d'exécution. Il est conçu pour être robuste, conforme aux standards HTTP strictement définis, et capable de gérer du contenu statique ainsi que du contenu dynamique via **CGI**.
 
-Compilation:
-To compile the project, simply run make at the root of the repository:
+---
+
+## 🚀 Instructions
+
+### 🛠 Compilation
+Pour compiler le projet, exécutez simplement `make` à la racine du dépôt :
+```bash
 make
 
-Execution:
-Run the server by providing a configuration file. If no file is provided, the server may default to a standard configuration or exit depending on implementation.
+Exécution
+Lancez le serveur en fournissant un fichier de configuration. Si aucun fichier n'est fourni, le serveur peut utiliser une configuration par défaut ou s'arrêter selon l'implémentation.
 ./webserv [configuration_file.conf]
 
-Example:
+Exemple :
 ./webserv l.conf
 
-Once the server is running (default port is usually 8080), you can access it via your web browser: http://localhost:8080
+Une fois le serveur lancé (le port par défaut est généralement 8080), vous pouvez y accéder via votre navigateur : http://localhost:8080
+
+Fonctionnalités
+Le serveur implémente les fonctionnalités obligatoires suivantes :
+
+Méthodes HTTP : Support complet des requêtes GET, POST, et DELETE.
+
+Multiplexage E/S : Opérations d'E/S non bloquantes utilisant poll().
+
+Support CGI : Exécution de scripts .py et .php via l'interface CGI (Common Gateway Interface).
+
+Upload de fichiers : Gestion robuste du multipart/form-data pour les téléchargements de fichiers via POST.
+
+Configuration : Parsing de fichiers .conf personnalisés (ports, hostnames, pages d'erreur par défaut, limites de taille du corps client, routes, etc.).
+
+Contenu Statique : Service de fichiers HTML, CSS, JS et images.
+
+Listing de Répertoire : Fonctionnalité autoindex lorsque le listage de répertoires est activé.
+
+Gestion des Erreurs : Pages d'erreurs personnalisées (404, 403, 500, 413, etc.).
 
 
-Features
-This server implements the following mandatory features:
+Ressources & Utilisation de l'IA
+🔗 Ressources utiles
+Socket Programming in C++
 
-HTTP Methods: Support for GET, POST, and DELETE requests.
+Guide Curl - Administration Serveur
 
-I/O Multiplexing: Non-blocking I/O operations using poll().
+What is Epoll?
 
-CGI Support: Execution of .py and .php scripts via CGI (Common Gateway Interface).
+Understanding the Poll Function
 
-File Upload: Robust handling of multipart/form-data for file uploads via POST.
+🤖 Utilisation de l'IA
+Conformément aux exigences du sujet, nous déclarons explicitement que des outils d'Intelligence Artificielle (ChatGPT / Gemini) ont été utilisés pendant le développement de ce projet comme outils de support pour les tâches suivantes :
 
-Configuration: Custom .conf file parsing (setup ports, hostnames, default error pages, client body size limits, routes, etc.).
+Explication de concepts : Clarification de sujets complexes tels que les E/S non bloquantes, le cycle de vie de poll(), et la structure des requêtes/réponses HTTP.
 
-Static Content: Serving HTML, CSS, JS, and images.
+Debugging : Aide à l'identification de causes d'erreurs complexes (ex: logique de parsing, gestion de la mémoire en C++98).
 
-Directory Listing: Autoindex feature when directory listing is enabled.
-
-Error Handling: Custom error pages (404, 403, 500, 413, etc.).
-
-
-Resources & AI Usage:
-
-Ressources
-https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
-https://blog.stephane-robert.info/docs/admin-serveurs/linux/curl/
-https://medium.com/@avocadi/what-is-epoll-9bbc74272f7c
-https://www.scaffoldgainford.com/blog/what-is-the-poll-function-for-sockets-311835.html
-
-AI Usage
-As required by the subject, we explicitly state that Artificial Intelligence tools (ChatGPT / Gemini) were used during the development of this project. They were utilized as a support tool for the following specific tasks:
-
-Concept Explanation: Clarifying complex topics such as non-blocking I/O, the lifecycle of poll(), and the structure of HTTP requests/responses.
-
-Debugging: Assisting in identifying the cause of complex errors (e.g., parsing logic issues, memory management in C++98) that were difficult to trace manually.
-
-Test Generation: Generating Python scripts for CGI testing and complex curl commands to verify edge cases (like multipart uploads).
-
+Génération de tests : Création de scripts Python pour les tests CGI et de commandes curl complexes pour vérifier les cas limites (comme les uploads multipart).
 
