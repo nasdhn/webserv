@@ -22,7 +22,7 @@ Pour compiler le projet, exécutez simplement `make` à la racine du dépôt :
 make
 ```
 
-💻 Exécution
+## Exécution
 Lancez le serveur en fournissant un fichier de configuration.
 
 ```bash
@@ -36,32 +36,36 @@ Exemple :
 ```
 Note : Une fois le serveur lancé (port par défaut : 8080), accédez-y via : http://localhost:8080
 
-✨ Fonctionnalités
-Le serveur implémente les fonctionnalités suivantes :
+## Fonctionnalités
 
-Méthodes HTTP : Support complet des requêtes GET, POST, et DELETE.
+- Le serveur implémente les fonctionnalités suivantes :
 
-Multiplexage E/S : Opérations non bloquantes utilisant poll().
+- Méthodes HTTP : Support complet des requêtes GET, POST, et DELETE.
 
-Support CGI : Éxécution de scripts .py et .php.
+- Multiplexage E/S : Opérations non bloquantes utilisant poll().
 
-Upload de fichiers : Gestion du multipart/form-data via POST.
+- Support CGI : Éxécution de scripts .py et .php.
 
-Configuration : Parsing de fichiers .conf (ports, hostnames, routes, etc.).
+- pload de fichiers : Gestion du multipart/form-data via POST.
 
-Gestion des Erreurs : Pages d'erreurs personnalisées (404, 403, 500, etc.).
+- Configuration : Parsing de fichiers .conf (ports, hostnames, routes, etc.).
 
-Ressources & IA
-🔗 Liens utiles
-Socket Programming in C++
+- Gestion des Erreurs : Pages d'erreurs personnalisées (404, 403, 500, etc.).
+
+## Ressources & IA
+🔗 Liens utiles :
+https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/ 
+https://blog.stephane-robert.info/docs/admin-serveurs/linux/curl/ 
+https://medium.com/@avocadi/what-is-epoll-9bbc74272f7c 
+https://www.scaffoldgainford.com/blog/what-is-the-poll-function-for-sockets-311835.html
 
 Guide Curl
 
-🤖 Utilisation de l'IA
+Utilisation de l'IA
 Conformément aux exigences du sujet, nous déclarons l'usage d'outils d'IA (ChatGPT / Gemini) pour :
 
-Explication de concepts (E/S non bloquantes, poll()).
+- Explication de concepts (E/S non bloquantes, poll()).
 
-Debugging (Logique de parsing, C++98).
+- Debugging (Logique de parsing, C++98).
 
-Génération de tests (Scripts Python, commandes curl).
+- Génération de tests (Scripts Python, commandes curl).
