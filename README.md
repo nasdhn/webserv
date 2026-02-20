@@ -20,17 +20,20 @@ Pour compiler le projet, exécutez simplement `make` à la racine du dépôt :
 
 ```bash
 make
+```
 
 💻 Exécution
 Lancez le serveur en fournissant un fichier de configuration.
 
 ```bash
 ./webserv [configuration_file.conf]
+```
 
 Exemple :
 
 ```bash
 ./webserv l.conf
+```
 Note : Une fois le serveur lancé (port par défaut : 8080), accédez-y via : http://localhost:8080
 
 ✨ Fonctionnalités
